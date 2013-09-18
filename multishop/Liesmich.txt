@@ -6,11 +6,11 @@ Vorraussetzungen:
 	Pear DB
 
 Installation:
-Die Datei conf.php ben�tigt Schreibrechte f�r den Webserver-Benutzer (apache, www-data, httpd)
-Es muss ein Unterverzeichnis tmp angelegt werden, in dem die log-Dateien angelegt werden k�nnen.
+Die Datei conf.php benoetigt Schreibrechte fuer den Webserver-Benutzer (apache, www-data, httpd)
+Es muss ein Unterverzeichnis tmp angelegt werden, in dem die log-Dateien angelegt werden koennen.
 
 Die Schnittstelle kann auch in die ERP integriert werden.
-Erweitern Sie die menu.ini um die Eintr�ge im Multishop-Verzeichnis aus der Datei add_menu.ini, z.B.:
+Erweitern Sie die menu.ini um die Eintraege im Multishop-Verzeichnis aus der Datei add_menu.ini, z.B.:
 
 $ cat /kivitendo/multishop/menu.ini >> /kivitendo/menu.ini
 
