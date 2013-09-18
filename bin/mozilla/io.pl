@@ -995,6 +995,7 @@ sub edit_e_mail {
 
   my $attachment_filename = $form->generate_attachment_filename();
   my $subject             = $form->{subject} || $form->generate_email_subject();
+  my $message             = "";
 
   $form->header;
 
@@ -1007,6 +1008,7 @@ sub edit_e_mail {
                                    { title         => $title,
                                      a_filename    => $attachment_filename,
                                      subject       => $subject,
+                                     message       => $message,
                                      print_options => print_options('inline' => 1),
                                      HIDDEN        => [ map +{ name => $_, value => $form->{$_} }, @hidden_keys ],
                                      SHOW_BCC      => $::auth->assert('email_bcc', 'may fail') });

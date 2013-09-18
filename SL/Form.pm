@@ -1301,6 +1301,7 @@ sub generate_email_subject {
   $main::lxdebug->enter_sub();
   my ($self) = @_;
 
+  my $company = $::myconfig{company};
   my $subject = $main::locale->unquote_special_chars('HTML', $self->get_formname_translation());
   my $prefix  = $self->get_number_prefix_for_type();
 
@@ -1308,6 +1309,10 @@ sub generate_email_subject {
     $subject .= " " . $self->{"${prefix}number"}
   }
 
+  if ($company) {
+    $subject = $company . " " . $subject
+  }
+  
   $main::lxdebug->leave_sub();
   return $subject;
 }
