@@ -1,0 +1,22 @@
+Shop - Schnittstelle Amazon/Ebay/Joomla jShopping -> Kivitendo
+
+Vorraussetzungen:
+	Kivitendo-ERP Version >= 3.0.0 
+	Amazon/Ebay/jShopping
+	Pear DB
+
+Installation:
+Die Datei conf.php benötigt Schreibrechte für den Webserver-Benutzer (apache, www-data, httpd)
+Es muss ein Unterverzeichnis tmp angelegt werden, in dem die log-Dateien angelegt werden können.
+
+Die Schnittstelle kann auch in die ERP integriert werden.
+Erweitern Sie die menu.ini um die Einträge im Multishop-Verzeichnis aus der Datei add_menu.ini, z.B.:
+
+$ cat /kivitendo/multishop/menu.ini >> /kivitendo/menu.ini
+
+Die Aufrufbaren Dateien im Folder multisop sind
+
+confedit.php	Konfigurationseinstellungen 
+shoptoerp.php	Der eigentlich Import
+
+Beide Dateien sind kennwortgeschuetzt, wobei initial kein User/Kennwort angegeben ist bzw. dieses einfach leer gelassen wird.
