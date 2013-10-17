@@ -29,8 +29,9 @@ else
 	
 	require "erpfunctions.php";
 	require "amazonfunctions.php";
-	require "joomlafunctions.php";
 	require "ebayfunctions.php";
+	require "joomlafunctions.php";
+	require "rakutenfunctions.php";
 	
 	// Variablen definieren: wieviele Tage in Vergangenheit gezeigt werden sollen:
 	$daysBeforeFrom	= "9";
@@ -130,7 +131,7 @@ else
 				."<tr>"
 					."<td>Amazon Fulfillment (nur Amazon)</td>"
 					."<td><input type=\"radio\" name=\"fulfillmentchannel\" value=\"amazon\" ".$amazon_checked."></td>"
-					."<td>Haendler Fulfillment (Amazon, Ebay, Joomla)</td>"
+					."<td>Haendler Fulfillment (Amazon, Ebay, Joomla, Rakuten)</td>"
 					."<td><input type=\"radio\" name=\"fulfillmentchannel\" value=\"haendler\" ".$haendler_checked."></td>"
 				."</tr>"
 				."<tr>"
@@ -171,6 +172,14 @@ else
 					$output = array_merge($output, $joomlaresult);
 				}
 			}
+			if ($Rakutenaktiviert == "checked")
+			{
+				$Rakutenresult = getRakutenOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
+				if(count($Rakutenresult) > 0)
+				{
+					$output = array_merge($output, $Rakutenresult);
+				}
+			}
 								
 			// output sortieren
 			if ($suchdatum == "versanddatum")
@@ -207,6 +216,14 @@ else
 				if(count($joomlaresult) > 0)
 				{
 					$output = array_merge($output, $joomlaresult);
+				}
+			}
+			if ($Rakutenaktiviert == "checked")
+			{
+				$Rakutenresult = getRakutenOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "");
+				if(count($Rakutenresult) > 0)
+				{
+					$output = array_merge($output, $Rakutenresult);
 				}
 			}
 
@@ -317,11 +334,13 @@ else
 										}
 										else
 										{
-											if ($opSet1['OrderStatus'] == "Shipped" ||
+											if ($opSet1['OrderStatus'] == "Shipped" || $opSet1['OrderStatus'] == "shipped" ||
 												($opSet1['OrderStatus'] == "Unshipped" && $opSet1['FulfillmentChannel'] == "MFN") ||
 												($opSet1['OrderStatus'] == "Pending payment" && $opSet1['FulfillmentChannel'] == "MFN") ||
 												($opSet1['OrderStatus'] == "Paid" && $opSet1['FulfillmentChannel'] == "MFN") ||
-												($opSet1['OrderStatus'] == "Completed" && $opSet1['MarketplaceId'] == $eBayAbteilungsname))
+												($opSet1['OrderStatus'] == "Completed" && $opSet1['MarketplaceId'] == $eBayAbteilungsname) ||
+												($opSet1['OrderStatus'] == "editable" && $opSet1['MarketplaceId'] == $RakutenAbteilungsname) ||
+												($opSet1['OrderStatus'] == "payout" && $opSet1['MarketplaceId'] == $RakutenAbteilungsname))
 											{
 												echo "<td>";
 												echo "<input type=\"checkbox\" name=\"importauswahl[]\" value=\"".$opSet1['AmazonOrderId']."\" "."checked=\"checked\"".">";

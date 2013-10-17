@@ -193,7 +193,7 @@ class eBayApiClass
 						
 						// $returnvalue[$bestellungszaehler]['recipient-title'] = utf8_encode("");
 						// $returnvalue[$bestellungszaehler]['recipient-name'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-address-1"'] = utf8_encode("");
+						// $returnvalue[$bestellungszaehler]['ship-address-1'] = utf8_encode("");
 						// $returnvalue[$bestellungszaehler]['ship-address-2'] = "";
 						// $returnvalue[$bestellungszaehler]['ship-postal-code'] = utf8_encode("");
 						// $returnvalue[$bestellungszaehler]['ship-city'] = utf8_encode("");

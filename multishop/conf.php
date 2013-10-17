@@ -45,4 +45,9 @@ $Joomlaport="3306";
 $Joomladbname="";
 $Joomlauser="";
 $Joomlapass="";
+$Rakutenaktiviert="";
+$RakutenAbteilungsname="Rakuten";
+$RakutenBestellnummernprefix="Rakuten";
+$RakutenAPIUrl="https://webservice.rakuten.de/merchants/orders/";
+$RakutenAPISchluessel="";
 ?>
