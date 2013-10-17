@@ -98,6 +98,12 @@ else
 			$Joomlauser=$_POST["Joomlauser"];
 			$Joomlapass=$_POST["Joomlapass"];
 			
+			$Rakutenaktiviert=$_POST["Rakutenaktiviert"];
+			$RakutenAbteilungsname=$_POST["RakutenAbteilungsname"];
+			$RakutenBestellnummernprefix=$_POST["RakutenBestellnummernprefix"];
+			$RakutenAPIUrl=$_POST["RakutenAPIUrl"];
+			$RakutenAPISchluessel=$_POST["RakutenAPISchluessel"];
+			
 			fputs($f,"<?\n// Verbindung zur ERP-db\n");
 			fputs($f,"\$ERPhost=\"".$_POST["ERPhost"]."\";\n");
 			fputs($f,"\$ERPport=\"".$_POST["ERPport"]."\";\n");
@@ -147,6 +153,12 @@ else
 			fputs($f,"\$Joomladbname=\"".$_POST["Joomladbname"]."\";\n");
 			fputs($f,"\$Joomlauser=\"".$_POST["Joomlauser"]."\";\n");
 			fputs($f,"\$Joomlapass=\"".$_POST["Joomlapass"]."\";\n");
+			
+			fputs($f,"\$Rakutenaktiviert=\"".$_POST["Rakutenaktiviert"]."\";\n");
+			fputs($f,"\$RakutenAbteilungsname=\"".$_POST["RakutenAbteilungsname"]."\";\n");
+			fputs($f,"\$RakutenBestellnummernprefix=\"".$_POST["RakutenBestellnummernprefix"]."\";\n");
+			fputs($f,"\$RakutenAPIUrl=\"".$_POST["RakutenAPIUrl"]."\";\n");
+			fputs($f,"\$RakutenAPISchluessel=\"".$_POST["RakutenAPISchluessel"]."\";\n");
 
 			fputs($f,"?>");
 			fclose($f);
@@ -202,6 +214,12 @@ else
 			$Joomladbname=$_POST["Joomladbname"];
 			$Joomlauser=$_POST["Joomlauser"];
 			$Joomlapass=$_POST["Joomlapass"];
+			
+			$Rakutenaktiviert=$_POST["Rakutenaktiviert"];
+			$RakutenAbteilungsname=$_POST["RakutenAbteilungsname"];
+			$RakutenBestellnummernprefix=$_POST["RakutenBestellnummernprefix"];						
+			$RakutenAPIUrl=$_POST["RakutenAPIUrl"];
+			$RakutenAPISchluessel=$_POST["RakutenAPISchluessel"];
 		}
 	}
 	else
@@ -214,6 +232,9 @@ else
 		<table style="background-color:#cccccc">
 			<form name="ConfEdit" method="post" action="confedit.php">
 				<input type="hidden" name="ERPusrID" value="<?= $ERPusrID ?>">
+				<tr>
+					<td colspan="5" align="center"><input type="submit" name="ok" value="sichern"></td>
+				</tr>
 				<tr>
 					<td>Import/Confedit User</td>
 					<td><input type="text" name="ERPftpuser" size="25" value="<?= $ERPftpuser ?>"></td>
@@ -409,6 +430,55 @@ else
 					<td></td>
 					<td>Joomla db-User PWD</td>
 					<td><input type="text" name="Joomlapass" size="25" value="<?= $Joomlapass ?>"></td>
+				</tr>
+				<tr>
+					<td>------------------------------</td>
+					<td>------------------------------</td>
+					<td></td>
+					<td>------------------------------</td>
+					<td>------------------------------</td>
+				</tr>
+				<tr>
+					<th>Wert</th>
+					<th>Rakuten</th>
+					<th></th>
+					<th>-</th>
+					<th>-</th>
+				</tr>
+				<tr>
+					<td>Rakuten aktiviert</td>
+					<td><input type="checkbox" name="Rakutenaktiviert" value="checked" <? if ($Rakutenaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>				
+				<tr>
+					<td>Rakuten Abteilungsname</td>
+					<td><input type="text" name="RakutenAbteilungsname" size="25" value="<?= $RakutenAbteilungsname ?>"></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Rakuten Bestellnummernprefix</td>
+					<td><input type="text" name="RakutenBestellnummernprefix" size="25" value="<?= $RakutenBestellnummernprefix ?>"></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Rakuten API-Url</td>
+					<td><input type="text" name="RakutenAPIUrl" size="25" value="<?= $RakutenAPIUrl ?>"></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Rakuten API-Schluessel</td>
+					<td><input type="text" name="RakutenAPISchluessel" size="25" value="<?= $RakutenAPISchluessel ?>"></td>
+					<td></td>
+					<td></td>
+					<td></td>
 				</tr>
 				<tr>
 					<td colspan="5" align="center"><input type="submit" name="ok" value="sichern"></td>
