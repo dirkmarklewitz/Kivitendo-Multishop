@@ -343,7 +343,12 @@ else
 												($opSet1['OrderStatus'] == "payout" && $opSet1['MarketplaceId'] == $RakutenAbteilungsname))
 											{
 												echo "<td>";
-												echo "<input type=\"checkbox\" name=\"importauswahl[]\" value=\"".$opSet1['AmazonOrderId']."\" "."checked=\"checked\"".">";
+												echo "<input type=\"checkbox\" name=\"importauswahl[]\" value=\"".$opSet1['AmazonOrderId']."\" ";
+												if ($amazon_checked)
+												{
+													echo "checked=\"checked\"";
+												}
+												echo ">";
 												
 												echo "<input type=\"hidden\" name=\"AmazonOrderId"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['AmazonOrderId']."\">";
 												echo "<input type=\"hidden\" name=\"SellerOrderId"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['SellerOrderId']."\">";
