@@ -36,10 +36,10 @@ function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $erled
 	{
 		$bearbeitungsstatus = checkAmazonOrderId($opSet1['AmazonOrderId']);
 		$output[$lfdNr]['bearbeitungsstatus'] = $bearbeitungsstatus;
-		$get_it = true;
-		if (!$erledigtesanzeigen && $bearbeitungsstatus == "email")
+		$get_it = false;
+		if ($bearbeitungsstatus == "neu")
 		{
-			$get_it = false;
+			$get_it = true;
 		}
 		if ($get_it)
 		{
