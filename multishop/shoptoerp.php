@@ -89,6 +89,25 @@ else
 		$amazon_checked = "checked=\"checked\"";
 		$haendler_checked = "";
 	}
+	if (isset($_POST["filter"])) {
+		if ($_POST["filter"] == "Alle") {
+			$Alle_checked = "checked=\"checked\"";
+		}
+		if ($_POST["filter"] == "Amazon") {
+			$Amazon_checked = "checked=\"checked\"";
+		}
+		if ($_POST["filter"] == "Ebay") {
+			$Ebay_checked = "checked=\"checked\"";
+		}
+		if ($_POST["filter"] == "Joomla") {
+			$Joomla_checked = "checked=\"checked\"";
+		}
+		if ($_POST["filter"] == "Rakuten") {
+			$Rakuten_checked = "checked=\"checked\"";
+		}
+	} else {
+		$Alle_checked = "checked=\"checked\"";
+	}
 	if (isset($_POST["versandstatus"])) {
 		$versandstatus = $_POST['versandstatus'];
 		if (in_array("shipped", $versandstatus)) { $versandstatus_shipped = "checked=\"checked\""; } else { $versandstatus_shipped = ""; }
@@ -131,14 +150,18 @@ else
 				."<tr>"
 					."<td>Amazon Fulfillment (nur Amazon)</td>"
 					."<td><input type=\"radio\" name=\"fulfillmentchannel\" value=\"amazon\" ".$amazon_checked."></td>"
-					."<td>Haendler Fulfillment (Amazon, Ebay, Joomla, Rakuten)</td>"
-					."<td><input type=\"radio\" name=\"fulfillmentchannel\" value=\"haendler\" ".$haendler_checked."></td>"
+					."<td>Haendler Fulfillment (<input type=\"radio\" name=\"filter\" value=\"Alle\" ".$Alle_checked.">Alle";
+					if ($Amazonaktiviert == "checked") { echo ", <input type=\"radio\" name=\"filter\" value=\"Amazon\" ".$Amazon_checked.">Amazon"; }
+					if ($eBayaktiviert == "checked") { echo ", <input type=\"radio\" name=\"filter\" value=\"Ebay\" ".$Ebay_checked.">Ebay"; }
+					if ($Joomlaaktiviert == "checked") { echo ", <input type=\"radio\" name=\"filter\" value=\"Joomla\" ".$Joomla_checked.">Joomla"; }
+					if ($Rakutenaktiviert == "checked") { echo ", <input type=\"radio\" name=\"filter\" value=\"Rakuten\" ".$Rakuten_checked.">Rakuten"; }
+	echo			")</td><td><input type=\"radio\" name=\"fulfillmentchannel\" value=\"haendler\" ".$haendler_checked."></td>"
 				."</tr>"
 				."<tr>"
 					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"shipped\" ".$versandstatus_shipped.">Shipped</td>"
 					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"pending\" ".$versandstatus_pending.">Pending</td>"
 					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"partiallyunshipped\" ".$versandstatus_partiallyunshipped.">Partially Shipped / Unshipped</td>"
-					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"canceled\" ".$versandstatus_canceled.">Canceled<br><input type=\"checkbox\" name=\"versandstatus[]\" value=\"unfulfillable\" ".$versandstatus_unfulfillable.">Unfulfillable</td>"
+					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"canceled\" ".$versandstatus_canceled.">Canceled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"versandstatus[]\" value=\"unfulfillable\" ".$versandstatus_unfulfillable.">Unfulfillable</td>"
 				."</tr>"
 			."</table>";
 	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\"><br>";
@@ -148,7 +171,7 @@ else
 		if (isset($_POST["bestellungbis"]))
 		{
 			$output = array();
-			if ($Amazonaktiviert == "checked")
+			if ($Amazonaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
 			{
 				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], isset($_POST["erledigtesanzeigen"]), $_POST["bestellungvom"], $_POST["bestellungbis"]);
 				if(count($amazonresult) > 0)
@@ -156,7 +179,7 @@ else
 					$output = array_merge($output, $amazonresult);
 				}
 			}
-			if ($eBayaktiviert == "checked")
+			if ($eBayaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Ebay"))
 			{
 				$ebayresult = getEbayOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
 				if(count($ebayresult) > 0)
@@ -164,7 +187,7 @@ else
 					$output = array_merge($output, $ebayresult);
 				}
 			}
-			if ($Joomlaaktiviert == "checked")
+			if ($Joomlaaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Joomla"))
 			{
 				$joomlaresult = getJoomlaOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
 				if(count($joomlaresult) > 0)
@@ -172,7 +195,7 @@ else
 					$output = array_merge($output, $joomlaresult);
 				}
 			}
-			if ($Rakutenaktiviert == "checked")
+			if ($Rakutenaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Rakuten"))
 			{
 				$Rakutenresult = getRakutenOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
 				if(count($Rakutenresult) > 0)
