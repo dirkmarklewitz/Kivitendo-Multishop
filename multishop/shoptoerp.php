@@ -171,7 +171,7 @@ else
 		if (isset($_POST["bestellungbis"]))
 		{
 			$output = array();
-			if ($Amazonaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
+			if ($Amazonaktiviert == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
 			{
 				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], isset($_POST["erledigtesanzeigen"]), $_POST["bestellungvom"], $_POST["bestellungbis"]);
 				if(count($amazonresult) > 0)
