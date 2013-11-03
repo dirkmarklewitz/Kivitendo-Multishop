@@ -467,8 +467,8 @@ else
 									$zerlegteEinzelSKU = split("\|", $einzelSKU);
 									if(count($zerlegteEinzelSKU) == 2)
 									{
-										$searchSKU[] = $zerlegteEinzelSKU[0];
-										$replaceSKU[] = $zerlegteEinzelSKU[1];
+										$searchSKU[] = trim($zerlegteEinzelSKU[0]);
+										$replaceSKU[] = trim($zerlegteEinzelSKU[1]);
 									}
 								}
 								
