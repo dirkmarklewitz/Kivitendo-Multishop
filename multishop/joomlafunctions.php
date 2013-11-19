@@ -210,7 +210,7 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 			$orderItemsListOutput[$itemcounter]['OrderItemId'] = $itemcounter;
 			$orderItemsListOutput[$itemcounter]['SellerSKU'] = trim($row_products['product_ean']);
 			// $orderItemsListOutput[$itemcounter]['ASIN'] = "";
-			$orderItemsListOutput[$itemcounter]['ItemPrice'] = $row_products['product_item_price'];
+			$orderItemsListOutput[$itemcounter]['ItemPrice'] = $row_products['product_item_price'] * $row_products['product_quantity']; // Gesamtpreis für alle Artikel, wird später über doe Anzahl zerlegt
 			// $orderItemsListOutput[$itemcounter]['ItemTax'] = "";
 			if ($itemcounter == 0)
 			{
