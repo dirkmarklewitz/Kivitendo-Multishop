@@ -30,7 +30,13 @@ $LAND = array(	"DE" => "Deutschland",
 				"UK" => "United Kingdom",
 				"GB" => "United Kingdom",
 
-				"CH" => "Schweiz");
+				"CH" => "Schweiz",
+				"IN" => "Indien",
+				"MC" => "Monaco",
+				"NO" => "Norwegen",
+				"TR" => "Türkei",
+				"US" => "USA",
+				"XK" => "Kosovo, Republik");
 				
 $TAXID = array(	"DE" => 0,	// Steuerschluessel Deutschland
 
