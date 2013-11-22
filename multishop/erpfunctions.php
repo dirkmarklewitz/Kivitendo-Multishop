@@ -673,7 +673,8 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$waehrungstext = chr(13)."Originalwaehrung: ".$bestellung["CurrencyCode"].chr(13)."Originalbetrag: ".$bestellung["Amount"]." ".$bestellung["CurrencyCode"].chr(13)."Kurs 1 ".$bestellung["CurrencyCode"]." = x.xx EUR";
 	}
-	$sql .= "notes='".$bestellung["OrderComment"]."', intnotes='".$bestelldatum.$versanddatum."SalesChannel ".$bestellung["SalesChannel"]." (".$bestellung["CountryCode"].")".chr(13)."Versand durch ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]]).$waehrungstext."', ";
+	$kundenkommentar = pg_escape_string($bestellung["OrderComment"]);
+	$sql .= "notes='".$kundenkommentar."', intnotes='".$bestelldatum.$versanddatum."SalesChannel ".$bestellung["SalesChannel"]." (".$bestellung["CountryCode"].")".chr(13)."Versand durch ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]]).$waehrungstext."', ";
 	$sql .= "curr='".$bestellung["CurrencyCode"]."', employee_id=".$ERPusrID.", vendor_id=NULL ";
 	$sql .= "where id=".$rs2[0]["id"];
 	
