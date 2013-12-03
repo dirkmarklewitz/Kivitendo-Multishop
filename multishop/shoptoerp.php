@@ -34,7 +34,7 @@ else
 	require "rakutenfunctions.php";
 	
 	// Variablen definieren: wieviele Tage in Vergangenheit gezeigt werden sollen:
-	$daysBeforeFrom	= "9";
+	$daysBeforeFrom	= "5";
 	
 	echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/transitional.dtd\">";
 	echo "<html>";

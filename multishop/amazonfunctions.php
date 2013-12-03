@@ -184,6 +184,12 @@ class DhListOrders extends DhAmazonAccess
 
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
 			{
+				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				if (!empty($nextToken))
+				{
+					echo "Mehr als 100 Eintraege, es wird nicht alles angezeigt, Datum bitte einschraenken";
+				}
+				
 				$items=$response->getElementsByTagName("Order");
 				
 				foreach($items as $i => $item)
