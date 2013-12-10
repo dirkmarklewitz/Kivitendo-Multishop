@@ -164,7 +164,11 @@ else
 					."<td><input type=\"checkbox\" name=\"versandstatus[]\" value=\"canceled\" ".$versandstatus_canceled.">Canceled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"versandstatus[]\" value=\"unfulfillable\" ".$versandstatus_unfulfillable.">Unfulfillable</td>"
 				."</tr>"
 			."</table>";
-	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\"><br>";
+	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\">";
+	
+	echo	"<form name=\"sellings\" action=\"shoptoerp.php\" method=\"post\">";
+	echo 	"<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\"><br>";
+	echo	"</form>";
 	
 	if (isset($_POST["bestellungen"]) && isset($_POST["bestellungvom"]))
 	{
@@ -277,8 +281,8 @@ else
 			{
 				echo	"<table border=\"1\">"
 					 		."<tr>"
-			 					."<td>Bestellnummer</td>"
-			 					."<td>Details</td>"
+			 					."<th>Bestellnummer</th>"
+			 					."<th>Details</th>"
 			 				."</tr>";
 		 	}
 		 	else
@@ -286,14 +290,15 @@ else
 			 	echo 	"<form name=\"importauswahl\" action=\"shoptoerp.php\" method=\"post\">";
 			 	echo	"<table border=\"1\">"
 					 		."<tr>"
-					 			."<td>Importieren</td>"
-			 					."<td>Bestellnummer</td>"
-			 					."<td>Marktplatz (Zielland)</td>"
-			 					."<td>Versanddatum (Bestelldatum)</td>"
-			 					."<td>Name</td>"
-			 					."<td>Status (x of y done)</td>"
-			 					."<td>Gesamtbetrag</td>"
-			 					."<td>Artikel</td>"
+					 			."<th>Nr.</th>"
+					 			."<th>Importieren</th>"
+			 					."<th>Bestellnummer</th>"
+			 					."<th>Marktplatz (Zielland)</th>"
+			 					."<th>Versanddatum (Bestelldatum)</th>"
+			 					."<th>Name</th>"
+			 					."<th>Status (x of y done)</th>"
+			 					."<th>Gesamtbetrag</th>"
+			 					."<th>Artikel</th>"
 			 				."</tr>";
 		 	}
 			foreach($output as $lfdNr => $opSet1)
@@ -333,6 +338,7 @@ else
 					{
 					
 						echo 	"<tr valign=\"top\">";
+						echo 		"<td>".$lfdNr."</td>";
 									if ($bearbeitungsstatus == "auftrag")
 									{
 										echo "<td>Auftrag vorhanden</td>";
@@ -658,6 +664,34 @@ else
 		{
 			echo "Keine Bestellungen ausgewaehlt/ es liegen keine Bestellungen vor!<br>";
 		}
+	}
+	else if (isset($_POST["sellings"]))
+	{
+		echo "<br><table border=\"1\">"
+				."<tr>"
+					."<th>Produktgruppe</th>"
+					."<th>Saleschannel</th>"
+					."<th>Laenderkuerzel</th>"
+					."<th>Abteilung</th>"
+					."<th>Zielland</th>"
+					."<th>Region</th>"
+					."<th>Menge</th>"
+					."<th>Returns</th>"
+				."</tr>";
+		foreach (getSellingInfo($bestellungvom, $bestellungbis) as $eintrag)
+		{
+			echo "<tr>"
+					."<td>".$eintrag[0]."</td>"
+					."<td>".$eintrag[1]."</td>"
+					."<td>".$eintrag[2]."</td>"
+					."<td>".$eintrag[3]."</td>"
+					."<td>".$eintrag[4]."</td>"
+					."<td>".$eintrag[5]."</td>"
+					."<td>".$eintrag[6]."</td>"
+					."<td>".$eintrag[7]."</td>"
+				."</tr>";
+		}
+		echo "</table>";
 	}
 	
 	echo "</form>";

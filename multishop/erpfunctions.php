@@ -882,4 +882,81 @@ function checkCustomer($BuyerEmail, $BuyerName)
 	
 	return $status;
 }
+
+/**********************************************
+* getSellingInfo($datum_von, $datum_bis)
+***********************************************/
+function getSellingInfo($datum_von, $datum_bis)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$dbP = @DB::connect($dsnP);
+	if (DB::isError($dbP)||!$dbP)
+	{
+		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
+		$dbP = false;
+	}
+	else
+	{
+		// Daten holen
+		$rs = $dbP->getall("SELECT"
+								." trim(partsgroup.partsgroup) AS artikelgruppe,"
+								." regexp_split_to_array(trim(substring(ar.intnotes from E'Sales.*\\\(..\\\)?')), E' +') AS saleschannel,"
+								." trim(department.description) AS abteilung,"
+								." trim(customer.country) AS zielland,"
+								." trim(tax_zones.description) AS region,"
+								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) AS menge,"
+								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns"
+							." FROM"
+								." ar"
+							." INNER JOIN"
+								." invoice ON ar.id = invoice.trans_id"
+							." INNER JOIN"
+								." customer ON ar.customer_id = customer.id"
+							." INNER JOIN"
+								." parts ON parts.id = invoice.parts_id"
+							." INNER JOIN"
+								." partsgroup ON partsgroup.id = parts.partsgroup_id"
+							." INNER JOIN"
+								." department ON ar.department_id = department.id"
+							." INNER JOIN"
+								." tax_zones ON ar.taxzone_id = tax_zones.id"								
+							." WHERE"
+								." ar.transdate >= '".$datum_von."' AND ar.transdate <= '".$datum_bis."'"
+							." GROUP BY"
+								." saleschannel, artikelgruppe, abteilung, zielland, region"
+							." HAVING"
+								." sum(invoice.qty) <> 0"
+							." ORDER BY"
+								." artikelgruppe, saleschannel");
+		
+		$returnvalue = array();
+		
+		foreach ($rs as $lfdNr => $zeile)
+		{
+			$newarray = explode(',', $zeile[1]);
+			
+			$returnvalue[$lfdNr][0] = $zeile[0];
+			$returnvalue[$lfdNr][1] = $newarray[1];
+			$returnvalue[$lfdNr][2] = trim($newarray[2], "()}");
+			$returnvalue[$lfdNr][3] = $zeile[2];
+			$returnvalue[$lfdNr][4] = $zeile[3];
+			$returnvalue[$lfdNr][5] = $zeile[4];
+			$returnvalue[$lfdNr][6] = $zeile[5];
+			$returnvalue[$lfdNr][7] = $zeile[6];
+		}
+	}
+	
+	return $returnvalue;
+}
 ?>
