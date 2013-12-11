@@ -36,21 +36,6 @@ else
 	// Variablen definieren: wieviele Tage in Vergangenheit gezeigt werden sollen:
 	$daysBeforeFrom	= "5";
 	
-	echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/transitional.dtd\">";
-	echo "<html>";
-	echo "<head>";
-	echo "	<title>Amazon-Import</title>";
-	echo "	<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">";
-	echo "	<script type=\"text/javascript\" src=\"calendarDateInput.js\">";
-	echo "		/***********************************************";
-	echo "		* Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm";
-	echo "		* Script featured on and available at http://www.dynamicdrive.com";
-	echo "		* Keep this notice intact for use.";
-	echo "		***********************************************/";
-	echo "	</script>";
-	echo "</head>";
-	echo "<body>";
-	
 	if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht") {
 		$listenansicht_checked = "";
 		$detailansicht_checked = "checked=\"checked\"";
@@ -121,6 +106,27 @@ else
 		$versandstatus_shipped = "checked=\"checked\"";
 	}
 	
+	// Sellingdata CSV ausgeben
+	if (isset($_POST["sellingscsv"]))
+	{
+		getSellingInfo($bestellungvom, $bestellungbis, true);
+		exit;
+	}
+
+	echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/transitional.dtd\">";
+	echo "<html>";
+	echo "<head>";
+	echo "	<title>Amazon-Import</title>";
+	echo "	<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">";
+	echo "	<script type=\"text/javascript\" src=\"calendarDateInput.js\">";
+	echo "		/***********************************************";
+	echo "		* Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm";
+	echo "		* Script featured on and available at http://www.dynamicdrive.com";
+	echo "		* Keep this notice intact for use.";
+	echo "		***********************************************/";
+	echo "	</script>";
+	echo "</head>";
+	echo "<body>";	
 	echo "<form name=\"bestellauswahl\" action=\"shoptoerp.php\" method=\"post\">";
 	echo	"<table style=\"background-color:#cccccc\">"
 				."<tr><p>"
@@ -167,7 +173,8 @@ else
 	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\">";
 	
 	echo	"<form name=\"sellings\" action=\"shoptoerp.php\" method=\"post\">";
-	echo 	"<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\"><br>";
+	echo 		"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\">";
+	echo 		"&nbsp;&nbsp;<input type=\"submit\" name=\"sellingscsv\" value=\"Verkaufstabelle als .csv\">";
 	echo	"</form>";
 	
 	if (isset($_POST["bestellungen"]) && isset($_POST["bestellungvom"]))

@@ -886,7 +886,13 @@ function checkCustomer($BuyerEmail, $BuyerName)
 /**********************************************
 * getSellingInfo($datum_von, $datum_bis)
 ***********************************************/
-function getSellingInfo($datum_von, $datum_bis)
+function convertToWindowsCharset($string)
+{
+	$charset =  mb_detect_encoding($string, "UTF-8, ISO-8859-1, ISO-8859-15", true);
+	$string =  mb_convert_encoding($string, "Windows-1252", $charset);
+	return $string;
+}
+function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 {
 	require_once "DB.php";
 	require "conf.php";
@@ -955,6 +961,116 @@ function getSellingInfo($datum_von, $datum_bis)
 			$returnvalue[$lfdNr][6] = $zeile[5];
 			$returnvalue[$lfdNr][7] = $zeile[6];
 		}
+	}
+
+	if ($csvausgabe == false)
+	{
+		return $returnvalue;
+	}
+	
+	$csv_daten = array();
+	$anzahl_zeilen = 0;
+		
+	$fp = fopen("table.csv", "rb");
+	if(!$fp)
+	{
+		echo "Datei table.csv konnte nicht geoeffnet werden!\n";
+	}
+	else
+	{
+		while (($einzelzeile = fgetcsv($fp, 0, ";")) != FALSE)
+		{
+			$csv_daten[$anzahl_zeilen] = $einzelzeile;
+			$anzahl_zeilen++;
+		}
+	}
+	fclose($fp);
+
+	$nichtgefunden = 0;
+	foreach ($returnvalue as $lfdNr => $zeile)
+	{
+		$found = false;
+		$returnfound = false;
+		foreach ($csv_daten as $lfdNrCsv => $csvzeile)
+		{
+			if($found == false &&
+				($zeile[1] == $csv_daten[$lfdNrCsv][0] ||
+				(str_replace("EU mit", "EU ohne", $zeile[3].'.'.$zeile[5])) == $csv_daten[$lfdNrCsv][0]))
+			{
+				switch ($zeile[0]) {
+				    case 'mobile':
+				        $csv_daten[$lfdNrCsv][1] += $zeile[6];
+				        break;
+				    case 'cable':
+				        $csv_daten[$lfdNrCsv][2] += $zeile[6];
+				        break;
+				    case 'micro':
+				        $csv_daten[$lfdNrCsv][3] += $zeile[6];
+				        break;
+					case 'sonstiges':
+			        	$csv_daten[$lfdNrCsv][4] += $zeile[6];
+				        break;
+
+				}
+				$found = true;
+			}
+			if($returnfound == false &&
+				(('Returns.'.$zeile[1]) == $csv_daten[$lfdNrCsv][0] ||
+				(str_replace("EU mit", "EU ohne", 'Returns.'.$zeile[3].".".$zeile[5])) == $csv_daten[$lfdNrCsv][0]))
+			{
+				switch ($zeile[0]) {
+				    case 'mobile':
+				        $csv_daten[$lfdNrCsv][1] += $zeile[7];
+				        break;
+				    case 'cable':
+				        $csv_daten[$lfdNrCsv][2] += $zeile[7];
+				        break;
+				    case 'micro':
+				        $csv_daten[$lfdNrCsv][3] += $zeile[7];
+				        break;
+					case 'sonstiges':
+			        	$csv_daten[$lfdNrCsv][4] += $zeile[7];
+				        break;
+
+				}
+				$returnfound = true;
+			}
+		}
+		if ($found == false)
+		{
+			var_dump($zeile);
+			echo "\n";
+			$nichtgefunden++;
+		}
+		if ($returnfound == false)
+		{
+			var_dump($zeile);
+			echo "\n";
+			$nichtgefunden++;
+		}
+	}
+	if ($nichtgefunden > 0)
+	{
+		echo "Nicht zugeordnet: ".$nichtgefunden."\n";
+	}
+	
+	$fileName = 'sellingdata.csv';
+
+	header('Content-Description: File Transfer');
+	header('Content-Encoding: Windows-1252');
+	header('Content-type: text/csv; charset=Windows-1252');
+	header('Content-Disposition: attachment; filename=' . $fileName);
+	header('Content-Transfer-Encoding: binary');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	
+	foreach ($csv_daten as $zeile)
+	{
+		foreach ($zeile as $spalte)
+		{
+			echo convertToWindowsCharset($spalte.";");
+		}
+		echo "\n";
 	}
 	
 	return $returnvalue;
