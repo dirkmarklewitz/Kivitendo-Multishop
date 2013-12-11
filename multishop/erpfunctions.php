@@ -933,7 +933,7 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 								." parts ON parts.id = invoice.parts_id"
 							." INNER JOIN"
 								." partsgroup ON partsgroup.id = parts.partsgroup_id"
-							." INNER JOIN"
+							." LEFT OUTER JOIN"
 								." department ON ar.department_id = department.id"
 							." INNER JOIN"
 								." tax_zones ON ar.taxzone_id = tax_zones.id"								
@@ -1038,20 +1038,18 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 		}
 		if ($found == false)
 		{
-			var_dump($zeile);
-			echo "\n";
+			echo $zeile[0].";".$zeile[1].";".$zeile[2].";".$zeile[3].";".$zeile[4].";".$zeile[5].";".$zeile[6].";".$zeile[7]."\n";
 			$nichtgefunden++;
 		}
 		if ($returnfound == false)
 		{
-			var_dump($zeile);
-			echo "\n";
+			echo $zeile[0].";".$zeile[1].";".$zeile[2].";".$zeile[3].";".$zeile[4].";".$zeile[5].";".$zeile[6].";".$zeile[7]."\n";
 			$nichtgefunden++;
 		}
 	}
 	if ($nichtgefunden > 0)
 	{
-		echo "Nicht zugeordnet: ".$nichtgefunden."\n";
+		echo "Nicht zugeordnet;".$nichtgefunden."\n\n";
 	}
 	
 	$fileName = 'sellingdata.csv';

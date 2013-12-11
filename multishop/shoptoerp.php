@@ -127,7 +127,7 @@ else
 	echo "	</script>";
 	echo "</head>";
 	echo "<body>";	
-	echo "<form name=\"bestellauswahl\" action=\"shoptoerp.php\" method=\"post\">";
+	echo "<form name=\"gesamtformular\" action=\"shoptoerp.php\" method=\"post\">";
 	echo	"<table style=\"background-color:#cccccc\">"
 				."<tr><p>"
 					."<td>Listenansicht</td>"
@@ -171,11 +171,8 @@ else
 				."</tr>"
 			."</table>";
 	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\">";
-	
-	echo	"<form name=\"sellings\" action=\"shoptoerp.php\" method=\"post\">";
-	echo 		"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\">";
-	echo 		"&nbsp;&nbsp;<input type=\"submit\" name=\"sellingscsv\" value=\"Verkaufstabelle als .csv\">";
-	echo	"</form>";
+	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\">";
+	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellingscsv\" value=\"Verkaufstabelle als .csv\"><br>";
 	
 	if (isset($_POST["bestellungen"]) && isset($_POST["bestellungvom"]))
 	{
@@ -294,7 +291,6 @@ else
 		 	}
 		 	else
 		 	{
-			 	echo 	"<form name=\"importauswahl\" action=\"shoptoerp.php\" method=\"post\">";
 			 	echo	"<table border=\"1\">"
 					 		."<tr>"
 					 			."<th>Nr.</th>"
@@ -570,7 +566,6 @@ else
 			{
 				echo "</table><br>";
 				echo "<input type=\"submit\" name=\"import\" value=\"Ausgewaehltes importieren\">";
-				echo "</form>";
 			}
 		}
 	}
@@ -674,7 +669,7 @@ else
 	}
 	else if (isset($_POST["sellings"]))
 	{
-		echo "<br><table border=\"1\">"
+		echo "<br><br><table border=\"1\">"
 				."<tr>"
 					."<th>Produktgruppe</th>"
 					."<th>Saleschannel</th>"
