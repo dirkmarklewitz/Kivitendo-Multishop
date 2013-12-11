@@ -147,8 +147,20 @@ class RakutenApiClass
 					$returnvalue[$bestellungszaehler]['BuyerName'] = "Rakuten-Kd-Nr-".$rechnungsdaten->item(0)->getElementsByTagName('client_id')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['Title'] = $rechnungsdaten->item(0)->getElementsByTagName('gender')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['Name'] = $rechnungsdaten->item(0)->getElementsByTagName('first_name')->item(0)->nodeValue." ".$rechnungsdaten->item(0)->getElementsByTagName('last_name')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['AddressLine1'] = $rechnungsdaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$rechnungsdaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['AddressLine2'] = $rechnungsdaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
+					if (empty($rechnungsdaten->item(0)->getElementsByTagName('company')->item(0)->nodeValue))
+					{
+						$returnvalue[$bestellungszaehler]['AddressLine1'] = $rechnungsdaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$rechnungsdaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['AddressLine2'] = $rechnungsdaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
+					}
+					else
+					{
+						$returnvalue[$bestellungszaehler]['AddressLine1'] = $rechnungsdaten->item(0)->getElementsByTagName('company')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['AddressLine2'] = $rechnungsdaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$rechnungsdaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
+						if (!empty($rechnungsdaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue))
+						{
+							$returnvalue[$bestellungszaehler]['AddressLine2'] .= " / ".$rechnungsdaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
+						}
+					}
 					$returnvalue[$bestellungszaehler]['PostalCode'] = $rechnungsdaten->item(0)->getElementsByTagName('zip_code')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['City'] = $rechnungsdaten->item(0)->getElementsByTagName('city')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['CountryCode'] = $rechnungsdaten->item(0)->getElementsByTagName('country')->item(0)->nodeValue;
@@ -160,11 +172,23 @@ class RakutenApiClass
 					$versanddaten = $item->getElementsByTagName('delivery_address');
 					$returnvalue[$bestellungszaehler]['recipient-title'] = $versanddaten->item(0)->getElementsByTagName('gender')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['recipient-name'] =  $versanddaten->item(0)->getElementsByTagName('first_name')->item(0)->nodeValue." ".$versanddaten->item(0)->getElementsByTagName('last_name')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['ship-address-1'] = $versanddaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$versanddaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['ship-address-2'] = $versanddaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['ship-postal-code'] = $rechnungsdaten->item(0)->getElementsByTagName('zip_code')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['ship-city'] = $rechnungsdaten->item(0)->getElementsByTagName('city')->item(0)->nodeValue;
-					$returnvalue[$bestellungszaehler]['ship-country'] = $rechnungsdaten->item(0)->getElementsByTagName('country')->item(0)->nodeValue;
+					if (empty($versanddaten->item(0)->getElementsByTagName('company')->item(0)->nodeValue))
+					{
+						$returnvalue[$bestellungszaehler]['ship-address-1'] = $versanddaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$versanddaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-address-2'] = $versanddaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
+					}
+					else
+					{
+						$returnvalue[$bestellungszaehler]['ship-address-1'] = $versanddaten->item(0)->getElementsByTagName('company')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-address-2'] = $versanddaten->item(0)->getElementsByTagName('street')->item(0)->nodeValue." ".$versanddaten->item(0)->getElementsByTagName('street_no')->item(0)->nodeValue;
+						if (!empty($versanddaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue))
+						{
+							$returnvalue[$bestellungszaehler]['ship-address-2'] .= " / ".$versanddaten->item(0)->getElementsByTagName('address_add')->item(0)->nodeValue;
+						}
+					}
+					$returnvalue[$bestellungszaehler]['ship-postal-code'] = $versanddaten->item(0)->getElementsByTagName('zip_code')->item(0)->nodeValue;
+					$returnvalue[$bestellungszaehler]['ship-city'] = $versanddaten->item(0)->getElementsByTagName('city')->item(0)->nodeValue;
+					$returnvalue[$bestellungszaehler]['ship-country'] = $versanddaten->item(0)->getElementsByTagName('country')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['ship-state'] = utf8_encode("");
 			
 				    $itemcounter = 0;
@@ -204,8 +228,19 @@ class RakutenApiClass
 				}
             }
         }
-		// echo $responseDoc->saveXML();
-        // var_dump($responses);
+        
+        //	*** Testausgaben ***
+		// 	echo $responseDoc->saveXML()."<br>";
+		// 		
+		// 	echo $returnvalue[0]['recipient-title']."<br>";
+		// 	echo $returnvalue[0]['recipient-name']."<br>";
+		// 	echo $returnvalue[0]['ship-address-1']."<br>";
+		// 	echo $returnvalue[0]['ship-address-2']."<br>";
+		// 	echo $returnvalue[0]['ship-postal-code']."<br>";
+		// 	echo $returnvalue[0]['ship-city']."<br>";
+		// 	echo $returnvalue[0]['ship-country']."<br>";
+		// 	echo $returnvalue[0]['ship-state']."<br>";
+		
 		return $returnvalue;
     }
 }
