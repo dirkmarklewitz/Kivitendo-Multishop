@@ -187,7 +187,10 @@ class DhListOrders extends DhAmazonAccess
 				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
 				if (!empty($nextToken))
 				{
-					echo "Mehr als 100 Eintraege, es wird nicht alles angezeigt, Datum bitte einschraenken";
+					$amazonApiCall = new DhListOrdersByNextToken();
+					$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
+					$amazonApiCall->callAmazon($amazonApiCall->prepareListOrdersByNextTokenRequest($nextToken));
+					$nextTokenOutput = $amazonApiCall->handleListOrdersByNextTokenResponse();
 				}
 				
 				$items=$response->getElementsByTagName("Order");
@@ -200,6 +203,12 @@ class DhListOrders extends DhAmazonAccess
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
+				}
+				
+				foreach($nextTokenOutput as $item)
+				{
+					$i++;
+					$output[$i] = $item;
 				}
 			}
 		}
@@ -285,5 +294,102 @@ class DhListOrders extends DhAmazonAccess
 		return $output;
 	}
 }
+
+class DhListOrdersByNextToken extends DhAmazonAccess
+{
+	public function prepareListOrdersByNextTokenRequest($nextToken)
+	{
+		require "conf.php";
+		
+		// Request zusammenstellen:
+		$request = "AWSAccessKeyId=".$AccessKeyID
+				   ."&Action=ListOrdersByNextToken";
+				   
+		$request .= "&NextToken=".$nextToken;
+		
+		$request .= "&SellerId=".$MerchantID
+					."&SignatureMethod=".$SigMethod
+					."&SignatureVersion=".$SigVersion
+					."&Timestamp=".$this->_timestamp
+					."&Version=2011-01-01";
+				
+		// Request sauber zusammenstellen:
+		$requestArr = explode("&",$request);
+		foreach ($requestArr as $requestSet)
+		{
+			list($param, $value) = explode("=",$requestSet);
+			$param = str_replace("%7E","~",rawurlencode($param));
+			$value = str_replace("%7E","~",rawurlencode($value));
+			$requestCanonicalized[] = $param."=".$value;
+		}
+		$request=implode("&",$requestCanonicalized);
+		
+		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
+		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+		$signature = base64_encode(hash_hmac("sha256",$stringToSign,$SecretKey,True));
+		$signature = str_replace("%7E","~",rawurlencode($signature));
+		$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
+		
+		return $request;
+	}
+ 
+	public function handleListOrdersByNextTokenResponse()
+	{
+		require "constants.php";
+		
+		$responseDomDoc = new DomDocument();	// Response in neuem DomDocument-Objekt verarbeiten
+		$responseDomDoc->loadXML($this->_responseXml);
+		$error = $responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
+ 
+		if ($error->length>0)	// wenn Fehler, Errorcode auslesen und darstellen:
+		{
+			$errorType = $error->item(0)->getElementsByTagName('Type')->item(0)->nodeValue;
+			$errorCode = $error->item(0)->getElementsByTagName('Code')->item(0)->nodeValue;
+ 			$errorMsg = $error->item(0)->getElementsByTagName('Message')->item(0)->nodeValue;
+ 			
+			// $output['error'][] = $errorType." ".$errorCode.": ".$errorMsg;
+			echo "Es konnte nicht alles abgerufen werden. ListOrdersByNextTokenResponse() liefert folgenden Fehler:<br>";
+			echo $errorType." ".$errorCode.": ".$errorMsg."<br>";
+		}
+		else // sonst: angeforderte Parameter aus Response in Array auslesen:
+  		{
+			$responses=$responseDomDoc->getElementsByTagName("ListOrdersByNextTokenResult");
+
+			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
+			{
+				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				if (!empty($nextToken))
+				{
+					$amazonApiCall = new DhListOrdersByNextToken();
+					$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
+					$amazonApiCall->callAmazon($amazonApiCall->prepareListOrdersByNextTokenRequest($nextToken));
+					$nextTokenOutput = $amazonApiCall->handleListOrdersByNextTokenResponse();
+				}
+				
+				$items=$response->getElementsByTagName("Order");
+				
+				foreach($items as $i => $item)
+				{
+					foreach($paramsOrders as $param)
+					{
+						$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
+					}
+					$output[$i]['MarketplaceId'] = "Amazon";
+					$output[$i]['PaymentMethod'] = "Amazon";
+				}
+				
+				foreach($nextTokenOutput as $item)
+				{
+					$i++;
+					$output[$i] = $item;
+				}
+			}
+		}
+		
+		return $output;
+	}
+}
+
+
 // ###################################################################################
 ?>
