@@ -944,7 +944,7 @@ sub quotation {
     map({ $form->{"${_}_${i}"} = $form->parse_amount(\%myconfig,
                                                      $form->{"${_}_${i}"})
             if ($form->{"${_}_${i}"}) }
-        qw(ship qty sellprice listprice basefactor discount));
+        qw(ship qty sellprice listprice basefactor discount lastcost));
   }
 
   &prepare_order;
@@ -1367,6 +1367,7 @@ sub print_form {
 
   my $language_saved = $form->{language_id};
   my $payment_id_saved = $form->{payment_id};
+  my $delivery_term_id_saved = $form->{delivery_term_id};
   my $salesman_id_saved = $form->{salesman_id};
   my $cp_id_saved = $form->{cp_id};
   my $taxzone_id_saved = $form->{taxzone_id};
@@ -1376,6 +1377,7 @@ sub print_form {
 
   $form->{language_id} = $language_saved;
   $form->{payment_id} = $payment_id_saved;
+  $form->{delivery_term_id} = $delivery_term_id_saved;
   $form->{taxzone_id} = $taxzone_id_saved;
   $form->{currency} = $currency_saved;
 
@@ -1920,6 +1922,13 @@ sub _remove_billed_or_delivered_rows {
   my @fields = map { s/_1$//; $_ } grep { m/_1$/ } keys %{ $::form };
   my @new_rows;
 
+  my $make_key = sub {
+    my ($row) = @_;
+    return $::form->{"id_${row}"} unless $::form->{"serialnumber_${row}"};
+    my $key = $::form->{"id_${row}"} . ':' . $::form->{"serialnumber_${row}"};
+    return exists $params{quantities}->{$key} ? $key : $::form->{"id_${row}"};
+  };
+
   my $removed_rows = 0;
   my $row          = 0;
   while ($row < $::form->{rowcount}) {
@@ -1929,8 +1938,9 @@ sub _remove_billed_or_delivered_rows {
     my $parts_id                      = $::form->{"id_$row"};
     my $base_qty                      = $::form->parse_amount(\%::myconfig, $::form->{"qty_$row"}) * SL::DB::Manager::Unit->find_by(name => $::form->{"unit_$row"})->base_factor;
 
-    my $sub_qty                       = min($base_qty, $params{quantities}->{$parts_id});
-    $params{quantities}->{$parts_id} -= $sub_qty;
+    my $key                           = $make_key->($row);
+    my $sub_qty                       = min($base_qty, $params{quantities}->{$key});
+    $params{quantities}->{$key}      -= $sub_qty;
 
     if (!$sub_qty || ($sub_qty != $base_qty)) {
       $::form->{"qty_${row}"} = $::form->format_amount(\%::myconfig, ($base_qty - $sub_qty) / SL::DB::Manager::Unit->find_by(name => $::form->{"unit_$row"})->base_factor);
