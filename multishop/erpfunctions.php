@@ -942,7 +942,7 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 							." GROUP BY"
 								." saleschannel, artikelgruppe, abteilung, zielland, region"
 							." HAVING"
-								." sum(invoice.qty) <> 0"
+								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) <> 0 OR sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) <> 0" 
 							." ORDER BY"
 								." artikelgruppe, saleschannel");
 		
@@ -950,6 +950,8 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 		
 		foreach ($rs as $lfdNr => $zeile)
 		{
+			// var_dump($zeile); echo "<br>";
+			
 			$newarray = explode(',', $zeile[1]);
 			
 			$returnvalue[$lfdNr][0] = $zeile[0];
@@ -960,6 +962,7 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 			$returnvalue[$lfdNr][5] = $zeile[4];
 			$returnvalue[$lfdNr][6] = $zeile[5];
 			$returnvalue[$lfdNr][7] = $zeile[6];
+
 		}
 	}
 
