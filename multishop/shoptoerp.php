@@ -371,6 +371,7 @@ else
 												($opSet1['OrderStatus'] == "Pending payment" && $opSet1['FulfillmentChannel'] == "MFN") ||
 												($opSet1['OrderStatus'] == "Paid" && $opSet1['FulfillmentChannel'] == "MFN") ||
 												($opSet1['OrderStatus'] == "Completed" && $opSet1['MarketplaceId'] == $eBayAbteilungsname) ||
+												($opSet1['OrderStatus'] == "Active" && $opSet1['MarketplaceId'] == $eBayAbteilungsname) ||
 												($opSet1['OrderStatus'] == "editable" && $opSet1['MarketplaceId'] == $RakutenAbteilungsname) ||
 												($opSet1['OrderStatus'] == "payout" && $opSet1['MarketplaceId'] == $RakutenAbteilungsname))
 											{
