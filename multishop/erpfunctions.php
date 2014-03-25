@@ -177,7 +177,7 @@ function insert_Versandadresse($bestellung, $kundenid)
 	{
 		$set .= ",'".$bestellung["recipient-name"]."','','".$bestellung["ship-address-1"]."',";
 	}
-	$set .= "'".$bestellung["ship-postal-code"]."',";
+	$set .= "'".substr($bestellung["ship-postal-code"], 0, 10)."',";
 	$set .= "'".$bestellung["ship-city"]."',";
 	
 	if (array_key_exists($bestellung["ship-country"], $GLOBALS["LAND"]))
@@ -336,7 +336,7 @@ function checke_alte_Kundendaten($bestellung)
 	}
 	if ($rs[0]["zipcode"] <> $bestellung["PostalCode"])
 	{
-		$set.="zipcode='".$bestellung["PostalCode"]."',";
+		$set.="zipcode='".substr($bestellung["PostalCode"], 0, 10)."',";
 	}
 	if ($rs[0]["city"] <> $bestellung["City"])
 	{
@@ -447,7 +447,7 @@ function insert_neuen_Kunden($bestellung)
 		$street = pg_escape_string($bestellung["AddressLine1"]);
 		$set .= "street='".$street."',";
 	}
-	$set .= "zipcode='".$bestellung["PostalCode"]."',";
+	$set .= "zipcode='".substr($bestellung["PostalCode"], 0, 10)."',";
 	$city = pg_escape_string($bestellung["City"]);
 	$set .= "city='".$city."',";
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["LAND"]))
