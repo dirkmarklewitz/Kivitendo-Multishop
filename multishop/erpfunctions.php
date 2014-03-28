@@ -171,14 +171,14 @@ function insert_Versandadresse($bestellung, $kundenid)
 	$set = $kundenid;
 	if ($bestellung["ship-address-2"] != "")
 	{
-		$set .= ",'".$bestellung["recipient-name"]."','".$bestellung["ship-address-1"]."','".$bestellung["ship-address-2"]."',";
+		$set .= ",'".pg_escape_string($bestellung["recipient-name"])."','".pg_escape_string($bestellung["ship-address-1"])."','".pg_escape_string($bestellung["ship-address-2"])."',";
 	}
 	else
 	{
-		$set .= ",'".$bestellung["recipient-name"]."','','".$bestellung["ship-address-1"]."',";
+		$set .= ",'".pg_escape_string($bestellung["recipient-name"])."','','".pg_escape_string($bestellung["ship-address-1"])."',";
 	}
-	$set .= "'".substr($bestellung["ship-postal-code"], 0, 10)."',";
-	$set .= "'".$bestellung["ship-city"]."',";
+	$set .= "'".pg_escape_string(substr($bestellung["ship-postal-code"], 0, 10))."',";
+	$set .= "'".pg_escape_string($bestellung["ship-city"])."',";
 	
 	if (array_key_exists($bestellung["ship-country"], $GLOBALS["LAND"]))
 	{
@@ -186,7 +186,7 @@ function insert_Versandadresse($bestellung, $kundenid)
 	}
 	else
 	{
-		$set .= "'".$bestellung["ship-country"]."'";
+		$set .= "'".pg_escape_string($bestellung["ship-country"])."'";
 	}
 	
 	$sql = "insert into shipto (trans_id, shiptoname, shiptodepartment_1, shiptostreet, shiptozipcode, shiptocity, shiptocountry, module) values ($set,'CT')";
@@ -292,9 +292,9 @@ function check_update_Kundendaten($bestellung)
 function checke_alte_Kundendaten($bestellung)
 {
 	$sql = "select * from customer where ";
-	if ($bestellung["BuyerEmail"] != "") { $sql .= "email = '".$bestellung["BuyerEmail"]."'"; }
+	if ($bestellung["BuyerEmail"] != "") { $sql .= "email = '".pg_escape_string($bestellung["BuyerEmail"])."'"; }
 	if ($bestellung["BuyerEmail"] != "" && $bestellung["BuyerName"] != "") { $sql .= " OR "; }
-	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".$bestellung["BuyerName"]."'"; }
+	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".pg_escape_string($bestellung["BuyerName"])."'"; }
 	
 	$rs = getAll("erp", $sql, "checke_alte_Kundendaten");
 	
@@ -311,7 +311,7 @@ function checke_alte_Kundendaten($bestellung)
 	}
 	if ($rs[0]["greeting"] <> $bestellung["Title"])
 	{
-		$set.="greeting='".$bestellung["Title"]."',";
+		$set.="greeting='".pg_escape_string($bestellung["Title"])."',";
 	}
 	if ($bestellung["AddressLine2"] != "")
 	{
@@ -336,7 +336,7 @@ function checke_alte_Kundendaten($bestellung)
 	}
 	if ($rs[0]["zipcode"] <> $bestellung["PostalCode"])
 	{
-		$set.="zipcode='".substr($bestellung["PostalCode"], 0, 10)."',";
+		$set.="zipcode='".pg_escape_string(substr($bestellung["PostalCode"], 0, 10))."',";
 	}
 	if ($rs[0]["city"] <> $bestellung["City"])
 	{
@@ -347,27 +347,27 @@ function checke_alte_Kundendaten($bestellung)
 	{
 		if ($rs[0]["country"] <> $GLOBALS["LAND"][$bestellung["CountryCode"]])
 		{
-			$set.="country='".utf8_encode($GLOBALS["LAND"][$bestellung["CountryCode"]])."',";
+			$set.="country='".pg_escape_string(utf8_encode($GLOBALS["LAND"][$bestellung["CountryCode"]]))."',";
 		}
 	}
 	else
 	{
 		if ($rs[0]["country"] <> $bestellung["CountryCode"])
 		{
-			$set.="country='".$bestellung["CountryCode"]."',";
+			$set.="country='".pg_escape_string($bestellung["CountryCode"])."',";
 		}
 	}
 	if ($rs[0]["phone"] <> $bestellung["Phone"])
 	{
-		$set.="phone='".$bestellung["Phone"]."',";
+		$set.="phone='".pg_escape_string($bestellung["Phone"])."',";
 	}
 	if ($rs[0]["email"] <> $bestellung["BuyerEmail"])
 	{
-		$set.="email='".$bestellung["BuyerEmail"]."',";
+		$set.="email='".pg_escape_string($bestellung["BuyerEmail"])."',";
 	}
 	if ($rs[0]["username"] <> $bestellung["BuyerName"])
 	{
-		$set.="username='".$bestellung["BuyerName"]."',";
+		$set.="username='".pg_escape_string($bestellung["BuyerName"])."',";
 	}
 	
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
@@ -433,7 +433,7 @@ function insert_neuen_Kunden($bestellung)
 	$set .= "set name='".$name."',";
 	if ($bestellung["Title"] != "")
 	{
-		$set .= "greeting='".$bestellung["Title"]."',";
+		$set .= "greeting='".pg_escape_string($bestellung["Title"])."',";
 	}
 	if ($bestellung["AddressLine2"] != "")
 	{
@@ -452,15 +452,15 @@ function insert_neuen_Kunden($bestellung)
 	$set .= "city='".$city."',";
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["LAND"]))
 	{
-		$set .= "country='".utf8_encode($GLOBALS["LAND"][$bestellung["CountryCode"]])."',";
+		$set .= "country='".pg_escape_string(utf8_encode($GLOBALS["LAND"][$bestellung["CountryCode"]]))."',";
 	}
 	else
 	{
-		$set .= "country='".$bestellung["CountryCode"]."',";
+		$set .= "country='".pg_escape_string($bestellung["CountryCode"])."',";
 	}
-	$set .= "phone='".$bestellung["Phone"]."',";
-	$set .= "email='".$bestellung["BuyerEmail"]."',";
-	$set .= "username='".$bestellung["BuyerName"]."',";
+	$set .= "phone='".pg_escape_string($bestellung["Phone"])."',";
+	$set .= "email='".pg_escape_string($bestellung["BuyerEmail"])."',";
+	$set .= "username='".pg_escape_string($bestellung["BuyerName"])."',";
 
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
@@ -515,8 +515,8 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 			$sql .= $zugehoerigeAuftragsID.","
 					.$ordnumber.",'"
 					.$artID."','"
-					.$text."','"
-					.$longdescription."',"
+					.pg_escape_string($text)."','"
+					.pg_escape_string($longdescription)."',"
 					.$einzelartikel["QuantityOrdered"].",'"
 					.$AmazonOrderId."',"
 					.$einzelpreis.","
@@ -545,7 +545,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 				$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
 				$sql .= $zugehoerigeAuftragsID.",'"
 						.$artID."','"
-						.$text."',"
+						.pg_escape_string($text)."',"
 						.$einzelartikel["QuantityOrdered"].",'"
 						.$AmazonOrderId."',"
 						.$einzelpreis.",'Stck',0,0)";
@@ -872,7 +872,7 @@ function checkCustomer($BuyerEmail, $BuyerName)
 		if ($BuyerName != "")
 		{
 			// BuyerName checken
-			$rs = $dbP->getall("select customernumber from customer where username = '".$BuyerName."'");
+			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string($BuyerName)."'");
 			if (count($rs) == 1)
 			{
 				$status = "vorhanden";
