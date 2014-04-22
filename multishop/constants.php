@@ -37,6 +37,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"NO" => "Norwegen",
 				"NZ" => "Neuseeland",
 				"RU" => "Russische Föderation",
+				"SG" => "Singapur",
 				"TR" => "Türkei",
 				"US" => "USA",
 				"XK" => "Kosovo, Republik");
