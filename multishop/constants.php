@@ -31,6 +31,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"UK" => "United Kingdom",
 				"GB" => "United Kingdom",
 
+				"AU" => "Australien",
 				"CH" => "Schweiz",
 				"IN" => "Indien",
 				"MC" => "Monaco",
