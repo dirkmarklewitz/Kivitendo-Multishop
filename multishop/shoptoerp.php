@@ -195,7 +195,7 @@ else
 		if (isset($_POST["bestellungbis"]))
 		{
 			$output = array();
-			if ($Amazonaktiviert == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
+			if (($Amazonaktiviert == "checked" || $Amazonaktiviert_COM == "checked") && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
 			{
  				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], isset($_POST["erledigtesanzeigen"]), $_POST["bestellungvom"], $_POST["bestellungbis"], $domain);
  				if(count($amazonresult) > 0)
@@ -241,9 +241,9 @@ else
 		else
 		{
 			$output = array();
-			if ($Amazonaktiviert == "checked")
+			if ($Amazonaktiviert == "checked" || $Amazonaktiviert_COM == "checked")
 			{
-				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], isset($_POST["erledigtesanzeigen"]), $_POST["bestellungvom"], "", "EU");
+				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], isset($_POST["erledigtesanzeigen"]), $_POST["bestellungvom"], "", $domain);
 				if(count($amazonresult) > 0)
 				{
 					$output = array_merge($output, $amazonresult);
