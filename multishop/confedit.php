@@ -80,6 +80,13 @@ else
 			$MarketplaceID_ES=$_POST["MarketplaceID_ES"];
 			$ersatzSKU=$_POST["ersatzSKU"];
 			
+			$Amazonaktiviert_COM=$_POST["Amazonaktiviert_COM"];
+			$MerchantID_COM=$_POST["MerchantID_COM"];
+			$AccessKeyID_COM=$_POST["AccessKeyID_COM"];
+			$SecretKey_COM=$_POST["SecretKey_COM"];
+			$EndpointUrl_COM=$_POST["EndpointUrl_COM"];
+			$MarketplaceID_US=$_POST["MarketplaceID_US"];
+			
 			$eBayaktiviert=$_POST["eBayaktiviert"];
 			$eBayAbteilungsname=$_POST["eBayAbteilungsname"];
 			$eBayBestellnummernprefix=$_POST["eBayBestellnummernprefix"];
@@ -135,6 +142,13 @@ else
 			fputs($f,"\$MarketplaceID_IT=\"".$_POST["MarketplaceID_IT"]."\";\n");
 			fputs($f,"\$MarketplaceID_ES=\"".$_POST["MarketplaceID_ES"]."\";\n");
 			fputs($f,"\$ersatzSKU=\"".$_POST["ersatzSKU"]."\";\n");
+			
+			fputs($f,"\$Amazonaktiviert_COM=\"".$_POST["Amazonaktiviert_COM"]."\";\n");
+			fputs($f,"\$MerchantID_COM=\"".$_POST["MerchantID_COM"]."\";\n");
+			fputs($f,"\$AccessKeyID_COM=\"".$_POST["AccessKeyID_COM"]."\";\n");
+			fputs($f,"\$SecretKey_COM=\"".$_POST["SecretKey_COM"]."\";\n");
+			fputs($f,"\$EndpointUrl_COM=\"".$_POST["EndpointUrl_COM"]."\";\n");			
+			fputs($f,"\$MarketplaceID_US=\"".$_POST["MarketplaceID_US"]."\";\n");
 
 			fputs($f,"\$eBayaktiviert=\"".$_POST["eBayaktiviert"]."\";\n");
 			fputs($f,"\$eBayAbteilungsname=\"".$_POST["eBayAbteilungsname"]."\";\n");
@@ -196,6 +210,13 @@ else
 			$MarketplaceID_IT=$_POST["MarketplaceID_IT"];
 			$MarketplaceID_ES=$_POST["MarketplaceID_ES"];
 			$ersatzSKU=$_POST["ersatzSKU"];
+			
+			$Amazonaktiviert_COM=$_POST["Amazonaktiviert_COM"];
+			$MerchantID_COM=$_POST["MerchantID_COM"];
+			$AccessKeyID_COM=$_POST["AccessKeyID_COM"];
+			$SecretKey_COM=$_POST["SecretKey_COM"];
+			$EndpointUrl_COM=$_POST["EndpointUrl_COM"];
+			$MarketplaceID_US=$_POST["MarketplaceID_US"];
 
 			$eBayaktiviert=$_POST["eBayaktiviert"];
 			$eBayAbteilungsname=$_POST["eBayAbteilungsname"];
@@ -361,6 +382,48 @@ else
 					<td>Liste mit zu ersetzenden SKU<br>Amazon -> Kivi<br>(eine pro Zeile, | ist Trenner)</td>
 					<td><textarea name="ersatzSKU" cols="32" rows="5"><?= $ersatzSKU ?></textarea>
 				</tr>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com aktiviert</td>
+					<td><input type="checkbox" name="Amazonaktiviert_COM" value="checked" <? if ($Amazonaktiviert_COM == "checked") { echo "checked=\"checked\""; } ?>></td>
+				</tr>				
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com MerchantID</td>
+					<td><input type="text" name="MerchantID_COM" size="25" value="<?= $MerchantID_COM ?>"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com AccessKeyID</td>
+					<td><input type="text" name="AccessKeyID_COM" size="25" value="<?= $AccessKeyID_COM ?>"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com SecretKey</td>
+					<td><input type="text" name="SecretKey_COM" size="25" value="<?= $SecretKey_COM ?>"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com EndpointUrl</td>
+					<td><input type="text" name="EndpointUrl_COM" size="25" value="<?= $EndpointUrl_COM ?>"></td>
+				</tr>				
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com MarketplaceID_US</td>
+					<td><input type="text" name="MarketplaceID_US" size="25" value="<?= $MarketplaceID_US ?>"></td>
+				</tr>				
 				<tr>
 					<td>------------------------------</td>
 					<td>------------------------------</td>

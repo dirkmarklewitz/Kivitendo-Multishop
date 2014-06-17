@@ -1,9 +1,10 @@
 <?php
 
-function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $erledigtesanzeigen,  $bestellungvom, $bestellungbis)
+function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $erledigtesanzeigen, $bestellungvom, $bestellungbis, $domain)
 {
 	$amazonApiCall = new DhListOrders();
-	$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
+	$amazonApiCall->_domain = $domain;
+	$amazonApiCall->_timestamp = gmdate("Y-m-d\TH:i:s\Z");
 	// Bestellungen vom
 	$date_from = explode("-", $bestellungvom);
 	$amazonApiCall->_dateAfter = date("Y-m-d\TH:i:s\Z", mktime(0, 0, 0, $date_from[1], $date_from[0], $date_from[2]));
@@ -56,7 +57,6 @@ function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $erled
 			}
 		}
 	}
-	
 	return $output;
 }
 
@@ -86,8 +86,15 @@ class DhListOrders extends DhAmazonAccess
 		require "conf.php";
 		
 		// Request zusammenstellen:
-		$request = "AWSAccessKeyId=".$AccessKeyID
-				   ."&Action=ListOrders";
+		if ($this->_domain == "COM")
+ 		{
+			$request = "AWSAccessKeyId=".$AccessKeyID_COM;
+ 		}
+ 		else
+ 		{
+			$request = "AWSAccessKeyId=".$AccessKeyID;
+		}
+		$request .= "&Action=ListOrders";
 				   
 		if ($suchdatum == "bestelldatum")
 		{
@@ -110,11 +117,18 @@ class DhListOrders extends DhAmazonAccess
 			$request .= "&LastUpdatedBefore=".$this->_dateBefore;
 		}
 		
-		$request .= "&MarketplaceId.Id.1=".$MarketplaceID_DE
-					."&MarketplaceId.Id.2=".$MarketplaceID_GB
-					."&MarketplaceId.Id.3=".$MarketplaceID_FR
-					."&MarketplaceId.Id.4=".$MarketplaceID_IT
-					."&MarketplaceId.Id.5=".$MarketplaceID_ES;
+		if ($this->_domain == "COM")
+ 		{
+			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_US;
+ 		}
+ 		else
+ 		{
+			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_DE
+						."&MarketplaceId.Id.2=".$MarketplaceID_GB
+						."&MarketplaceId.Id.3=".$MarketplaceID_FR
+						."&MarketplaceId.Id.4=".$MarketplaceID_IT
+						."&MarketplaceId.Id.5=".$MarketplaceID_ES;
+		}
 
 		if ($versandstatus)
 		{
@@ -129,13 +143,21 @@ class DhListOrders extends DhAmazonAccess
 		{
 			$request .= "&OrderStatus.Status.1=Shipped";
  		}
-
-					
-		$request .= "&SellerId=".$MerchantID
-					."&SignatureMethod=".$SigMethod
+ 					
+ 		if ($this->_domain == "COM")
+ 		{
+			$request .= "&SellerId=".$MerchantID_COM;
+ 		}
+ 		else
+ 		{
+			$request .= "&SellerId=".$MerchantID;
+		}
+		
+		$request .= "&SignatureMethod=".$SigMethod
 					."&SignatureVersion=".$SigVersion
 					."&Timestamp=".$this->_timestamp
 					."&Version=2011-01-01";
+
 		
 		// Request sauber zusammenstellen:
 		$requestArr = explode("&",$request);
@@ -149,10 +171,21 @@ class DhListOrders extends DhAmazonAccess
 		$request=implode("&",$requestCanonicalized);
 		
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
-		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
-		$signature = base64_encode(hash_hmac("sha256",$stringToSign,$SecretKey,True));
-		$signature = str_replace("%7E","~",rawurlencode($signature));
-		$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
+		if ($this->_domain == "COM")
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;
+ 		}
+ 		else
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
+		}
+
 		
 		return $request;
 	}
@@ -188,6 +221,7 @@ class DhListOrders extends DhAmazonAccess
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhListOrdersByNextToken();
+					$amazonApiCall->_domain = $this->_domain;
 					$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
 					$amazonApiCall->callAmazon($amazonApiCall->prepareListOrdersByNextTokenRequest($nextToken));
 					$nextTokenOutput = $amazonApiCall->handleListOrdersByNextTokenResponse();
@@ -226,14 +260,28 @@ class DhListOrders extends DhAmazonAccess
 	{
 		require "conf.php";
 		// Request zusammenstellen:
-		$request = "AWSAccessKeyId=".$AccessKeyID
-				  	."&Action=ListOrderItems"
-				  	."&AmazonOrderId=".$amazonOrderId
-					."&SellerId=".$MerchantID
-					."&SignatureMethod=".$SigMethod
-					."&SignatureVersion=".$SigVersion
-					."&Timestamp=".$this->_timestamp
-					."&Version=2011-01-01";
+ 		if ($this->_domain == "COM")
+ 		{
+			$request = "AWSAccessKeyId=".$AccessKeyID_COM
+						."&Action=ListOrderItems"
+					  	."&AmazonOrderId=".$amazonOrderId
+						."&SellerId=".$MerchantID_COM
+						."&SignatureMethod=".$SigMethod
+						."&SignatureVersion=".$SigVersion
+						."&Timestamp=".$this->_timestamp
+						."&Version=2011-01-01";			
+ 		}
+ 		else
+ 		{
+	 		$request = "AWSAccessKeyId=".$AccessKeyID
+						."&Action=ListOrderItems"
+					  	."&AmazonOrderId=".$amazonOrderId
+						."&SellerId=".$MerchantID
+						."&SignatureMethod=".$SigMethod
+						."&SignatureVersion=".$SigVersion
+						."&Timestamp=".$this->_timestamp
+						."&Version=2011-01-01";			
+		}		
 
 		// Request sauber zusammenstellen:
 		$requestArr = explode("&",$request);
@@ -247,10 +295,20 @@ class DhListOrders extends DhAmazonAccess
 		$request=implode("&",$requestCanonicalized);
 		
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
-		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
-		$signature = base64_encode(hash_hmac('sha256', $stringToSign, $SecretKey, true));
-		$signature = str_replace("%7E","~",rawurlencode($signature));
-		$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
+		if ($this->_domain == "COM")
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;
+ 		}
+ 		else
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+		}
 
 		return $request;
 	}
@@ -302,13 +360,28 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 		require "conf.php";
 		
 		// Request zusammenstellen:
-		$request = "AWSAccessKeyId=".$AccessKeyID
-				   ."&Action=ListOrdersByNextToken";
+		if ($this->_domain == "COM")
+ 		{
+			$request = "AWSAccessKeyId=".$AccessKeyID_COM;
+ 		}
+ 		else
+ 		{
+			$request = "AWSAccessKeyId=".$AccessKeyID;
+		}
+		$request .= "&Action=ListOrdersByNextToken";
 				   
 		$request .= "&NextToken=".$nextToken;
+
+		if ($this->_domain == "COM")
+ 		{
+			$request .= "&SellerId=".$MerchantID_COM;
+ 		}
+ 		else
+ 		{
+			$request .= "&SellerId=".$MerchantID;
+		}
 		
-		$request .= "&SellerId=".$MerchantID
-					."&SignatureMethod=".$SigMethod
+		$request .= "&SignatureMethod=".$SigMethod
 					."&SignatureVersion=".$SigVersion
 					."&Timestamp=".$this->_timestamp
 					."&Version=2011-01-01";
@@ -325,11 +398,21 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 		$request=implode("&",$requestCanonicalized);
 		
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
-		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
-		$signature = base64_encode(hash_hmac("sha256",$stringToSign,$SecretKey,True));
-		$signature = str_replace("%7E","~",rawurlencode($signature));
-		$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
-		
+		if ($this->_domain == "COM")
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+ 		}
+ 		else
+ 		{
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
+			$signature = str_replace("%7E","~",rawurlencode($signature));
+			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+		}		
+
 		return $request;
 	}
  
@@ -361,6 +444,7 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhListOrdersByNextToken();
+					$amazonApiCall->_domain = $this->_domain;
 					$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
 					$amazonApiCall->callAmazon($amazonApiCall->prepareListOrdersByNextTokenRequest($nextToken));
 					$nextTokenOutput = $amazonApiCall->handleListOrdersByNextTokenResponse();
