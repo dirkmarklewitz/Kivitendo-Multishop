@@ -81,6 +81,11 @@ class DhAmazonAccess	// enthält Zugangsdaten und Call-Funktion:
 
 class DhListOrders extends DhAmazonAccess
 {
+	function cmp($a, $b)
+	{
+		return strcmp($a['LastUpdateDate'], $b['LastUpdateDate']);
+	}
+	
 	public function prepareOrderListRequest($fulfillmentchannel, $versandstatus, $suchdatum)
 	{
 		require "conf.php";
@@ -192,11 +197,6 @@ class DhListOrders extends DhAmazonAccess
  
 	public function handleOrderListResponse()
 	{
-		function cmp($a, $b)
-		{
-			return strcmp($a['LastUpdateDate'], $b['LastUpdateDate']);
-		}
-		
 		require "constants.php";
 		
 		$responseDomDoc = new DomDocument();	// Response in neuem DomDocument-Objekt verarbeiten
