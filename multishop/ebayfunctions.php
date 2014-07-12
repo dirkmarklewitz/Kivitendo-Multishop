@@ -211,7 +211,7 @@ class eBayApiClass
 						$orderItemsListOutput[$itemcounter]['OrderItemId'] = $item->getElementsByTagName('ItemID')->item(0)->nodeValue;
 						$orderItemsListOutput[$itemcounter]['SellerSKU'] = trim($item->getElementsByTagName('SKU')->item(0)->nodeValue);
 						// $orderItemsListOutput[$itemcounter]['ASIN'] = "";
-						$orderItemsListOutput[$itemcounter]['ItemPrice'] = $item->getElementsByTagName('TransactionPrice')->item(0)->nodeValue;
+						$orderItemsListOutput[$itemcounter]['ItemPrice'] = $item->getElementsByTagName('TransactionPrice')->item(0)->nodeValue * $item->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
 						// $orderItemsListOutput[$itemcounter]['ItemTax'] = "";
 						// $orderItemsListOutput[$itemcounter]['PromotionDiscount'] = ""; // Rabatte werden beim Artikel eingetragen
 						$orderItemsListOutput[$itemcounter]['ShippingPrice'] = $shippingServiceSubtree->item(0)->getElementsByTagName('ShippingServiceCost')->item(0)->nodeValue; // Versandkosten werden beim Artikel eingetragen
