@@ -71,6 +71,8 @@ class eBayApiClass
         $requestXmlBody = file_get_contents('ebayGetOrders.xml');
         $requestXmlBody = str_replace($search, $replace, $requestXmlBody);
  
+        // echo '<pre>', htmlentities($requestXmlBody), '</pre>';
+        
         return $requestXmlBody;
     }
     
@@ -179,7 +181,6 @@ class eBayApiClass
 							$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Sonstiges";
 						}
 						$returnvalue[$bestellungszaehler]['NumberOfItemsShipped'] = 0;
-						$returnvalue[$bestellungszaehler]['NumberOfItemsUnshipped'] = $item->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['BuyerName'] = $item->getElementsByTagName('BuyerUserID')->item(0)->nodeValue;
 						//$returnvalue[$bestellungszaehler]['Title'] = "";
 						$returnvalue[$bestellungszaehler]['Name'] = $item->getElementsByTagName('Name')->item(0)->nodeValue;
@@ -208,20 +209,29 @@ class eBayApiClass
 				
 					    $itemcounter = 0;
 					    $orderItemsListOutput = array();
-						$orderItemsListOutput[$itemcounter]['OrderItemId'] = $item->getElementsByTagName('ItemID')->item(0)->nodeValue;
-						$orderItemsListOutput[$itemcounter]['SellerSKU'] = trim($item->getElementsByTagName('SKU')->item(0)->nodeValue);
-						// $orderItemsListOutput[$itemcounter]['ASIN'] = "";
-						$orderItemsListOutput[$itemcounter]['ItemPrice'] = $item->getElementsByTagName('TransactionPrice')->item(0)->nodeValue * $item->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
-						// $orderItemsListOutput[$itemcounter]['ItemTax'] = "";
-						// $orderItemsListOutput[$itemcounter]['PromotionDiscount'] = ""; // Rabatte werden beim Artikel eingetragen
-						$orderItemsListOutput[$itemcounter]['ShippingPrice'] = $shippingServiceSubtree->item(0)->getElementsByTagName('ShippingServiceCost')->item(0)->nodeValue; // Versandkosten werden beim Artikel eingetragen
+
+						$orderItemsListOutput[$itemcounter]['ShippingPrice'] = $shippingServiceSubtree->item(0)->getElementsByTagName('ShippingServiceCost')->item(0)->nodeValue; // Versandkosten werden nur beim ersten Artikel eingetragen
 						$orderItemsListOutput[$itemcounter]['ShippingTax'] = "";
 						$orderItemsListOutput[$itemcounter]['ShippingDiscount'] = "";
 						// $orderItemsListOutput[$itemcounter]['GiftWrapPrice'] = "";
 						// $orderItemsListOutput[$itemcounter]['GiftWrapTax'] = "";
-						$orderItemsListOutput[$itemcounter]['QuantityOrdered'] = $item->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
-						$orderItemsListOutput[$itemcounter]['QuantityShipped'] = 0;
-						$orderItemsListOutput[$itemcounter]['Title'] = $item->getElementsByTagName('Title')->item(0)->nodeValue;
+
+					    $transactions = $item->getElementsByTagName("Transaction");
+
+					    foreach ($transactions as $transaction)
+					    {
+						    $returnvalue[$bestellungszaehler]['NumberOfItemsUnshipped'] += $transaction->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
+							$orderItemsListOutput[$itemcounter]['OrderItemId'] = $transaction->getElementsByTagName('ItemID')->item(0)->nodeValue;
+							$orderItemsListOutput[$itemcounter]['SellerSKU'] = trim($transaction->getElementsByTagName('SKU')->item(0)->nodeValue);
+							// $orderItemsListOutput[$itemcounter]['ASIN'] = "";
+							$orderItemsListOutput[$itemcounter]['ItemPrice'] = $transaction->getElementsByTagName('TransactionPrice')->item(0)->nodeValue * $transaction->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
+							// $orderItemsListOutput[$itemcounter]['ItemTax'] = "";
+							// $orderItemsListOutput[$itemcounter]['PromotionDiscount'] = ""; // Rabatte werden beim Artikel eingetragen
+							$orderItemsListOutput[$itemcounter]['QuantityOrdered'] = $transaction->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
+							$orderItemsListOutput[$itemcounter]['QuantityShipped'] = 0;
+							$orderItemsListOutput[$itemcounter]['Title'] = $transaction->getElementsByTagName('Title')->item(0)->nodeValue;
+							$itemcounter++;
+						}
 
 						$returnvalue[$bestellungszaehler]['orderItemsListOutput'] = $orderItemsListOutput;
 
