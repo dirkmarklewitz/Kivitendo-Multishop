@@ -1010,10 +1010,21 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				    case 'micro':
 				        $csv_daten[$lfdNrCsv][3] += $zeile[6];
 				        break;
-					case 'sonstiges':
-			        	$csv_daten[$lfdNrCsv][4] += $zeile[6];
+				    case 'mobile-hEar':
+				        $csv_daten[$lfdNrCsv][4] += $zeile[6];
 				        break;
-
+				    case 'cable-hEar':
+				        $csv_daten[$lfdNrCsv][5] += $zeile[6];
+				        break;
+				    case 'micro-hEar':
+				        $csv_daten[$lfdNrCsv][6] += $zeile[6];
+				        break;				        
+					case 'ff-cable':
+			        	$csv_daten[$lfdNrCsv][7] += $zeile[6];
+				        break;
+					case 'sonstiges':
+			        	$csv_daten[$lfdNrCsv][8] += $zeile[6];
+				        break;
 				}
 				$found = true;
 			}
@@ -1031,8 +1042,20 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				    case 'micro':
 				        $csv_daten[$lfdNrCsv][3] += $zeile[7];
 				        break;
+				    case 'mobile-hEar':
+				        $csv_daten[$lfdNrCsv][4] += $zeile[7];
+				        break;
+				    case 'cable-hEar':
+				        $csv_daten[$lfdNrCsv][5] += $zeile[7];
+				        break;
+				    case 'micro-hEar':
+				        $csv_daten[$lfdNrCsv][6] += $zeile[7];
+				        break;
+					case 'ff-cable':
+			        	$csv_daten[$lfdNrCsv][7] += $zeile[7];
+				        break;				        
 					case 'sonstiges':
-			        	$csv_daten[$lfdNrCsv][4] += $zeile[7];
+			        	$csv_daten[$lfdNrCsv][8] += $zeile[7];
 				        break;
 
 				}
