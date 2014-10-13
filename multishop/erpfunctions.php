@@ -244,24 +244,37 @@ function check_update_Kundendaten($bestellung)
 	
 	echo $bestellung["BuyerName"]." ".$bestellung["Name"]." $kdnr<br>";
 
-	// Ggf. Versandadressen eintragen
+	// Versandadressen immer eintragen (damit immer klar ist wohin eine Sendung verschickt wurde)
 	$versandadressennummer = 0;
 	if ($kdnr > 0)
 	{
-		if ((trim($bestellung["recipient-name"]) <> "") &&
-				($bestellung["Title"] <> $bestellung["recipient-title"] ||
-				trim($bestellung["Name"]) <> trim($bestellung["recipient-name"]) ||
-				$bestellung["AddressLine1"] <> $bestellung["ship-address-1"] ||
-				$bestellung["AddressLine2"] <> $bestellung["ship-address-2"] ||
-				$bestellung["PostalCode"] <> $bestellung["ship-postal-code"] ||
-				$bestellung["City"] <> $bestellung["ship-city"] ||
-				$bestellung["StateOrRegion"] <> $bestellung["ship-state"] ||
-				$bestellung["CountryCode"] <> $bestellung["ship-country"]
-				))
-		{
+		// Alte	Abfrage ob Shipping-Adresse vorhanden, wenn ja wird sie eingetragen
+// 		if ((trim($bestellung["recipient-name"]) <> "") &&
+// 				($bestellung["Title"] <> $bestellung["recipient-title"] ||
+// 				trim($bestellung["Name"]) <> trim($bestellung["recipient-name"]) ||
+// 				$bestellung["AddressLine1"] <> $bestellung["ship-address-1"] ||
+// 				$bestellung["AddressLine2"] <> $bestellung["ship-address-2"] ||
+// 				$bestellung["PostalCode"] <> $bestellung["ship-postal-code"] ||
+// 				$bestellung["City"] <> $bestellung["ship-city"] ||
+// 				$bestellung["StateOrRegion"] <> $bestellung["ship-state"] ||
+// 				$bestellung["CountryCode"] <> $bestellung["ship-country"]
+// 				))
+// 		{
+			// Neue Abfrage: wenn keine extra Shipping-Adresse vorhanden ist, dann wird Sie nun immer von der Rechnungsadresse übertragen
+			if (trim($bestellung["recipient-name"]) == "")
+			{
+				$bestellung["recipient-title"] = $bestellung["Title"];
+				$bestellung["recipient-name"] = $bestellung["Name"];
+				$bestellung["ship-address-1"] = $bestellung["AddressLine1"];
+				$bestellung["ship-address-2"] = $bestellung["AddressLine2"];
+				$bestellung["ship-postal-code"] = $bestellung["PostalCode"];
+				$bestellung["ship-city"] = $bestellung["City"];
+				$bestellung["ship-state"] = $bestellung["StateOrRegion"];
+				$bestellung["ship-country"] = $bestellung["CountryCode"];
+			}
 			$rc = insert_Versandadresse($bestellung, $kdnr);
 			$versandadressennummer = $rc;
-		}
+// 		}
 	}
 	
 	if (!$kdnr || $rc === -99)
