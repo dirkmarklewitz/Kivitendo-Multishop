@@ -224,7 +224,7 @@ function check_update_Kundendaten($bestellung)
 	if (checkCustomer($bestellung['BuyerEmail'], $bestellung['BuyerName']) == "vorhanden")  // Bestandskunde; BuyerEmail (Amazon eindeutig) oder BuyerName vorhanden
 	{
 		$msg = "update ";
-		$kdnr = checke_alte_Kundendaten($bestellung);
+		$kdnr = checke_update_alte_Kundendaten($bestellung, false);
 		if ($kdnr == -1)		// Kunde nicht gefunden, neu anlegen.
 		{
 			$msg = "insert ";
@@ -248,33 +248,20 @@ function check_update_Kundendaten($bestellung)
 	$versandadressennummer = 0;
 	if ($kdnr > 0)
 	{
-		// Alte	Abfrage ob Shipping-Adresse vorhanden, wenn ja wird sie eingetragen
-// 		if ((trim($bestellung["recipient-name"]) <> "") &&
-// 				($bestellung["Title"] <> $bestellung["recipient-title"] ||
-// 				trim($bestellung["Name"]) <> trim($bestellung["recipient-name"]) ||
-// 				$bestellung["AddressLine1"] <> $bestellung["ship-address-1"] ||
-// 				$bestellung["AddressLine2"] <> $bestellung["ship-address-2"] ||
-// 				$bestellung["PostalCode"] <> $bestellung["ship-postal-code"] ||
-// 				$bestellung["City"] <> $bestellung["ship-city"] ||
-// 				$bestellung["StateOrRegion"] <> $bestellung["ship-state"] ||
-// 				$bestellung["CountryCode"] <> $bestellung["ship-country"]
-// 				))
-// 		{
-			// Neue Abfrage: wenn keine extra Shipping-Adresse vorhanden ist, dann wird Sie nun immer von der Rechnungsadresse übertragen
-			if (trim($bestellung["recipient-name"]) == "")
-			{
-				$bestellung["recipient-title"] = $bestellung["Title"];
-				$bestellung["recipient-name"] = $bestellung["Name"];
-				$bestellung["ship-address-1"] = $bestellung["AddressLine1"];
-				$bestellung["ship-address-2"] = $bestellung["AddressLine2"];
-				$bestellung["ship-postal-code"] = $bestellung["PostalCode"];
-				$bestellung["ship-city"] = $bestellung["City"];
-				$bestellung["ship-state"] = $bestellung["StateOrRegion"];
-				$bestellung["ship-country"] = $bestellung["CountryCode"];
-			}
-			$rc = insert_Versandadresse($bestellung, $kdnr);
-			$versandadressennummer = $rc;
-// 		}
+		// Neue Abfrage: wenn keine extra Shipping-Adresse vorhanden ist, dann wird Sie nun immer von der Rechnungsadresse übertragen
+		if (trim($bestellung["recipient-name"]) == "")
+		{
+			$bestellung["recipient-title"] = $bestellung["Title"];
+			$bestellung["recipient-name"] = $bestellung["Name"];
+			$bestellung["ship-address-1"] = $bestellung["AddressLine1"];
+			$bestellung["ship-address-2"] = $bestellung["AddressLine2"];
+			$bestellung["ship-postal-code"] = $bestellung["PostalCode"];
+			$bestellung["ship-city"] = $bestellung["City"];
+			$bestellung["ship-state"] = $bestellung["StateOrRegion"];
+			$bestellung["ship-country"] = $bestellung["CountryCode"];
+		}
+		$rc = insert_Versandadresse($bestellung, $kdnr);
+		$versandadressennummer = $rc;
 	}
 	
 	if (!$kdnr || $rc === -99)
@@ -300,16 +287,63 @@ function check_update_Kundendaten($bestellung)
 }
 
 /**********************************************
-* checke_alte_Kundendaten($bestellung)
+* check_update_Rechnungsadresse($bestellung)
 ***********************************************/
-function checke_alte_Kundendaten($bestellung)
+function check_update_Rechnungsadresse($bestellung)
+{
+	$rc = query("erp","BEGIN WORK","check_update_Rechnungsadresse");
+	
+	if ($rc === -99)
+	{
+		echo "Probleme mit Transaktion. Abbruch!";
+		exit();
+	}
+	if (checkCustomer($bestellung['BuyerEmail'], $bestellung['BuyerName']) == "vorhanden")  // Bestandskunde; BuyerEmail (Amazon eindeutig) oder BuyerName vorhanden
+	{
+		$msg = "update ";
+		$kdnr = checke_update_alte_Kundendaten($bestellung, true);
+		if ($kdnr == -1 || !$kdnr)		// Kunde nicht gefunden, neu anlegen.
+		{
+			echo $msg." ".$bestellung["BuyerName"]." fehlgeschlagen!<br>";
+			continue;
+		}
+	}
+	
+	echo $bestellung["BuyerName"]." ".$bestellung["Name"]." $kdnr<br>";
+
+	if (!$kdnr || $rc === -99)
+	{
+		echo $msg." ".$bestellung["BuyerName"]." fehlgeschlagen! ($kdnr, $rc)<br>";
+		$rc = query("erp", "ROLLBACK WORK", "check_update_Rechnungsadresse");
+		if ($rc === -99)
+		{
+			echo "Probleme mit Transaktion. Abbruch!";
+			exit();
+		}
+	}
+	else
+	{
+		$rc = query("erp", "COMMIT WORK", "check_update_Rechnungsadresse");
+		if ($rc === -99)
+		{
+			echo "Probleme mit Transaktion. Abbruch!";
+			exit();
+		}
+	}
+	return $kdnr;
+}
+
+/**********************************************
+* checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
+***********************************************/
+function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 {
 	$sql = "select * from customer where ";
 	if ($bestellung["BuyerEmail"] != "") { $sql .= "email = '".pg_escape_string($bestellung["BuyerEmail"])."'"; }
 	if ($bestellung["BuyerEmail"] != "" && $bestellung["BuyerName"] != "") { $sql .= " OR "; }
 	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".pg_escape_string($bestellung["BuyerName"])."'"; }
 	
-	$rs = getAll("erp", $sql, "checke_alte_Kundendaten");
+	$rs = getAll("erp", $sql, "checke_update_alte_Kundendaten");
 	
 	if (!$rs || count($rs) != 1)	// Kunde nicht gefunden
 	{
@@ -317,6 +351,11 @@ function checke_alte_Kundendaten($bestellung)
 	}
 	$set = "";
 	// Wenn Kunde gefunden, ab hier die Kundendaten auf den neusten Stand bringen
+	if($rechnungsadressenupdate)
+	{
+		$set.="notes=coalesce(notes, '') || '".pg_escape_string("\n[adressabgleich_".$bestellung['AmazonOrderId']."] ".$bestellung['PurchaseDate']."")."',";	
+	}
+
 	if ($rs[0]["name"] <> $bestellung["Name"])
 	{
 		$name = pg_escape_string($bestellung["Name"]);
@@ -344,6 +383,7 @@ function checke_alte_Kundendaten($bestellung)
 		$street = pg_escape_string($bestellung["AddressLine1"]);
 		if ($rs[0]["street"] <> $bestellung["AddressLine1"])
 		{
+			$set.="department_1='',";
 			$set.="street='".$street."',";
 		}
 	}
@@ -370,7 +410,7 @@ function checke_alte_Kundendaten($bestellung)
 			$set.="country='".pg_escape_string($bestellung["CountryCode"])."',";
 		}
 	}
-	if ($rs[0]["phone"] <> $bestellung["Phone"])
+	if (!empty($bestellung["Phone"]) && $rs[0]["phone"] <> $bestellung["Phone"])
 	{
 		$set.="phone='".pg_escape_string($bestellung["Phone"])."',";
 	}
@@ -378,7 +418,7 @@ function checke_alte_Kundendaten($bestellung)
 	{
 		$set.="email='".pg_escape_string($bestellung["BuyerEmail"])."',";
 	}
-	if ($rs[0]["username"] <> $bestellung["BuyerName"])
+	if (!empty($bestellung["BuyerName"]) && $rs[0]["username"] <> $bestellung["BuyerName"])
 	{
 		$set.="username='".pg_escape_string($bestellung["BuyerName"])."',";
 	}
@@ -399,7 +439,7 @@ function checke_alte_Kundendaten($bestellung)
 	if ($set)
 	{
 		$sql = "update customer set ".substr($set,0,-1)." where id=".$rs[0]["id"];
-		$rc = query("erp", $sql, "checke_alte_Kundendaten");
+		$rc = query("erp", $sql, "checke_update_alte_Kundendaten");
 		if ($rc === -99)
 		{
 			return false;
@@ -413,6 +453,93 @@ function checke_alte_Kundendaten($bestellung)
 	{
 		return $rs[0]["id"];
 	}
+}
+
+/**********************************************
+* checke_ob_Kundendaten_aktuell($bestellung)
+***********************************************/
+function checke_ob_Kundendaten_aktuell($bestellung)
+{
+	$sql = "select * from customer where ";
+	if ($bestellung["BuyerEmail"] != "") { $sql .= "email = '".pg_escape_string($bestellung["BuyerEmail"])."'"; }
+	if ($bestellung["BuyerEmail"] != "" && $bestellung["BuyerName"] != "") { $sql .= " OR "; }
+	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".pg_escape_string($bestellung["BuyerName"])."'"; }
+	
+	$rs = getAll("erp", $sql, "checke_ob_Kundendaten_aktuell");
+	
+	if (!$rs || count($rs) != 1)	// Kunde nicht gefunden
+	{
+		return "Kunde nicht gefunden";
+	}
+	$daten_aktuell = true;
+	// Wenn Kunde gefunden, ab hier die Kundendaten auf den neusten Stand bringen
+	if ($rs[0]["name"] <> $bestellung["Name"])
+	{
+		$daten_aktuell = false;
+	}
+	if ($rs[0]["greeting"] <> $bestellung["Title"])
+	{
+		$daten_aktuell = false;
+	}
+	if ($bestellung["AddressLine2"] != "")
+	{
+		if ($rs[0]["department_1"] <> $bestellung["AddressLine1"])
+		{
+			$daten_aktuell = false;
+		}
+		if ($rs[0]["street"] <> $bestellung["AddressLine2"])
+		{
+			$daten_aktuell = false;
+		}
+	}
+	else 
+	{
+		if ($rs[0]["street"] <> $bestellung["AddressLine1"])
+		{
+			$daten_aktuell = false;
+		}
+	}
+	if ($rs[0]["zipcode"] <> $bestellung["PostalCode"])
+	{
+		$daten_aktuell = false;
+	}
+	if ($rs[0]["city"] <> $bestellung["City"])
+	{
+		$daten_aktuell = false;
+	}
+	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["LAND"]))
+	{
+		if ($rs[0]["country"] <> utf8_encode($GLOBALS["LAND"][$bestellung["CountryCode"]]))
+		{
+			$daten_aktuell = false;
+		}
+	}
+	else
+	{
+		if ($rs[0]["country"] <> $bestellung["CountryCode"])
+		{
+			$daten_aktuell = false;
+		}
+	}
+	if ($rs[0]["email"] <> $bestellung["BuyerEmail"])
+	{
+		$daten_aktuell = false;
+	}
+	
+	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
+	{	
+		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+	}
+	else
+	{
+		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+	}
+	if ($rs[0]["taxzone_id"] <> $localtaxid)
+	{
+		$daten_aktuell = false;
+	}
+
+	return $daten_aktuell;
 }
 
 /**********************************************
@@ -875,7 +1002,7 @@ function checkCustomer($BuyerEmail, $BuyerName)
 		// Email checken
 		if ($BuyerEmail != "")
 		{
-			$rs = $dbP->getall("select customernumber from customer where email = '".$BuyerEmail."'");
+			$rs = $dbP->getall("select customernumber from customer where email = '".pg_escape_string($BuyerEmail)."'");
 			if (count($rs) == 1)
 			{
 				$status = "vorhanden";
@@ -889,6 +1016,85 @@ function checkCustomer($BuyerEmail, $BuyerName)
 			if (count($rs) == 1)
 			{
 				$status = "vorhanden";
+			}
+		}
+	}
+	
+	return $status;
+}
+
+/**********************************************
+* checkCustomerAdressabgleichErledigt($BuyerEmail, $BuyerName)
+***********************************************/
+function checkCustomerAdressabgleichErledigt($einzelbestellung)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$status = "Kunde nicht vorhanden";
+	$kundennummer = -1;
+	
+	$dbP = @DB::connect($dsnP);
+	if (DB::isError($dbP)||!$dbP)
+	{
+		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
+		$dbP = false;
+	}
+	else if ($einzelbestellung['BuyerEmail'] == "" && $einzelbestellung['BuyerName'] == "")
+	{
+		$status = "Keine Eingabedaten";
+	}
+	else
+	{
+		// Email checken
+		if ($einzelbestellung['BuyerEmail'] != "")
+		{
+			$rs = $dbP->getall("select customernumber from customer where email = '".pg_escape_string($einzelbestellung['BuyerEmail'])."'");
+			if (count($rs) == 1)
+			{
+				$status = "vorhanden";
+				$kundennummer = $rs[0][0];
+			}
+		}
+
+		if ($einzelbestellung['BuyerName'] != "")
+		{
+			// BuyerName checken
+			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string($einzelbestellung['BuyerName'])."'");
+			if (count($rs) == 1)
+			{
+				if ($kundennummer > -1 && $kundennummer != $rs[0][0])
+				{
+					$status = "Fehler: Mehrere passende Kundennummern gefunden";
+				}
+				else
+				{
+					$status = "vorhanden";
+					$kundennummer = $rs[0][0];
+				}
+			}
+		}
+		
+		if ($status == "vorhanden")
+		{
+			$adresseaktuell = checke_ob_Kundendaten_aktuell($einzelbestellung);
+			$rs = $dbP->getall("select id from customer where customernumber = '".$kundennummer."' and notes LIKE '%[adressabgleich_".$einzelbestellung['AmazonOrderId']."]%'");
+			if (count($rs) == 1 || $adresseaktuell)
+			{
+				$status = "ja|".$kundennummer;
+			}
+			else
+			{
+				$status = "nein|".$kundennummer;
 			}
 		}
 	}
@@ -1035,8 +1241,11 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 					case 'ff-cable':
 			        	$csv_daten[$lfdNrCsv][7] += $zeile[6];
 				        break;
-					case 'sonstiges':
+					case 'pmf-cable':
 			        	$csv_daten[$lfdNrCsv][8] += $zeile[6];
+				        break;				        
+					case 'sonstiges':
+			        	$csv_daten[$lfdNrCsv][9] += $zeile[6];
 				        break;
 				}
 				$found = true;
@@ -1066,9 +1275,12 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'ff-cable':
 			        	$csv_daten[$lfdNrCsv][7] += $zeile[7];
-				        break;				        
-					case 'sonstiges':
+				        break;
+					case 'pmf-cable':
 			        	$csv_daten[$lfdNrCsv][8] += $zeile[7];
+				        break;
+					case 'sonstiges':
+			        	$csv_daten[$lfdNrCsv][9] += $zeile[7];
 				        break;
 
 				}
