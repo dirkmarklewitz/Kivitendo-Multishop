@@ -1066,7 +1066,7 @@ function checkCustomerAdressabgleichErledigt($einzelbestellung)
 			}
 		}
 
-		if ($einzelbestellung['BuyerName'] != "")
+		if ($einzelbestellung['BuyerName'] != "" && $status != "vorhanden")
 		{
 			// BuyerName checken
 			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string($einzelbestellung['BuyerName'])."'");

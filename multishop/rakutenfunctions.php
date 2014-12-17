@@ -194,7 +194,7 @@ class RakutenApiClass
 				    $itemcounter = 0;
 				    $artikelanzahl = 0;
 				    $orderItemsListOutput = array();
-				    $artikelliste = $item->getElementsByTagName("items");
+				    $artikelliste = $item->getElementsByTagName("item");
 					foreach ($artikelliste as $einzelartikel)
 	            	{
 						$orderItemsListOutput[$itemcounter]['OrderItemId'] = $einzelartikel->getElementsByTagName('product_id')->item(0)->nodeValue;
