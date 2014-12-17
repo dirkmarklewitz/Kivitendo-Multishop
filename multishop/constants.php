@@ -36,6 +36,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"CA" => "Kanada",
 				"IN" => "Indien",
 				"MC" => "Monaco",
+				"MX" => "Mexiko",
 				"MY" => "Malaysia",
 				"NO" => "Norwegen",
 				"NZ" => "Neuseeland",
@@ -43,6 +44,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"SG" => "Singapur",
 				"TH" => "Thailand",
 				"TR" => "Türkei",
+				"TW" => "Republik China (Taiwan)",
 				"US" => "USA",
 				"XK" => "Kosovo, Republik");
 				
@@ -105,7 +107,7 @@ $paramsOrdersReportFBA = array(	"MarketplaceId" => "", "SalesChannel" => "sales-
 								"Amount" => "item-price", "CurrencyCode" => "currency", "PaymentMethod" => "",
 								"NumberOfItemsShipped" => "quantity-shipped", "NumberOfItemsUnshipped" => "",
 								"PurchaseDate" => "purchase-date", "LastUpdateDate" => "shipment-date",
-								"BuyerName" => "",
+								"BuyerName" => "buyer-name",
 								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
 								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
 								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "carrier", "tracking-number" => "tracking-number");
@@ -121,7 +123,7 @@ $paramsOrdersReportMFN = array(	"MarketplaceId" => "", "SalesChannel" => "sales-
 								"Amount" => "item-price", "CurrencyCode" => "currency", "PaymentMethod" => "",
 								"NumberOfItemsShipped" => "", "NumberOfItemsUnshipped" => "quantity-purchased",
 								"PurchaseDate" => "purchase-date", "LastUpdateDate" => "payments-date",
-								"BuyerName" => "",
+								"BuyerName" => "buyer-name",
 								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
 								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
 								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "", "tracking-number" => "");
