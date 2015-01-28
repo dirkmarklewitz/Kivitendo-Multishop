@@ -557,7 +557,15 @@ function insert_neuen_Kunden($bestellung)
 	{
 		$kdnr = naechste_freie_Kundennummer();
 	}
-	$sql= "insert into customer (name,customernumber) values ('$newID','$kdnr')";
+
+        $sql= "select id from currencies where name = '".$bestellung["CurrencyCode"]."'";
+        $rs = getAll("erp", $sql, "insert_neuen_Kunden");
+	$currencyCode = 0;
+	if ($rs[0]["id"])	// CurrencyCode vorhanden
+	{
+		$currencyCode = $rs[0]["id"];
+	}
+	$sql = "insert into customer (name,customernumber,currency_id) values ('$newID','$kdnr','$currencyCode')";
 	$rc = query("erp", $sql, "insert_neuen_Kunden");
 	if ($rc === -99)
 	{
@@ -758,7 +766,15 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		$auftrag = naechste_freie_Auftragsnummer();
 	}
 	$newID = uniqid (rand());
-	$sql = "insert into oe (notes,ordnumber,customer_id) values ('$newID','$auftrag','".$kundennummer."')";
+
+        $sql= "select id from currencies where name = '".$bestellung["CurrencyCode"]."'";
+        $rs = getAll("erp", $sql, "erstelle_Auftrag");
+	$currencyCode = 0;
+	if ($rs[0]["id"])	// CurrencyCode vorhanden
+	{
+		$currencyCode = $rs[0]["id"];
+	}
+	$sql = "insert into oe (notes,ordnumber,customer_id,currency_id) values ('$newID','$auftrag','".$kundennummer."','$currencyCode')";
 	$rc = query("erp", $sql, "erstelle_Auftrag 2");
 	if ($rc === -99)
 	{
@@ -815,7 +831,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	}
 	$kundenkommentar = pg_escape_string($bestellung["OrderComment"]);
 	$sql .= "notes='".$kundenkommentar."', intnotes='".$bestelldatum.$versanddatum."SalesChannel ".$bestellung["SalesChannel"]." (".$bestellung["CountryCode"].")".chr(13)."Versand durch ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]]).$waehrungstext."', ";
-	$sql .= "curr='".$bestellung["CurrencyCode"]."', employee_id=".$ERPusrID.", vendor_id=NULL ";
+	$sql .= "currency_id='".$currencyCode."', employee_id=".$ERPusrID.", vendor_id=NULL ";
 	$sql .= "where id=".$rs2[0]["id"];
 	
 	$rc = query("erp",$sql,"erstelle_Auftrag 4");	
