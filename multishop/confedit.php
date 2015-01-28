@@ -111,7 +111,7 @@ else
 			$RakutenAPIUrl=$_POST["RakutenAPIUrl"];
 			$RakutenAPISchluessel=$_POST["RakutenAPISchluessel"];
 			
-			fputs($f,"<?\n// Verbindung zur ERP-db\n");
+			fputs($f,"<?php\n// Verbindung zur ERP-db\n");
 			fputs($f,"\$ERPhost=\"".$_POST["ERPhost"]."\";\n");
 			fputs($f,"\$ERPport=\"".$_POST["ERPport"]."\";\n");
 			fputs($f,"\$ERPdbname=\"".$_POST["ERPdbname"]."\";\n");
@@ -282,7 +282,7 @@ else
 					<td><input type="text" name="ERPhost" size="25" value="<?= $ERPhost ?>"></td>
 					<td></td>
 					<td>Amazon aktiviert</td>
-					<td><input type="checkbox" name="Amazonaktiviert" value="checked" <? if ($Amazonaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td><input type="checkbox" name="Amazonaktiviert" value="checked" <?php if ($Amazonaktiviert == "checked") { echo "checked=\"checked\""; } ?> ></td>
 				</tr>				
 				<tr>
 					<td>Kivi-Port</td>
@@ -387,7 +387,7 @@ else
 					<td></td>
 					<td></td>
 					<td>Amazon.com aktiviert</td>
-					<td><input type="checkbox" name="Amazonaktiviert_COM" value="checked" <? if ($Amazonaktiviert_COM == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td><input type="checkbox" name="Amazonaktiviert_COM" value="checked" <?php if ($Amazonaktiviert_COM == "checked") { echo "checked=\"checked\""; } ?>></td>
 				</tr>				
 				<tr>
 					<td></td>
@@ -440,10 +440,10 @@ else
 				</tr>
 				<tr>
 					<td>eBay aktiviert</td>
-					<td><input type="checkbox" name="eBayaktiviert" value="checked" <? if ($eBayaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td><input type="checkbox" name="eBayaktiviert" value="checked" <?php if ($eBayaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
 					<td></td>
 					<td>Joomla aktiviert</td>
-					<td><input type="checkbox" name="Joomlaaktiviert" value="checked" <? if ($Joomlaaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td><input type="checkbox" name="Joomlaaktiviert" value="checked" <?php if ($Joomlaaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
 				</tr>				
 				<tr>
 					<td>eBay Abteilungsname</td>
@@ -510,7 +510,7 @@ else
 				</tr>
 				<tr>
 					<td>Rakuten aktiviert</td>
-					<td><input type="checkbox" name="Rakutenaktiviert" value="checked" <? if ($Rakutenaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
+					<td><input type="checkbox" name="Rakutenaktiviert" value="checked" <?php if ($Rakutenaktiviert == "checked") { echo "checked=\"checked\""; } ?>></td>
 					<td></td>
 					<td></td>
 					<td></td>
@@ -550,6 +550,6 @@ else
 		</table>
 	</body>
 </html>
-<?
+<?php
 }
 ?>

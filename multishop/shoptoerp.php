@@ -117,7 +117,7 @@ else
 	echo "<html>";
 	echo "<head>";
 	echo "	<title>Amazon-Import</title>";
-	echo "	<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">";
+	echo "	<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">";
 	echo "	<script type=\"text/javascript\" src=\"calendarDateInput.js\">";
 	echo "		/***********************************************";
 	echo "		* Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm";
