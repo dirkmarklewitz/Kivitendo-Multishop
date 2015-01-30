@@ -95,7 +95,7 @@ $paramsOrders = array(	"MarketplaceId", "SalesChannel",
 						"BuyerName",
 						"Title", "Name", "AddressLine1", "AddressLine2", "PostalCode", "City", "StateOrRegion", "CountryCode",
 						"recipient-title", "recipient-name", "ship-address-1", "ship-address-2", "ship-address-3", "ship-postal-code", "ship-city", "ship-state", "ship-country", "ship-phone-number",
-						"BuyerEmail", "Phone", "OrderComment", "carrier", "tracking-number");
+						"BuyerEmail", "Phone", "OrderComment", "carrier", "tracking-number", "Language");
 
 $paramsOrderItems = array(	"OrderItemId", "SellerSKU", "ASIN", "Title",
 							"ItemPrice", "ItemTax", "PromotionDiscount", "ShippingPrice", "ShippingTax", "ShippingDiscount", "GiftWrapPrice", "GiftWrapTax",
@@ -111,7 +111,7 @@ $paramsOrdersReportFBA = array(	"MarketplaceId" => "", "SalesChannel" => "sales-
 								"BuyerName" => "buyer-name",
 								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
 								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
-								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "carrier", "tracking-number" => "tracking-number");
+								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "carrier", "tracking-number" => "tracking-number", "Language" => "sales-channel");
 
 $paramsOrderItemsReportFBA = array(	"OrderItemId" => "amazon-order-item-id", "SellerSKU" => "sku", "ASIN" => "", "Title" => "product-name",
 									"ItemPrice" => "item-price", "ItemTax" => "item-tax", "PromotionDiscount" => "item-promotion-discount", "ShippingPrice" => "shipping-price", "ShippingTax" => "shipping-tax", "ShippingDiscount" => "ship-promotion-discount", "GiftWrapPrice" => "gift-wrap-price", "GiftWrapTax" => "gift-wrap-tax",
@@ -127,7 +127,7 @@ $paramsOrdersReportMFN = array(	"MarketplaceId" => "", "SalesChannel" => "sales-
 								"BuyerName" => "buyer-name",
 								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
 								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
-								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "", "tracking-number" => "");
+								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "", "tracking-number" => "", "Language" => "sales-channel");
 
 $paramsOrderItemsReportMFN = array(	"OrderItemId" => "order-item-id", "SellerSKU" => "sku", "ASIN" => "", "Title" => "product-name",
 									"ItemPrice" => "item-price", "ItemTax" => "item-tax", "PromotionDiscount" => "", "ShippingPrice" => "shipping-price", "ShippingTax" => "shipping-tax", "ShippingDiscount" => "", "GiftWrapPrice" => "", "GiftWrapTax" => "",

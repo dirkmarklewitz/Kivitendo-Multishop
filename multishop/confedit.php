@@ -63,6 +63,8 @@ else
 			$platzhalterFehlendeSKU=$_POST["platzhalterFehlendeSKU"];
 			$versandkosten=$_POST["versandkosten"];
 			$geschenkverpackung=$_POST["geschenkverpackung"];
+			$standardsprache=$_POST["standardsprache"];
+			$ersatzSprache=$_POST["ersatzSprache"];
 			
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
 			$AmazonAbteilungsname=$_POST["AmazonAbteilungsname"];
@@ -126,6 +128,8 @@ else
 			fputs($f,"\$platzhalterFehlendeSKU=\"".$_POST["platzhalterFehlendeSKU"]."\";\n");
 			fputs($f,"\$versandkosten=\"".$_POST["versandkosten"]."\";\n");
 			fputs($f,"\$geschenkverpackung=\"".$_POST["geschenkverpackung"]."\";\n");
+			fputs($f,"\$standardsprache=\"".$_POST["standardsprache"]."\";\n");
+			fputs($f,"\$ersatzSprache=\"".$_POST["ersatzSprache"]."\";\n");
 			
 			fputs($f,"\$Amazonaktiviert=\"".$_POST["Amazonaktiviert"]."\";\n");
 			fputs($f,"\$AmazonAbteilungsname=\"".$_POST["AmazonAbteilungsname"]."\";\n");
@@ -194,6 +198,8 @@ else
 			$platzhalterFehlendeSKU=$_POST["platzhalterFehlendeSKU"];
 			$versandkosten=$_POST["versandkosten"];
 			$geschenkverpackung=$_POST["geschenkverpackung"];
+			$standardsprache=$_POST["standardsprache"];
+			$ersatzSprache=$_POST["ersatzSprache"];
 
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
 			$AmazonAbteilungsname=$_POST["AmazonAbteilungsname"];
@@ -355,15 +361,15 @@ else
 					<td><input type="text" name="MarketplaceID_GB" size="25" value="<?= $MarketplaceID_GB ?>"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Standardsprache (Kuerzel)</td>
+					<td><input type="text" name="standardsprache" size="25" value="<?= $standardsprache ?>"></td>
 					<td></td>
 					<td>Amazon MarketplaceID_FR</td>
 					<td><input type="text" name="MarketplaceID_FR" size="25" value="<?= $MarketplaceID_FR ?>"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Liste Sprachzuordnung<br>Marketplace -> Sprache<br>(eine pro Zeile, | ist Trenner)</td>
+					<td><textarea name="ersatzSprache" cols="32" rows="10"><?= $ersatzSprache ?></textarea>
 					<td></td>
 					<td>Amazon MarketplaceID_IT</td>
 					<td><input type="text" name="MarketplaceID_IT" size="25" value="<?= $MarketplaceID_IT ?>"></td>

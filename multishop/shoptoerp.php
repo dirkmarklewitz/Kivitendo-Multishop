@@ -313,7 +313,7 @@ else
 					 			."<th>Nr.</th>"
 					 			."<th>Importieren</th>"
 			 					."<th>Bestellnummer</th>"
-			 					."<th>Marktplatz (Zielland)</th>"
+			 					."<th>Marktpl. (Ziel) - Sprache</th>"
 			 					."<th>Versanddatum (Bestelldatum)</th>"
 			 					."<th>Name</th>"
 			 					."<th>Status (x of y done)</th>"
@@ -321,8 +321,19 @@ else
 			 					."<th>Artikel</th>"
 			 				."</tr>";
 		 	}
+		 	// Ersatzsprache in Array umwandeln
+			$replaceLanguage = array();
+			foreach (split("\n", $ersatzSprache) as $einzelSprache)
+			{
+				$zerlegteEinzelsprache = split("\|", $einzelSprache);
+				if(count($zerlegteEinzelsprache) == 2)
+				{
+					$replaceLanguage[trim($zerlegteEinzelsprache[0])] = trim($zerlegteEinzelsprache[1]);
+				}
+			}
 			foreach($output as $lfdNr => $opSet1)
 			{
+				$languagetemp = $standardsprache;
 				$bearbeitungsstatus = $opSet1['bearbeitungsstatus'];
 				$show_it = true;
 				if (!isset($_POST["erledigtesanzeigen"]) && $bearbeitungsstatus == "email")
@@ -356,7 +367,21 @@ else
 					}
 					else
 					{
-					
+						// Sprache zuordnen
+						if(trim($opSet1['MarketplaceId']) == trim("Amazon"))
+						{
+							if (array_key_exists($opSet1['SalesChannel'], $replaceLanguage))
+							{
+								$languagetemp = $replaceLanguage[$opSet1['SalesChannel']];
+							}
+						}
+						else
+						{
+							if (array_key_exists($opSet1['Language'], $replaceLanguage))
+							{
+								$languagetemp = $replaceLanguage[$opSet1['Language']];
+							}
+						}					
 						echo 	"<tr valign=\"top\">";
 						echo 		"<td>".$lfdNr."</td>";
 									if ($bearbeitungsstatus == "auftrag")
@@ -437,6 +462,7 @@ else
 												echo "<input type=\"hidden\" name=\"BuyerEmail"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['BuyerEmail']."\">";
 												echo "<input type=\"hidden\" name=\"Phone"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['Phone']."\">";
 												echo "<input type=\"hidden\" name=\"OrderComment"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['OrderComment']."\">";
+												echo "<input type=\"hidden\" name=\"Language"."|".$opSet1['AmazonOrderId']."\" value=\"".$languagetemp."\">";
 												echo "</td>";
 											}
 											else 
@@ -452,7 +478,7 @@ else
 									$date1 = new DateTime($opSet1['LastUpdateDate']);
 									$date2 = new DateTime($opSet1['PurchaseDate']);
 									echo "<td>".$opSet1['AmazonOrderId']."</td>"
-										."<td>".$opSet1['SalesChannel']." (".$opSet1['CountryCode'].")</td>"
+										."<td>".$opSet1['SalesChannel']." (".$opSet1['CountryCode'].") - ".$languagetemp." </td>"
 										."<td>".$date1->format('Y-m-d H:i')." (".$date2->format('Y-m-d H:i').")</td>";
 									$customerstatus = checkCustomer($opSet1['BuyerEmail'], $opSet1['BuyerName']);
 									if ($customerstatus == "neu")
@@ -469,7 +495,7 @@ else
 									}
 									else
 									{
-										echo "<td>$customerstatus</td>";
+										echo "<td>".$customerstatus."</td>";
 									}
 						echo		"<td>".$opSet1['OrderStatus']." (".$opSet1['NumberOfItemsShipped']." of ".strval(intval($opSet1['NumberOfItemsShipped'])+intval($opSet1['NumberOfItemsUnshipped'])).")</td>";
 						echo		"<td>".$opSet1['Amount']." ".$opSet1['CurrencyCode']."</td>";
@@ -778,6 +804,7 @@ else
 			if (isset($_POST["BuyerEmail|".$importItem])) { $bestellungen[$importItem]['BuyerEmail'] = $_POST["BuyerEmail|".$importItem]; }			
 			if (isset($_POST["Phone|".$importItem])) { $bestellungen[$importItem]['Phone'] = $_POST["Phone|".$importItem]; }
 			if (isset($_POST["OrderComment|".$importItem])) { $bestellungen[$importItem]['OrderComment'] = $_POST["OrderComment|".$importItem]; }
+			if (isset($_POST["Language|".$importItem])) { $bestellungen[$importItem]['Language'] = $_POST["Language|".$importItem]; }
 	
 			//Artikel pro Bestellung
 			for ($zaehler = 0; $zaehler <= intval($bestellungen[$importItem]['NumberOfItemsShipped']) + intval($bestellungen[$importItem]['NumberOfItemsUnshipped']); $zaehler++)

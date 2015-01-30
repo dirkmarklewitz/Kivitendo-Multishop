@@ -190,13 +190,13 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		$returnvalue[$bestellungszaehler]['BuyerEmail'] = utf8_encode($row['email']);
 		// $returnvalue[$bestellungszaehler]['Phone'] = "";
 		$returnvalue[$bestellungszaehler]['OrderComment'] = utf8_encode($row['order_add_info']);
+		$returnvalue[$bestellungszaehler]['Language'] = utf8_encode($row['lang']);
 		/* unused fieldnames
 	    --------------------
 	    $row['order_tax']
 	    $row['payment_tax']
 	    $row['d_email']
 	    $row['pdf_file']
-	    $row['lang']
 	    $row['ip_address'] */
 
 		$bearbeitungsstatus = checkAmazonOrderId($returnvalue[$bestellungszaehler]['AmazonOrderId']);

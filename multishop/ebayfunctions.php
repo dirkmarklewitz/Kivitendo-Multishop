@@ -156,6 +156,7 @@ class eBayApiClass
 						$returnvalue[$bestellungszaehler]['PurchaseDate'] = $item->getElementsByTagName('CreatedDate')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['LastUpdateDate'] = $item->getElementsByTagName('LastModifiedTime')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['SalesChannel'] = $item->getElementsByTagName('Platform')->item(0)->nodeValue.".".$item->getElementsByTagName('TransactionSiteID')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['Language'] = $item->getElementsByTagName('TransactionSiteID')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['MarketplaceId'] = $eBayAbteilungsname;
 						// $returnvalue[$bestellungszaehler]['OrderType'] = "";
 						$returnvalue[$bestellungszaehler]['OrderStatus'] = $item->getElementsByTagName('OrderStatus')->item(0)->nodeValue;

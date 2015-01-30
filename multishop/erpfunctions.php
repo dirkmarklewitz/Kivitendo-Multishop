@@ -423,6 +423,22 @@ function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 		$set.="username='".pg_escape_string($bestellung["BuyerName"])."',";
 	}
 	
+	// Sprache setzen wenn vorhanden
+	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
+    $languagereturn = getAll("erp", $sql, "checke_update_alte_Kundendaten");
+	$languageId = 0;
+	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	{
+		$languageId = $languagereturn[0]["id"];
+	}
+	if ($languageId > 0)
+	{
+		if ($rs[0]["language_id"] <> $languageId)
+		{
+			$set .= "language_id=".$languageId.",";
+		}
+	}
+	
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
@@ -558,8 +574,8 @@ function insert_neuen_Kunden($bestellung)
 		$kdnr = naechste_freie_Kundennummer();
 	}
 
-        $sql= "select id from currencies where name = '".$bestellung["CurrencyCode"]."'";
-        $rs = getAll("erp", $sql, "insert_neuen_Kunden");
+    $sql= "select id from currencies where name = '".$bestellung["CurrencyCode"]."'";
+    $rs = getAll("erp", $sql, "insert_neuen_Kunden");
 	$currencyCode = 0;
 	if ($rs[0]["id"])	// CurrencyCode vorhanden
 	{
@@ -571,6 +587,7 @@ function insert_neuen_Kunden($bestellung)
 	{
 		return false;
 	}
+	
 	$sql = "select * from customer where name = '$newID'";
 	$rs = getAll("erp", $sql, "insert_neuen_Kunden");
 	if (!$rs)
@@ -610,6 +627,19 @@ function insert_neuen_Kunden($bestellung)
 	$set .= "email='".pg_escape_string($bestellung["BuyerEmail"])."',";
 	$set .= "username='".pg_escape_string($bestellung["BuyerName"])."',";
 
+	// Sprache setzen wenn vorhanden
+	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
+    $languagereturn = getAll("erp", $sql, "insert_neuen_Kunden");
+	$languageId = 0;
+	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	{
+		$languageId = $languagereturn[0]["id"];
+	}
+	if ($languageId > 0)
+	{
+		$set .= "language_id=".$languageId.",";
+	}
+	
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
@@ -774,6 +804,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$currencyCode = $rs[0]["id"];
 	}
+		
 	$sql = "insert into oe (notes,ordnumber,customer_id,currency_id) values ('$newID','$auftrag','".$kundennummer."','$currencyCode')";
 	$rc = query("erp", $sql, "erstelle_Auftrag 2");
 	if ($rc === -99)
@@ -820,6 +851,18 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		{
 			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 		}
+	}
+	// Sprache setzen wenn vorhanden
+	$sqllang= "select id from language where template_code = '".$bestellung["Language"]."'";
+    $languagereturn = getAll("erp", $sqllang, "insert_neuen_Kunden");
+	$languageId = 0;
+	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	{
+		$languageId = $languagereturn[0]["id"];
+	}
+	if ($languageId > 0)
+	{
+		$sql .= "language_id=".$languageId.",";
 	}
 	$sql .= "taxzone_id=$localtaxid, ";
 	$sql .= "payment_id=".hole_payment_id($bestellung["PaymentMethod"]).", ";
