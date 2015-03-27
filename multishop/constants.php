@@ -31,18 +31,24 @@ $LAND = array(	"DE" => "Deutschland",
 				"UK" => "United Kingdom",
 				"GB" => "United Kingdom",
 
+				"AL" => "Albanien",
 				"AU" => "Australien",
+				"BR" => "Brasilien",
 				"CH" => "Schweiz",
 				"CA" => "Kanada",
 				"GF" => "Französisch Guyana",
+				"GI" => "Gibraltar",
 				"HK" => "Hong Kong",
 				"IN" => "Indien",
+				"JE" => "Jersey (Kanalinsel)",
 				"KR" => "Süd Korea",
 				"MC" => "Monaco",
 				"MX" => "Mexiko",
 				"MY" => "Malaysia",
+				"NG" => "Nigeria",
 				"NO" => "Norwegen",
 				"NZ" => "Neuseeland",
+				"PH" => "Philippinen",
 				"RU" => "Russische Föderation",
 				"SG" => "Singapur",
 				"TH" => "Thailand",
@@ -83,7 +89,8 @@ $TAXID = array(	"DE" => 0,	// Steuerschluessel Deutschland
 				"GB" => 2,
 				
 				"CH" => 3,		// Steuerschluessel Welt (also keine USt.)
-				"GF" => 3);
+				"GF" => 3,
+				"GI" => 3);
 
 $VERSAND = array(	"AFN" => "Amazon",
 					"MFN" => "Händler");

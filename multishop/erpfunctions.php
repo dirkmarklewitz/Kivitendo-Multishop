@@ -905,15 +905,22 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$sql = "select * from parts where partnumber='".$versandkosten."'";
 		$rsversand = getAll("erp", $sql, "erstelle_Auftrag");
+		
 		if ($rsversand[0]["id"])
 		{
 			$artID = $rsversand[0]["id"];
 			$artNr = $rsversand[0]["partnumber"];
 			$einzelpreis = $GLOBALS["VERSANDKOSTEN"];
 			$text = $rsversand[0]["description"];
-			
+			$sqlUebersetzung = "select * from translation where parts_id='".$rsversand[0]["id"]."' and language_id='".$languageId."'";
+			$rsUebersetzung = getAll("erp", $sqlUebersetzung, "erstelle_Auftrag");
+			if ($rsUebersetzung[0]["language_id"])
+			{
+				$text = pg_escape_string($rsUebersetzung[0]["longdescription"]);
+			}
+		
 			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
-			$sql .= $rs2[0]["id"].",'"
+			$sql .= $rs2[0]["id"].",'"	
 					.$artID."','"
 					.$text."',"
 					."1,'"
@@ -932,13 +939,19 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	if ($GLOBALS["GESCHENKVERPACKUNG"] > 0)
 	{
 		$sql = "select * from parts where partnumber='".$geschenkverpackung."'";
-		$rsversand = getAll("erp", $sql, "erstelle_Auftrag");
-		if ($rsversand[0]["id"])
+		$rsgeschenk = getAll("erp", $sql, "erstelle_Auftrag");
+		if ($rsgeschenk[0]["id"])
 		{
-			$artID = $rsversand[0]["id"];
-			$artNr = $rsversand[0]["partnumber"];
+			$artID = $rsgeschenk[0]["id"];
+			$artNr = $rsgeschenk[0]["partnumber"];
 			$einzelpreis = $GLOBALS["GESCHENKVERPACKUNG"];
-			$text = $rsversand[0]["description"];
+			$text = $rsgeschenk[0]["description"];
+			$sqlUebersetzung = "select * from translation where parts_id='".$rsgeschenk[0]["id"]."' and language_id='".$languageId."'";
+			$rsUebersetzung = getAll("erp", $sqlUebersetzung, "erstelle_Auftrag");
+			if ($rsUebersetzung[0]["language_id"])
+			{
+				$text = pg_escape_string($rsUebersetzung[0]["longdescription"]);
+			}
 			
 			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
 			$sql .= $rs2[0]["id"].",'"
