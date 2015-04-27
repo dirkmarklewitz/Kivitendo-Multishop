@@ -172,7 +172,7 @@ else
 			."</table>";
 	echo 	"<br><input type=\"submit\" name=\"bestellungen\" value=\"Bestellungen anzeigen\">";
 	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"orderreports\" value=\"Adressen ueber Reports abgleichen (nur Amazon)\">";
-	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Verkaufstabelle\">";
+	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Produktverkaufstabelle\">";
 	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellingscsv\" value=\"Verkaufstabelle als .csv\"><br>";
 	
 	if (isset($_POST["bestellungen"]) && isset($_POST["bestellungvom"]))
@@ -915,14 +915,11 @@ else
 	{
 		echo "<br><br><table border=\"1\">"
 				."<tr>"
-					."<th>Produktgruppe</th>"
 					."<th>Saleschannel</th>"
-					."<th>Laenderkuerzel</th>"
-					."<th>Abteilung</th>"
-					."<th>Zielland</th>"
-					."<th>Region</th>"
+					."<th>Produkt</th>"
 					."<th>Menge</th>"
 					."<th>Returns</th>"
+
 				."</tr>";
 		foreach (getSellingInfo($bestellungvom, $bestellungbis) as $eintrag)
 		{
@@ -931,13 +928,34 @@ else
 					."<td>".$eintrag[1]."</td>"
 					."<td>".$eintrag[2]."</td>"
 					."<td>".$eintrag[3]."</td>"
-					."<td>".$eintrag[4]."</td>"
-					."<td>".$eintrag[5]."</td>"
-					."<td>".$eintrag[6]."</td>"
-					."<td>".$eintrag[7]."</td>"
 				."</tr>";
 		}
 		echo "</table>";
+// 		echo "<br><br><table border=\"1\">"
+// 				."<tr>"
+// 					."<th>Produkt</th>"
+// 					."<th>Saleschannel</th>"
+// 					."<th>Laenderkuerzel</th>"
+// 					."<th>Abteilung</th>"
+// 					."<th>Zielland</th>"
+// 					."<th>Region</th>"
+// 					."<th>Menge</th>"
+// 					."<th>Returns</th>"
+// 				."</tr>";
+// 		foreach (getSellingInfo($bestellungvom, $bestellungbis) as $eintrag)
+// 		{
+// 			echo "<tr>"
+// 					."<td>".$eintrag[8]."</td>"
+// 					."<td>".$eintrag[1]."</td>"
+// 					."<td>".$eintrag[2]."</td>"
+// 					."<td>".$eintrag[3]."</td>"
+// 					."<td>".$eintrag[4]."</td>"
+// 					."<td>".$eintrag[5]."</td>"
+// 					."<td>".$eintrag[6]."</td>"
+// 					."<td>".$eintrag[7]."</td>"
+// 				."</tr>";
+// 		}
+// 		echo "</table>";		
 	}
 	
 	echo "</form>";

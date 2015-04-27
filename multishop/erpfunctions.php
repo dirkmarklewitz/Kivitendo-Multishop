@@ -420,7 +420,7 @@ function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 	}
 	if (!empty($bestellung["BuyerName"]) && $rs[0]["username"] <> $bestellung["BuyerName"])
 	{
-		$set.="username='".pg_escape_string($bestellung["BuyerName"])."',";
+		$set.="username='".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."',";
 	}
 	
 	// Sprache setzen wenn vorhanden
@@ -479,7 +479,7 @@ function checke_ob_Kundendaten_aktuell($bestellung)
 	$sql = "select * from customer where ";
 	if ($bestellung["BuyerEmail"] != "") { $sql .= "email = '".pg_escape_string($bestellung["BuyerEmail"])."'"; }
 	if ($bestellung["BuyerEmail"] != "" && $bestellung["BuyerName"] != "") { $sql .= " OR "; }
-	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".pg_escape_string($bestellung["BuyerName"])."'"; }
+	if ($bestellung["BuyerName"] != "") { $sql .= "user = '".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."'"; }
 	
 	$rs = getAll("erp", $sql, "checke_ob_Kundendaten_aktuell");
 	
@@ -625,7 +625,7 @@ function insert_neuen_Kunden($bestellung)
 	}
 	$set .= "phone='".pg_escape_string($bestellung["Phone"])."',";
 	$set .= "email='".pg_escape_string($bestellung["BuyerEmail"])."',";
-	$set .= "username='".pg_escape_string($bestellung["BuyerName"])."',";
+	$set .= "username='".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."',";
 
 	// Sprache setzen wenn vorhanden
 	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
@@ -1084,7 +1084,7 @@ function checkCustomer($BuyerEmail, $BuyerName)
 		if ($BuyerName != "")
 		{
 			// BuyerName checken
-			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string($BuyerName)."'");
+			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."'");
 			if (count($rs) == 1)
 			{
 				$status = "vorhanden";
@@ -1141,7 +1141,7 @@ function checkCustomerAdressabgleichErledigt($einzelbestellung)
 		if ($einzelbestellung['BuyerName'] != "" && $status != "vorhanden")
 		{
 			// BuyerName checken
-			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string($einzelbestellung['BuyerName'])."'");
+			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."'");
 			if (count($rs) == 1)
 			{
 				if ($kundennummer > -1 && $kundennummer != $rs[0][0])
@@ -1206,14 +1206,30 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 	else
 	{
 		// Daten holen
-		$rs = $dbP->getall("SELECT"
-								." trim(partsgroup.partsgroup) AS artikelgruppe,"
+		if ($csvausgabe == false)
+		{
+			$gruppierung = " saleschannel, artikel";
+			$sortierung = " saleschannel, artikel";
+			$selectanweisung = 	" trim(substring(ar.intnotes from E'SalesChannel(.*)\\\(..\\\)?')) AS saleschannel,"
+								." trim(parts.partnumber) AS artikel,"
+								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) AS menge,"
+								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns";
+		}
+		else
+		{
+			$gruppierung = " saleschannel, artikelgruppe, abteilung, zielland, region";
+			$sortierung = " artikelgruppe, saleschannel, zielland, artikel";
+			$selectanweisung = 	" trim(partsgroup.partsgroup) AS artikelgruppe,"
 								." regexp_split_to_array(trim(substring(ar.intnotes from E'Sales.*\\\(..\\\)?')), E' +') AS saleschannel,"
 								." trim(department.description) AS abteilung,"
 								." trim(customer.country) AS zielland,"
 								." trim(tax_zones.description) AS region,"
 								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) AS menge,"
-								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns"
+								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns,"
+								." trim(parts.partnumber) AS artikel";
+		}
+		$rs = $dbP->getall("SELECT"
+								.$selectanweisung
 							." FROM"
 								." ar"
 							." INNER JOIN"
@@ -1231,29 +1247,40 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 							." WHERE"
 								." ar.transdate >= '".$datum_von."' AND ar.transdate <= '".$datum_bis."'"
 							." GROUP BY"
-								." saleschannel, artikelgruppe, abteilung, zielland, region"
+								.$gruppierung
 							." HAVING"
 								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) <> 0 OR sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) <> 0" 
 							." ORDER BY"
-								." artikelgruppe, saleschannel");
+								.$sortierung);
 		
 		$returnvalue = array();
 		
 		foreach ($rs as $lfdNr => $zeile)
 		{
 			// var_dump($zeile); echo "<br>";
-			
-			$newarray = explode(',', $zeile[1]);
-			
-			$returnvalue[$lfdNr][0] = $zeile[0];
-			$returnvalue[$lfdNr][1] = $newarray[1];
-			$returnvalue[$lfdNr][2] = trim($newarray[2], "()}");
-			$returnvalue[$lfdNr][3] = $zeile[2];
-			$returnvalue[$lfdNr][4] = $zeile[3];
-			$returnvalue[$lfdNr][5] = $zeile[4];
-			$returnvalue[$lfdNr][6] = $zeile[5];
-			$returnvalue[$lfdNr][7] = $zeile[6];
-
+			if ($csvausgabe == false)
+			{
+				$newarray = explode(',', $zeile[0]);
+				
+				$returnvalue[$lfdNr][0] = $newarray[0];
+				$returnvalue[$lfdNr][1] = $zeile[1];
+				$returnvalue[$lfdNr][2] = $zeile[2];
+				$returnvalue[$lfdNr][3] = $zeile[3];
+			}
+			else
+			{
+				$newarray = explode(',', $zeile[1]);
+				
+				$returnvalue[$lfdNr][0] = $zeile[0];
+				$returnvalue[$lfdNr][1] = $newarray[1];
+				$returnvalue[$lfdNr][2] = trim($newarray[2], "()}");
+				$returnvalue[$lfdNr][3] = $zeile[2];
+				$returnvalue[$lfdNr][4] = $zeile[3];
+				$returnvalue[$lfdNr][5] = $zeile[4];
+				$returnvalue[$lfdNr][6] = $zeile[5];
+				$returnvalue[$lfdNr][7] = $zeile[6];
+				$returnvalue[$lfdNr][8] = $zeile[7];
+			}
 		}
 	}
 
