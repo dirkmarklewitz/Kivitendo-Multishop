@@ -303,7 +303,7 @@ class DhListOrders extends DhAmazonAccess
 		$request .= "&SignatureMethod=".$SigMethod
 					."&SignatureVersion=".$SigVersion
 					."&Timestamp=".$this->_timestamp
-					."&Version=2011-01-01";
+					."&Version=2013-09-01";
 
 		
 		// Request sauber zusammenstellen:
@@ -320,17 +320,17 @@ class DhListOrders extends DhAmazonAccess
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
 		if ($this->_domain == "COM")
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;
+			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;
  		}
  		else
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;
+			$request = "https://".$EndpointUrl."/Orders/2013-09-01?".$request."&Signature=".$signature;
 		}
 
 		return $request;
@@ -410,7 +410,7 @@ class DhListOrders extends DhAmazonAccess
 						."&SignatureMethod=".$SigMethod
 						."&SignatureVersion=".$SigVersion
 						."&Timestamp=".$this->_timestamp
-						."&Version=2011-01-01";			
+						."&Version=2013-09-01";			
  		}
  		else
  		{
@@ -421,7 +421,7 @@ class DhListOrders extends DhAmazonAccess
 						."&SignatureMethod=".$SigMethod
 						."&SignatureVersion=".$SigVersion
 						."&Timestamp=".$this->_timestamp
-						."&Version=2011-01-01";			
+						."&Version=2013-09-01";			
 		}		
 
 		// Request sauber zusammenstellen:
@@ -438,17 +438,17 @@ class DhListOrders extends DhAmazonAccess
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
 		if ($this->_domain == "COM")
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;
+			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;
  		}
  		else
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+			$request = "https://".$EndpointUrl."/Orders/2013-09-01?".$request."&Signature=".$signature;			
 		}
 
 		return $request;
@@ -485,7 +485,25 @@ class DhListOrders extends DhAmazonAccess
 					$output[$i]['AmazonOrderId'] = $amazonOrderId;
 					foreach($paramsOrderItems as $param)
 					{
-						$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
+						switch ($param)
+						{
+							case "ItemPrice":
+							case "ItemTax":
+							case "PromotionDiscount":
+							case "ShippingPrice":
+							case "ShippingTax":
+							case "ShippingDiscount":
+							case "GiftWrapPrice":
+							case "GiftWrapTax":							
+								$subitems = $item->getElementsByTagName($param);
+								if($subitems->length > 0)
+								{
+									$output[$i][$param] = $subitems->item(0)->getElementsByTagName("Amount")->item(0)->nodeValue;
+								}
+								break;
+							default:
+								$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
+						}
 					}
 				}
 			}
@@ -525,7 +543,7 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 		$request .= "&SignatureMethod=".$SigMethod
 					."&SignatureVersion=".$SigVersion
 					."&Timestamp=".$this->_timestamp
-					."&Version=2011-01-01";
+					."&Version=2013-09-01";
 				
 		// Request sauber zusammenstellen:
 		$requestArr = explode("&",$request);
@@ -541,17 +559,17 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
 		if ($this->_domain == "COM")
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;			
  		}
  		else
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+			$request = "https://".$EndpointUrl."/Orders/2013-09-01?".$request."&Signature=".$signature;			
 		}		
 
 		return $request;
@@ -902,10 +920,10 @@ class DhReportListByNextToken extends DhAmazonAccess
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
 		if ($this->_domain == "COM")
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2011-01-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2011-01-01?".$request."&Signature=".$signature;			
+			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;			
  		}
  		else
  		{
