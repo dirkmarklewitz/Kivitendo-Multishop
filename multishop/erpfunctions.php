@@ -1218,15 +1218,14 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 		else
 		{
 			$gruppierung = " saleschannel, artikelgruppe, abteilung, zielland, region";
-			$sortierung = " artikelgruppe, saleschannel, zielland, artikel";
+			$sortierung = " artikelgruppe, saleschannel";
 			$selectanweisung = 	" trim(partsgroup.partsgroup) AS artikelgruppe,"
 								." regexp_split_to_array(trim(substring(ar.intnotes from E'Sales.*\\\(..\\\)?')), E' +') AS saleschannel,"
 								." trim(department.description) AS abteilung,"
 								." trim(customer.country) AS zielland,"
 								." trim(tax_zones.description) AS region,"
 								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) AS menge,"
-								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns,"
-								." trim(parts.partnumber) AS artikel";
+								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns";
 		}
 		$rs = $dbP->getall("SELECT"
 								.$selectanweisung
