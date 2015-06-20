@@ -88,6 +88,7 @@ else
 			$SecretKey_COM=$_POST["SecretKey_COM"];
 			$EndpointUrl_COM=$_POST["EndpointUrl_COM"];
 			$MarketplaceID_US=$_POST["MarketplaceID_US"];
+			$MarketplaceID_CA=$_POST["MarketplaceID_CA"];
 			
 			$eBayaktiviert=$_POST["eBayaktiviert"];
 			$eBayAbteilungsname=$_POST["eBayAbteilungsname"];
@@ -153,6 +154,7 @@ else
 			fputs($f,"\$SecretKey_COM=\"".$_POST["SecretKey_COM"]."\";\n");
 			fputs($f,"\$EndpointUrl_COM=\"".$_POST["EndpointUrl_COM"]."\";\n");			
 			fputs($f,"\$MarketplaceID_US=\"".$_POST["MarketplaceID_US"]."\";\n");
+			fputs($f,"\$MarketplaceID_CA=\"".$_POST["MarketplaceID_CA"]."\";\n");
 
 			fputs($f,"\$eBayaktiviert=\"".$_POST["eBayaktiviert"]."\";\n");
 			fputs($f,"\$eBayAbteilungsname=\"".$_POST["eBayAbteilungsname"]."\";\n");
@@ -181,7 +183,6 @@ else
 			fputs($f,"?>");
 			fclose($f);
 			echo "Konfiguration gesichert !<br><br>";
-			require "conf.php";
 		}
 		else
 		{
@@ -223,6 +224,7 @@ else
 			$SecretKey_COM=$_POST["SecretKey_COM"];
 			$EndpointUrl_COM=$_POST["EndpointUrl_COM"];
 			$MarketplaceID_US=$_POST["MarketplaceID_US"];
+			$MarketplaceID_CA=$_POST["MarketplaceID_CA"];
 
 			$eBayaktiviert=$_POST["eBayaktiviert"];
 			$eBayAbteilungsname=$_POST["eBayAbteilungsname"];
@@ -429,7 +431,14 @@ else
 					<td></td>
 					<td>Amazon.com MarketplaceID_US</td>
 					<td><input type="text" name="MarketplaceID_US" size="25" value="<?= $MarketplaceID_US ?>"></td>
-				</tr>				
+				</tr>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>Amazon.com MarketplaceID_CA</td>
+					<td><input type="text" name="MarketplaceID_CA" size="25" value="<?= $MarketplaceID_CA ?>"></td>
+				</tr>
 				<tr>
 					<td>------------------------------</td>
 					<td>------------------------------</td>

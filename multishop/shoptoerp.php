@@ -548,7 +548,16 @@ else
 									{
 										$giftwrap_text = " GiftWrap ".$orderItem['GiftWrapPrice'];
 									}
-									echo $orderItem['SellerSKU']." - Shipped ".$orderItem['QuantityShipped']." of ".$orderItem['QuantityOrdered']." Price ".$orderItem['ItemPrice'].$promotiondiscount_text.$shipping_text.$shippingdiscount_text.$giftwrap_text."<br>";
+									$count = 0;
+									str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU'], $count);
+									if ($count > 0)
+									{
+										echo $orderItem['SellerSKU']." (".str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU']).") - Shipped ".$orderItem['QuantityShipped']." of ".$orderItem['QuantityOrdered']." Price ".$orderItem['ItemPrice'].$promotiondiscount_text.$shipping_text.$shippingdiscount_text.$giftwrap_text."<br>";
+									}
+									else
+									{
+										echo $orderItem['SellerSKU']." - Shipped ".$orderItem['QuantityShipped']." of ".$orderItem['QuantityOrdered']." Price ".$orderItem['ItemPrice'].$promotiondiscount_text.$shipping_text.$shippingdiscount_text.$giftwrap_text."<br>";
+									}
 									
 									echo "<input type=\"hidden\" name=\"AmazonOrderIdProducts"."|".$opSet1['AmazonOrderId']."|".$lfdNrOrderItem."\" value=\""
 											.$orderItem['OrderItemId']."|"

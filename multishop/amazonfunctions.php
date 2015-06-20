@@ -266,7 +266,8 @@ class DhListOrders extends DhAmazonAccess
 		
 		if ($this->_domain == "COM")
  		{
-			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_US;
+			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_US
+						."&MarketplaceId.Id.2=".$MarketplaceID_CA;
  		}
  		else
  		{
