@@ -33,13 +33,20 @@ else
 	require "joomlafunctions.php";
 	require "rakutenfunctions.php";
 	
-	// Variablen definieren: wieviele Tage in Vergangenheit gezeigt werden sollen:
-	$daysBeforeFrom	= "5";
+	$autoimport = 0;
+	if (isset($_GET["autoimport"])) {
+		$autoimport=$_GET["autoimport"];
+	}
 	
+	// Variablen definieren: wieviele Tage in Vergangenheit gezeigt werden sollen:
+	$daysBeforeFrom	= "5";	
+		
 	if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht") {
+		$ansicht = "detailansicht";
 		$listenansicht_checked = "";
 		$detailansicht_checked = "checked=\"checked\"";
 	} else {
+		$ansicht = "listenansicht";
 		$listenansicht_checked = "checked=\"checked\"";
 		$detailansicht_checked = "";
 	}
@@ -49,55 +56,69 @@ else
 		$erledigtesanzeigen = "";
 	}
 	if (isset($_POST["suchdatum"]) &&  $_POST["suchdatum"] == "bestelldatum") {
+		$suchdatum = "bestelldatum";
 		$versanddatum_checked = "";
 		$bestelldatum_checked = "checked=\"checked\"";
 	} else {
+		$suchdatum = "versanddatum";
 		$versanddatum_checked = "checked=\"checked\"";
 		$bestelldatum_checked = "";
 	}
 	if (isset($_POST["bestellungvom"])) {
+		$bestellungvom_DATA = $_POST["bestellungvom"];
 		$date_from = explode("-", $_POST["bestellungvom"]);
 		$bestellungvom = strtoupper(gmdate("d-M-Y", mktime(12, 0, 0, $date_from[1], $date_from[0], $date_from[2])));
 	} else {
+		$bestellungvom_DATA = strtoupper(gmdate("d-m-Y", time()-86400*$daysBeforeFrom));
 		$bestellungvom = strtoupper(gmdate("d-M-Y", time()-86400*$daysBeforeFrom));
 	}
 	if (isset($_POST["bestellungbis"])) {
+		$bestellungbis_DATA = $_POST["bestellungbis"];
 		$date_bis = explode("-", $_POST["bestellungbis"]);
 		$bestellungbis = strtoupper(gmdate("d-M-Y", mktime(12, 0, 0, $date_bis[1], $date_bis[0], $date_bis[2])));
 	} else {
+		$bestellungbis_DATA = strtoupper(gmdate("d-m-Y", time()-120));
 		$bestellungbis = strtoupper(gmdate("d-M-Y", time()-120));
 	}
 	if (isset($_POST["fulfillmentchannel"]) &&  $_POST["fulfillmentchannel"] == "haendler") {
+		$fulfillmentchannel = "haendler";
 		$amazon_checked = "";
 		$haendler_checked = "checked=\"checked\"";
 	} else {
+		$fulfillmentchannel = "amazon";
 		$amazon_checked = "checked=\"checked\"";
 		$haendler_checked = "";
 	}
 	if (isset($_POST["filter"])) {
 		if ($_POST["filter"] == "Alle") {
+			$filter = "Alle";
 			$Alle_checked = "checked=\"checked\"";
 		}
 		if ($_POST["filter"] == "Amazon") {
+			$filter = "Amazon";
 			$Amazon_checked = "checked=\"checked\"";
 		}
 		if ($_POST["filter"] == "Ebay") {
+			$filter = "Ebay";
 			$Ebay_checked = "checked=\"checked\"";
 		}
 		if ($_POST["filter"] == "Joomla") {
+			$filter = "Joomla";
 			$Joomla_checked = "checked=\"checked\"";
 		}
 		if ($_POST["filter"] == "Rakuten") {
+			$filter = "Rakuten";
 			$Rakuten_checked = "checked=\"checked\"";
 		}
 	} else {
+		$filter = "Alle";
 		$Alle_checked = "checked=\"checked\"";
 	}
 	if (isset($_POST["versandstatus"])) {
 		$versandstatus = $_POST['versandstatus'];
 		if (in_array("shipped", $versandstatus)) { $versandstatus_shipped = "checked=\"checked\""; } else { $versandstatus_shipped = ""; }
 		if (in_array("pending", $versandstatus)) { $versandstatus_pending = "checked=\"checked\""; } else { $versandstatus_pending = ""; }
-		if (in_array("partiallyunshipped", $versandstatus) || $_POST["fulfillmentchannel"] == "haendler") { $versandstatus_partiallyunshipped = "checked=\"checked\""; } else { $versandstatus_partiallyunshipped = ""; }
+		if (in_array("partiallyunshipped", $versandstatus) || $fulfillmentchannel == "haendler") { $versandstatus_partiallyunshipped = "checked=\"checked\""; } else { $versandstatus_partiallyunshipped = ""; }
 		if (in_array("canceled", $versandstatus)) { $versandstatus_canceled = "checked=\"checked\""; } else { $versandstatus_canceled = ""; }
 		if (in_array("unfulfillable", $versandstatus)) { $versandstatus_unfulfillable = "checked=\"checked\""; } else { $versandstatus_unfulfillable = ""; }
 	}
@@ -175,115 +196,58 @@ else
 	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellings\" value=\"Produktverkaufstabelle\">";
 	echo 	"&nbsp;&nbsp;<input type=\"submit\" name=\"sellingscsv\" value=\"Verkaufstabelle als .csv\"><br>";
 	
-	if (isset($_POST["bestellungen"]) && isset($_POST["bestellungvom"]))
+	if (isset($_POST["bestellungen"]) || $autoimport)
 	{
-		if (isset($_POST["bestellungbis"]))
+		$output = array();
+		if ($Amazonaktiviert == "checked" && ($fulfillmentchannel == "amazon" || $filter == "Alle" || $filter == "Amazon"))
 		{
-			$output = array();
-			if ($Amazonaktiviert == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
-			{
- 				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], $_POST["bestellungvom"], $_POST["bestellungbis"], "EU");
- 				if(count($amazonresult) > 0)
- 				{
- 					$output = array_merge($output, $amazonresult);
- 				}
-			}
-			if ($Amazonaktiviert_COM == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
-			{
- 				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], $_POST["bestellungvom"], $_POST["bestellungbis"], "COM");
- 				if(count($amazonresult) > 0)
- 				{
- 					$output = array_merge($output, $amazonresult);
- 				}
-			}			
-			if ($eBayaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Ebay"))
-			{
-				$ebayresult = getEbayOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
-				if(count($ebayresult) > 0)
+				$amazonresult = getAmazonOrders($fulfillmentchannel, $_POST["versandstatus"], $suchdatum, $bestellungvom_DATA, $bestellungbis_DATA, "EU");
+				if(count($amazonresult) > 0)
 				{
-					$output = array_merge($output, $ebayresult);
+					$output = array_merge($output, $amazonresult);
 				}
-			}
-			if ($Joomlaaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Joomla"))
-			{
-				$joomlaresult = getJoomlaOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
-				if(count($joomlaresult) > 0)
+		}
+		if ($Amazonaktiviert_COM == "checked" && ($fulfillmentchannel == "amazon" || $filter == "Alle" || $filter == "Amazon"))
+		{
+				$amazonresult = getAmazonOrders($fulfillmentchannel, $_POST["versandstatus"], $suchdatum, $bestellungvom_DATA, $bestellungbis_DATA, "COM");
+				if(count($amazonresult) > 0)
 				{
-					$output = array_merge($output, $joomlaresult);
+					$output = array_merge($output, $amazonresult);
 				}
-			}
-			if ($Rakutenaktiviert == "checked" && ($_POST["filter"] == "Alle" || $_POST["filter"] == "Rakuten"))
+		}			
+		if ($eBayaktiviert == "checked" && ($filter == "Alle" || $filter == "Ebay"))
+		{
+			$ebayresult = getEbayOrders($fulfillmentchannel, $bestellungvom_DATA, $bestellungbis_DATA);
+			if(count($ebayresult) > 0)
 			{
-				$Rakutenresult = getRakutenOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"]);
-				if(count($Rakutenresult) > 0)
-				{
-					$output = array_merge($output, $Rakutenresult);
-				}
+				$output = array_merge($output, $ebayresult);
 			}
-								
-			// output sortieren
-			if ($suchdatum == "versanddatum")
+		}
+		if ($Joomlaaktiviert == "checked" && ($filter == "Alle" || $filter == "Joomla"))
+		{
+			$joomlaresult = getJoomlaOrders($fulfillmentchannel, $bestellungvom_DATA, $bestellungbis_DATA);
+			if(count($joomlaresult) > 0)
 			{
-				usort($output, "cmpversand");
+				$output = array_merge($output, $joomlaresult);
 			}
-			else
+		}
+		if ($Rakutenaktiviert == "checked" && ($filter == "Alle" || $filter == "Rakuten"))
+		{
+			$Rakutenresult = getRakutenOrders($fulfillmentchannel, $bestellungvom_DATA, $bestellungbis_DATA);
+			if(count($Rakutenresult) > 0)
 			{
-				usort($output, "cmpbestell");
+				$output = array_merge($output, $Rakutenresult);
 			}
+		}
+							
+		// output sortieren
+		if ($suchdatum == "versanddatum")
+		{
+			usort($output, "cmpversand");
 		}
 		else
 		{
-			$output = array();
-			if ($Amazonaktiviert == "checked")
-			{
-				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], $_POST["bestellungvom"], "", "EU");
-				if(count($amazonresult) > 0)
-				{
-					$output = array_merge($output, $amazonresult);
-				}
-			}
-			if ($Amazonaktiviert_COM == "checked")
-			{
-				$amazonresult = getAmazonOrders($_POST["fulfillmentchannel"], $_POST["versandstatus"], $_POST["suchdatum"], $_POST["bestellungvom"], "", "COM");
-				if(count($amazonresult) > 0)
-				{
-					$output = array_merge($output, $amazonresult);
-				}
-			}
-			if ($eBayaktiviert == "checked")
-			{
-				$ebayresult = getEbayOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "");
-				if(count($ebayresult) > 0)
-				{
-					$output = array_merge($output, $ebayresult);
-				}
-			}
-			if ($Joomlaaktiviert == "checked")
-			{
-				$joomlaresult = getJoomlaOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "");
-				if(count($joomlaresult) > 0)
-				{
-					$output = array_merge($output, $joomlaresult);
-				}
-			}
-			if ($Rakutenaktiviert == "checked")
-			{
-				$Rakutenresult = getRakutenOrders($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "");
-				if(count($Rakutenresult) > 0)
-				{
-					$output = array_merge($output, $Rakutenresult);
-				}
-			}
-
-			// output sortieren
-			if ($suchdatum == "versanddatum")
-			{
-				usort($output, "cmpversand");
-			}
-			else
-			{
-				usort($output, "cmpbestell");
-			}
+			usort($output, "cmpbestell");
 		}
 	
 		echo "<br>Bestellungen:<br>";
@@ -298,7 +262,7 @@ else
 		}
 		else
 		{
-			if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht")
+			if ($ansicht == "detailansicht")
 			{
 				echo	"<table border=\"1\">"
 					 		."<tr>"
@@ -331,6 +295,9 @@ else
 					$replaceLanguage[trim($zerlegteEinzelsprache[0])] = trim($zerlegteEinzelsprache[1]);
 				}
 			}
+			
+			$bestellungen_autoimport = array();			
+			
 			foreach($output as $lfdNr => $opSet1)
 			{
 				$languagetemp = $standardsprache;
@@ -342,7 +309,7 @@ else
 				}
 				if ($show_it)
 				{
-					if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht")
+					if ($ansicht == "detailansicht")
 					{
 						echo 	"<tr valign=\"top\">"
 									."<td>".$opSet1['AmazonOrderId']."</td>"
@@ -464,6 +431,48 @@ else
 												echo "<input type=\"hidden\" name=\"OrderComment"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['OrderComment']."\">";
 												echo "<input type=\"hidden\" name=\"Language"."|".$opSet1['AmazonOrderId']."\" value=\"".$languagetemp."\">";
 												echo "</td>";
+
+												if ($amazon_checked && $autoimport)
+												{
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderId'] = $opSet1['AmazonOrderId'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['SellerOrderId'] = $opSet1['SellerOrderId'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['PurchaseDate'] = $opSet1['PurchaseDate'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['LastUpdateDate'] = $opSet1['LastUpdateDate'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['SalesChannel'] = $opSet1['SalesChannel'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['MarketplaceId'] = $opSet1['MarketplaceId'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['OrderType'] = $opSet1['OrderType'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['OrderStatus'] = $opSet1['OrderStatus'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['FulfillmentChannel'] = $opSet1['FulfillmentChannel'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ShipmentServiceLevelCategory'] = $opSet1['ShipmentServiceLevelCategory'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ShipServiceLevel'] = $opSet1['ShipServiceLevel'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Amount'] = $opSet1['Amount'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['CurrencyCode'] = $opSet1['CurrencyCode'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['PaymentMethod'] = $opSet1['PaymentMethod'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['NumberOfItemsShipped'] = $opSet1['NumberOfItemsShipped'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['NumberOfItemsUnshipped'] = $opSet1['NumberOfItemsUnshipped'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['BuyerName'] = $opSet1['BuyerName'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Title'] = $opSet1['Title'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Name'] = $opSet1['Name'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AddressLine1'] = $opSet1['AddressLine1'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AddressLine2'] = $opSet1['AddressLine2'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['PostalCode'] = $opSet1['PostalCode'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['City'] = $opSet1['City'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['CountryCode'] = $opSet1['CountryCode'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['StateOrRegion'] = $opSet1['StateOrRegion'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['recipient-title'] = $opSet1['recipient-title'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['recipient-name'] = $opSet1['recipient-name'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-address-1'] = $opSet1['ship-address-1'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-address-2'] = $opSet1['ship-address-2'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-address-3'] = $opSet1['ship-address-3'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-postal-code'] = $opSet1['ship-postal-code'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-city'] = $opSet1['ship-city'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-state'] = $opSet1['ship-state'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['ship-country'] = $opSet1['ship-country'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['BuyerEmail'] = $opSet1['BuyerEmail'];			
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Phone'] = $opSet1['Phone'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['OrderComment'] = $opSet1['OrderComment'];
+													$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Language'] = $languagetemp;
+												}
 											}
 											else 
 											{
@@ -526,6 +535,7 @@ else
 								}
 								
 								echo "<td>";
+								$zaehler = 0;
 								foreach($opSet1['orderItemsListOutput'] as $lfdNrOrderItem => $orderItem)
 								{
 									$promotiondiscount_text = "";
@@ -575,6 +585,24 @@ else
 											.$orderItem['QuantityShipped']."|"
 											.$orderItem['Title']
 											."\">";
+									if ($amazon_checked && $autoimport)
+									{
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['OrderItemId'] = $orderItem['OrderItemId'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['SellerSKU'] = str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU']);
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ASIN'] = $orderItem['ASIN'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ItemPrice'] = $orderItem['ItemPrice'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ItemTax'] = $orderItem['ItemTax'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['PromotionDiscount'] = $orderItem['PromotionDiscount'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ShippingPrice'] = $orderItem['ShippingPrice'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ShippingTax'] = $orderItem['ShippingTax'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['ShippingDiscount'] = $orderItem['ShippingDiscount'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['GiftWrapPrice'] = $orderItem['GiftWrapPrice'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['GiftWrapTax'] = $orderItem['GiftWrapTax'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['QuantityOrdered'] = $orderItem['QuantityOrdered'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['QuantityShipped'] = $orderItem['QuantityShipped'];
+										$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['Title'] = $orderItem['Title'];
+										$zaehler++;
+									}
 								}
 								echo "</td>";
 							}
@@ -586,7 +614,7 @@ else
 					}
 					echo 	"</tr>";
 		
-					if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht")
+					if ($ansicht == "detailansicht")
 					{				
 						if (array_key_exists('error', $opSet1) && $opSet1['error'])
 						{
@@ -611,160 +639,21 @@ else
 					}
 				}
 			}
-			if (isset($_POST["ansicht"]) &&  $_POST["ansicht"] == "detailansicht")
+			if ($ansicht == "detailansicht")
 			{
 				echo "</table>";
 			}
 			else
 			{
 				echo "</table><br>";
-				echo "<input type=\"submit\" name=\"import\" value=\"Ausgewaehltes importieren\">";
+				if (!$autoimport) {
+					echo "<input type=\"submit\" name=\"import\" value=\"Ausgewaehltes importieren\">";
+				}
 			}
 		}
 	}
-	else if (isset($_POST["orderreports"]) && isset($_POST["bestellungvom"]))
-	{
-		if (isset($_POST["bestellungbis"]))
-		{
-			$output = array();
-			if ($Amazonaktiviert == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
-			{
- 				$amazonresult = getAmazonOrdersByReports($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"], "EU");
- 				if(count($amazonresult) > 0)
- 				{
- 					$output = array_merge($output, $amazonresult);
- 				}
-			}
-// 			if ($Amazonaktiviert_COM == "checked" && ($_POST["fulfillmentchannel"] == "amazon" || $_POST["filter"] == "Alle" || $_POST["filter"] == "Amazon"))
-// 			{
-//  				$amazonresult = getAmazonOrdersByReports($_POST["fulfillmentchannel"], $_POST["bestellungvom"], $_POST["bestellungbis"], "COM");
-//  				if(count($amazonresult) > 0)
-//  				{
-//  					$output = array_merge($output, $amazonresult);
-//  				}
-// 			}			
-		}
-		else
-		{
-			$output = array();
-			if ($Amazonaktiviert == "checked")
-			{
-				$amazonresult = getAmazonOrdersByReports($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "", "EU");
-				if(count($amazonresult) > 0)
-				{
-					$output = array_merge($output, $amazonresult);
-				}
-			}
-// 			if ($Amazonaktiviert_COM == "checked")
-// 			{
-// 				$amazonresult = getAmazonOrdersByReports($_POST["fulfillmentchannel"], $_POST["bestellungvom"], "", "COM");
-// 				if(count($amazonresult) > 0)
-// 				{
-// 					$output = array_merge($output, $amazonresult);
-// 				}
-// 			}
-		}
 	
-		echo "<br>Datensaetze zum Adressupdate: ".count($output)."<br>";
-		
-		// wenn Fehler, diese ausgeben, sonst Rückgabe in Tabelle anzeigen:
-		if (array_key_exists('error', $output) && $output['error'])
-		{
-			foreach($output['error'] as $oeSet)
-			{
-		  		echo $oeSet;
-			}
-		}
-		else
-		{
-		 	echo	"<table border=\"1\">"
-				 		."<tr>"
-				 			."<th>Nr.</th>"
-				 			."<th>Abgleichen</th>"
-				 			."<th>KdNr</th>"
-		 					."<th>Bestellnummer</th>"
-		 					."<th>Marktplatz (Zielland)</th>"
-		 					."<th>Versanddatum</th>"
-		 					."<th>Rechnungsadresse</th>"
-		 					."<th>Versandadresse</th>"
-		 				."</tr>";
-		 				
-			foreach($output as $lfdNr => $einzelbestellung)
-			{
-				$adressabgleicherledigt = explode ("|", checkCustomerAdressabgleichErledigt($einzelbestellung));
-				
-				$show_it = true;
-				if (!isset($_POST["erledigtesanzeigen"]) && $adressabgleicherledigt[0] == "ja")
-				{
-					$show_it = false;
-				}
-				if ($show_it)
-				{
-					echo 	"<tr valign=\"top\">";
-					echo 		"<td>".$lfdNr."</td>";
-					if ($adressabgleicherledigt[0] == "ja")
-					{
-						echo "<td>Adresse abgeglichen/ aktuell</td>";
-						echo "<td>".$adressabgleicherledigt[1]."</td>";
-					}
-					elseif ($adressabgleicherledigt[0] == "nein")
-					{
-						if (array_key_exists('error', $einzelbestellung) && $einzelbestellung['error'])
-						{
-							echo "<td bgcolor=\"red\">Abfragefehler!</td>";
-						}
-						else
-						{
-							echo "<td>";
-							echo "<input type=\"checkbox\" name=\"abgleichsauswahl[]\" value=\"".$einzelbestellung['AmazonOrderId']."\" checked=\"checked\">";
-							
-							echo "<input type=\"hidden\" name=\"AmazonOrderId"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AmazonOrderId']."\">";
-							echo "<input type=\"hidden\" name=\"SellerOrderId"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['SellerOrderId']."\">";
-							echo "<input type=\"hidden\" name=\"PurchaseDate"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['PurchaseDate']."\">";
-							echo "<input type=\"hidden\" name=\"SalesChannel"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['SalesChannel']."\">";
-							echo "<input type=\"hidden\" name=\"FulfillmentChannel"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['FulfillmentChannel']."\">";
-							echo "<input type=\"hidden\" name=\"BuyerName"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['BuyerName']."\">";
-							echo "<input type=\"hidden\" name=\"Title"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Title']."\">";
-							echo "<input type=\"hidden\" name=\"Name"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Name']."\">";
-							echo "<input type=\"hidden\" name=\"AddressLine1"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AddressLine1']."\">";
-							echo "<input type=\"hidden\" name=\"AddressLine2"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AddressLine2']."\">";
-							echo "<input type=\"hidden\" name=\"PostalCode"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['PostalCode']."\">";
-							echo "<input type=\"hidden\" name=\"City"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['City']."\">";
-							echo "<input type=\"hidden\" name=\"CountryCode"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['CountryCode']."\">";
-							echo "<input type=\"hidden\" name=\"StateOrRegion"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['StateOrRegion']."\">";
-							echo "<input type=\"hidden\" name=\"BuyerEmail"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['BuyerEmail']."\">";
-							echo "<input type=\"hidden\" name=\"Phone"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Phone']."\">";
-							echo "<input type=\"hidden\" name=\"recipient-title"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['recipient-title']."\">";
-							echo "<input type=\"hidden\" name=\"recipient-name"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['recipient-name']."\">";
-							echo "<input type=\"hidden\" name=\"ship-address-1"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-1']."\">";
-							echo "<input type=\"hidden\" name=\"ship-address-2"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-2']."\">";
-							echo "<input type=\"hidden\" name=\"ship-address-3"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-3']."\">";
-							echo "<input type=\"hidden\" name=\"ship-postal-code"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-postal-code']."\">";
-							echo "<input type=\"hidden\" name=\"ship-city"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-city']."\">";
-							echo "<input type=\"hidden\" name=\"ship-state"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-state']."\">";
-							echo "<input type=\"hidden\" name=\"ship-country"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-country']."\">";
-							echo "</td>";
-							echo "<td>".$adressabgleicherledigt[1]."</td>";
-						}
-					}
-					else 
-					{
-						echo "<td>".$adressabgleicherledigt[0]."</td><td></td>";
-					}
-					$date = new DateTime($einzelbestellung['LastUpdateDate']);
-					echo "<td>".$einzelbestellung['AmazonOrderId']."</td>"
-						."<td>".$einzelbestellung['SalesChannel']." (".$einzelbestellung['CountryCode'].")</td>"
-						."<td>".$date->format('Y-m-d H:i')."</td>";
-					echo "<td>".$einzelbestellung['Name'].", ".$einzelbestellung['AddressLine1'].", ".$einzelbestellung['AddressLine2'].", ".$einzelbestellung['PostalCode']." ".$einzelbestellung['City'].", ".$einzelbestellung['CountryCode']."</td>";
-					echo "<td>".$einzelbestellung['recipient-name'].", ".$einzelbestellung['ship-address-1'].", ".$einzelbestellung['ship-address-2'].", ".$einzelbestellung['ship-postal-code']." ".$einzelbestellung['ship-city'].", ".$einzelbestellung['ship-country']."</td>";
-					echo "</tr>";
-				}
-			}
-			echo "</table><br>";
-			echo "<input type=\"submit\" name=\"adressabgleich\" value=\"Ausgewaehlte Adressen abgleichen\">";
-		}
-	}	
-	else if (isset($_POST["import"]))
+	if (isset($_POST["import"]) || $autoimport)
 	{
 		// Zum Import ausgewaehlte Datensaetze zusammenstellen	
 		if (isset($_POST["importauswahl"])) {
@@ -841,6 +730,10 @@ else
 		}
 		echo "<br> Starte Import!<br><br>";
 		
+		if ($autoimport) {
+			$bestellungen = $bestellungen_autoimport;
+		}
+		
 		$bestellungszahl = count($bestellungen);
 	
 		if ($bestellungszahl)
@@ -862,8 +755,163 @@ else
 		{
 			echo "Keine Bestellungen ausgewaehlt/ es liegen keine Bestellungen vor!<br>";
 		}
+	}	
+	
+	if (isset($_POST["orderreports"]) || $autoimport)
+	{
+		$output = array();
+		if ($Amazonaktiviert == "checked" && ($fulfillmentchannel == "amazon" || $filter == "Alle" || $filter == "Amazon"))
+		{
+				$amazonresult = getAmazonOrdersByReports($fulfillmentchannel, $bestellungvom_DATA, $bestellungbis_DATA, "EU");
+				if(count($amazonresult) > 0)
+				{
+					$output = array_merge($output, $amazonresult);
+				}
+		}
+// 		if ($Amazonaktiviert_COM == "checked" && ($fulfillmentchannel == "amazon" || $filter == "Alle" || $filter == "Amazon"))
+// 		{
+//  			$amazonresult = getAmazonOrdersByReports($fulfillmentchannel, $bestellungvom_DATA, $bestellungbis_DATA, "COM");
+//  			if(count($amazonresult) > 0)
+//  			{
+//  				$output = array_merge($output, $amazonresult);
+//  			}
+// 		}			
+
+	
+		echo "<br>Datensaetze zum Adressupdate: ".count($output)."<br>";
+		
+		// wenn Fehler, diese ausgeben, sonst Rückgabe in Tabelle anzeigen:
+		if (array_key_exists('error', $output) && $output['error'])
+		{
+			foreach($output['error'] as $oeSet)
+			{
+		  		echo $oeSet;
+			}
+		}
+		else
+		{
+		 	echo	"<table border=\"1\">"
+				 		."<tr>"
+				 			."<th>Nr.</th>"
+				 			."<th>Abgleichen</th>"
+				 			."<th>KdNr</th>"
+		 					."<th>Bestellnummer</th>"
+		 					."<th>Marktplatz (Zielland)</th>"
+		 					."<th>Versanddatum</th>"
+		 					."<th>Rechnungsadresse</th>"
+		 					."<th>Versandadresse</th>"
+		 				."</tr>";
+
+		 	$abgleichsdatensaetze_autoimport = array();	
+		 						 				
+			foreach($output as $lfdNr => $einzelbestellung)
+			{
+				$adressabgleicherledigt = explode ("|", checkCustomerAdressabgleichErledigt($einzelbestellung));
+				
+				$show_it = true;
+				if (!isset($_POST["erledigtesanzeigen"]) && $adressabgleicherledigt[0] == "ja")
+				{
+					$show_it = false;
+				}
+				if ($show_it)
+				{
+					echo 	"<tr valign=\"top\">";
+					echo 		"<td>".$lfdNr."</td>";
+					if ($adressabgleicherledigt[0] == "ja")
+					{
+						echo "<td>Adresse abgeglichen/ aktuell</td>";
+						echo "<td>".$adressabgleicherledigt[1]."</td>";
+					}
+					elseif ($adressabgleicherledigt[0] == "nein")
+					{
+						if (array_key_exists('error', $einzelbestellung) && $einzelbestellung['error'])
+						{
+							echo "<td bgcolor=\"red\">Abfragefehler!</td>";
+						}
+						else
+						{
+							echo "<td>";
+							echo "<input type=\"checkbox\" name=\"abgleichsauswahl[]\" value=\"".$einzelbestellung['AmazonOrderId']."\" checked=\"checked\">";
+							
+							echo "<input type=\"hidden\" name=\"AmazonOrderId"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AmazonOrderId']."\">";
+							echo "<input type=\"hidden\" name=\"SellerOrderId"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['SellerOrderId']."\">";
+							echo "<input type=\"hidden\" name=\"PurchaseDate"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['PurchaseDate']."\">";
+							echo "<input type=\"hidden\" name=\"SalesChannel"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['SalesChannel']."\">";
+							echo "<input type=\"hidden\" name=\"FulfillmentChannel"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['FulfillmentChannel']."\">";
+							echo "<input type=\"hidden\" name=\"BuyerName"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['BuyerName']."\">";
+							echo "<input type=\"hidden\" name=\"Title"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Title']."\">";
+							echo "<input type=\"hidden\" name=\"Name"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Name']."\">";
+							echo "<input type=\"hidden\" name=\"AddressLine1"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AddressLine1']."\">";
+							echo "<input type=\"hidden\" name=\"AddressLine2"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['AddressLine2']."\">";
+							echo "<input type=\"hidden\" name=\"PostalCode"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['PostalCode']."\">";
+							echo "<input type=\"hidden\" name=\"City"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['City']."\">";
+							echo "<input type=\"hidden\" name=\"CountryCode"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['CountryCode']."\">";
+							echo "<input type=\"hidden\" name=\"StateOrRegion"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['StateOrRegion']."\">";
+							echo "<input type=\"hidden\" name=\"BuyerEmail"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['BuyerEmail']."\">";
+							echo "<input type=\"hidden\" name=\"Phone"."|".$einzelbestellung['AmazonOrderId']."\" value=\"".$einzelbestellung['Phone']."\">";
+							echo "<input type=\"hidden\" name=\"recipient-title"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['recipient-title']."\">";
+							echo "<input type=\"hidden\" name=\"recipient-name"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['recipient-name']."\">";
+							echo "<input type=\"hidden\" name=\"ship-address-1"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-1']."\">";
+							echo "<input type=\"hidden\" name=\"ship-address-2"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-2']."\">";
+							echo "<input type=\"hidden\" name=\"ship-address-3"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-address-3']."\">";
+							echo "<input type=\"hidden\" name=\"ship-postal-code"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-postal-code']."\">";
+							echo "<input type=\"hidden\" name=\"ship-city"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-city']."\">";
+							echo "<input type=\"hidden\" name=\"ship-state"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-state']."\">";
+							echo "<input type=\"hidden\" name=\"ship-country"."|".$$einzelbestellung['AmazonOrderId']."\" value=\"".$$einzelbestellung['ship-country']."\">";
+							echo "</td>";
+							echo "<td>".$adressabgleicherledigt[1]."</td>";
+							
+							if ($autoimport)
+							{
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['AmazonOrderId'] = $einzelbestellung['AmazonOrderId'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['SellerOrderId'] = $einzelbestellung['SellerOrderId'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['PurchaseDate'] = $einzelbestellung['PurchaseDate'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['SalesChannel'] = $einzelbestellung['SalesChannel'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['FulfillmentChannel'] = $einzelbestellung['FulfillmentChannel'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['BuyerName'] = $einzelbestellung['BuyerName'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['Title'] = $einzelbestellung['Title'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['Name'] = $einzelbestellung['Name'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['AddressLine1'] = $einzelbestellung['AddressLine1'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['AddressLine2'] = $einzelbestellung['AddressLine2'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['PostalCode'] = $einzelbestellung['PostalCode'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['City'] = $einzelbestellung['City'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['CountryCode'] = $einzelbestellung['CountryCode'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['StateOrRegion'] = $einzelbestellung['StateOrRegion'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['BuyerEmail'] = $einzelbestellung['BuyerEmail'];			
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['Phone'] = $einzelbestellung['Phone'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['recipient-title'] = $einzelbestellung['recipient-title'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['recipient-name'] = $einzelbestellung['recipient-name'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-address-1'] = $einzelbestellung['ship-address-1'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-address-2'] = $einzelbestellung['ship-address-2'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-address-3'] = $einzelbestellung['ship-address-3'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-postal-code'] = $einzelbestellung['ship-postal-code'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-city'] = $einzelbestellung['ship-city'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-state'] = $einzelbestellung['ship-state'];
+								$abgleichsdatensaetze_autoimport[$einzelbestellung['AmazonOrderId']]['ship-country'] = $einzelbestellung['ship-country'];
+							}
+						}
+					}
+					else 
+					{
+						echo "<td>".$adressabgleicherledigt[0]."</td><td></td>";
+					}
+					$date = new DateTime($einzelbestellung['LastUpdateDate']);
+					echo "<td>".$einzelbestellung['AmazonOrderId']."</td>"
+						."<td>".$einzelbestellung['SalesChannel']." (".$einzelbestellung['CountryCode'].")</td>"
+						."<td>".$date->format('Y-m-d H:i')."</td>";
+					echo "<td>".$einzelbestellung['Name'].", ".$einzelbestellung['AddressLine1'].", ".$einzelbestellung['AddressLine2'].", ".$einzelbestellung['PostalCode']." ".$einzelbestellung['City'].", ".$einzelbestellung['CountryCode']."</td>";
+					echo "<td>".$einzelbestellung['recipient-name'].", ".$einzelbestellung['ship-address-1'].", ".$einzelbestellung['ship-address-2'].", ".$einzelbestellung['ship-postal-code']." ".$einzelbestellung['ship-city'].", ".$einzelbestellung['ship-country']."</td>";
+					echo "</tr>";
+				}
+			}
+			echo "</table><br>";
+			if (!$autoimport) {
+				echo "<input type=\"submit\" name=\"adressabgleich\" value=\"Ausgewaehlte Adressen abgleichen\">";
+			}
+		}
 	}
-	else if (isset($_POST["adressabgleich"]))
+	
+	if (isset($_POST["adressabgleich"]) || $autoimport)
 	{
 		// Zum Adressabgleich ausgewaehlte Datensaetze zusammenstellen
 		if (isset($_POST["abgleichsauswahl"])) {
@@ -903,6 +951,11 @@ else
 		}
 		echo "<br> Starte Adressabgleich!<br><br>";
 		
+		if ($autoimport)
+		{
+			$abgleichsdatensaetze = $abgleichsdatensaetze_autoimport;
+		}
+		
 		$abgleichsdatensaetzezahl = count($abgleichsdatensaetze);
 	
 		if ($abgleichsdatensaetzezahl)
@@ -920,7 +973,8 @@ else
 			echo "Keine Datensaetze ausgewaehlt/ es liegen keine Datensaetze vor!<br>";
 		}
 	}
-	else if (isset($_POST["sellings"]))
+	
+	if (isset($_POST["sellings"]))
 	{
 		echo "<br><br><table border=\"1\">"
 				."<tr>"
