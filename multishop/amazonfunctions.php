@@ -38,7 +38,7 @@ function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $beste
 		$bearbeitungsstatus = checkAmazonOrderId($opSet1['AmazonOrderId']);
 		$output[$lfdNr]['bearbeitungsstatus'] = $bearbeitungsstatus;
 		$get_it = false;
-		if ($bearbeitungsstatus == "neu")
+		if ($bearbeitungsstatus == "neu" || ($bearbeitungsstatus == "auftrag" && $fulfillmentchannel == "haendler"))
 		{
 			$get_it = true;
 		}

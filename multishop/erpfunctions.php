@@ -758,6 +758,20 @@ function hole_department_id($department_klarname)
 }
 
 /**********************************************
+* hole_project_id($project_klarname)
+***********************************************/
+function hole_project_id($project_klarname)
+{
+	$sql = "select id from project where projectnumber='".$project_klarname."'";
+	$abfrage = getAll("erp", $sql, "hole_project_id");
+	if ($abfrage[0]["id"])
+	{
+		return $abfrage[0]["id"];
+	}
+	return "NULL";
+}
+
+/**********************************************
 * hole_payment_id($zahlungsart)
 ***********************************************/
 function hole_payment_id($zahlungsart)
@@ -828,6 +842,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		$sql .= "shipto_id=".$versandadressennummer.", ";
 	}
 	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", shippingpoint='".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]])."', ";
+	$sql .= "globalproject_id=".hole_project_id($standardprojekt).", ";
 	$sql .= "amount=".$brutto.", netamount=".$netto.", reqdate='".$bestellung["LastUpdateDate"]."', taxincluded='t', ";
 	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
 	if ($bestellung["ship-country"] != "")
@@ -1035,6 +1050,90 @@ function checkAmazonOrderId($AmazonOrderId)
 				$status = "email";
 			}
 		}
+	}
+	
+	return $status;
+}
+
+/**********************************************
+* checkPortostatusOfOrderId($OrderId)
+***********************************************/
+function checkPortostatusOfOrderId($OrderId)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$status = false;
+	
+	$dbP = @DB::connect($dsnP);
+	if (DB::isError($dbP)||!$dbP)
+	{
+		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
+		$dbP = false;
+	}
+	else
+	{
+		// Auftraege checken
+		$rs = $dbP->getall("select cusordnumber from oe where cusordnumber = '".$OrderId."' and shipvia LIKE '%[porto]%'");
+		if (count($rs) >= 1)
+		{
+			$status = true;
+		}
+	}
+	
+	return $status;
+}
+
+/**********************************************
+* setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
+***********************************************/
+function setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$status = false;
+	
+	$dbP = @DB::connect($dsnP);
+	if (DB::isError($dbP)||!$dbP)
+	{
+		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
+		$dbP = false;
+	}
+	else
+	{
+		// Daten in Auftrag eintragen
+		$sql = "update oe set shipvia='[porto] ".$Carrier."/".$TrackingNumber."' where cusordnumber = '".$OrderId."'";
+		$rc = query("erp",$sql,"setPortostatusOfOrderId");	
+		if ($rc === -99)
+		{
+			echo "Portostatus ".$OrderId." konnte nicht eingetragen werden.<br>";
+			$rc = query("erp", "ROLLBACK WORK", "setPortostatusOfOrderId");
+			if ($rc === -99)
+			{
+				echo "Probleme mit Transaktion. Abbruch!"; exit();
+			}
+			return false;
+		}		
+		$status = true;
 	}
 	
 	return $status;
@@ -1345,6 +1444,12 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 					case 'sonstiges':
 			        	$csv_daten[$lfdNrCsv][9] += $zeile[6];
 				        break;
+					case '1921-cable':
+			        	$csv_daten[$lfdNrCsv][10] += $zeile[6];
+				        break;				        
+					case 'mobile6-garde':
+			        	$csv_daten[$lfdNrCsv][11] += $zeile[6];
+				        break;				        
 				}
 				$found = true;
 			}
@@ -1380,7 +1485,12 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 					case 'sonstiges':
 			        	$csv_daten[$lfdNrCsv][9] += $zeile[7];
 				        break;
-
+					case '1921-cable':
+			        	$csv_daten[$lfdNrCsv][10] += $zeile[7];
+				        break;
+					case 'mobile6-garde':
+			        	$csv_daten[$lfdNrCsv][11] += $zeile[7];
+				        break;
 				}
 				$returnfound = true;
 			}

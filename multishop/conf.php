@@ -15,6 +15,7 @@ $platzhalterFehlendeSKU="";
 $versandkosten="";
 $geschenkverpackung="";
 $standardsprache="";
+$standardprojekt="";
 $ersatzSprache="";
 $Amazonaktiviert="";
 $AmazonAbteilungsname="Amazon";

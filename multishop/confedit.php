@@ -64,6 +64,8 @@ else
 			$versandkosten=$_POST["versandkosten"];
 			$geschenkverpackung=$_POST["geschenkverpackung"];
 			$standardsprache=$_POST["standardsprache"];
+			$standardprojekt=$_POST["standardprojekt"];
+			$portoemail=$_POST["portoemail"];
 			$ersatzSprache=$_POST["ersatzSprache"];
 			
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
@@ -130,6 +132,8 @@ else
 			fputs($f,"\$versandkosten=\"".$_POST["versandkosten"]."\";\n");
 			fputs($f,"\$geschenkverpackung=\"".$_POST["geschenkverpackung"]."\";\n");
 			fputs($f,"\$standardsprache=\"".$_POST["standardsprache"]."\";\n");
+			fputs($f,"\$standardprojekt=\"".$_POST["standardprojekt"]."\";\n");
+			fputs($f,"\$portoemail=\"".$_POST["portoemail"]."\";\n");
 			fputs($f,"\$ersatzSprache=\"".$_POST["ersatzSprache"]."\";\n");
 			
 			fputs($f,"\$Amazonaktiviert=\"".$_POST["Amazonaktiviert"]."\";\n");
@@ -200,6 +204,8 @@ else
 			$versandkosten=$_POST["versandkosten"];
 			$geschenkverpackung=$_POST["geschenkverpackung"];
 			$standardsprache=$_POST["standardsprache"];
+			$standardprojekt=$_POST["standardprojekt"];
+			$portoemail=$_POST["portoemail"];
 			$ersatzSprache=$_POST["ersatzSprache"];
 
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
@@ -370,22 +376,22 @@ else
 					<td><input type="text" name="MarketplaceID_FR" size="25" value="<?= $MarketplaceID_FR ?>"></td>
 				</tr>
 				<tr>
-					<td>Liste Sprachzuordnung<br>Marketplace -> Sprache<br>(eine pro Zeile, | ist Trenner)</td>
-					<td><textarea name="ersatzSprache" cols="32" rows="10"><?= $ersatzSprache ?></textarea>
+					<td>Standardprojekt (Bezeichnung)</td>
+					<td><input type="text" name="standardprojekt" size="25" value="<?= $standardprojekt ?>"></td>				
 					<td></td>
 					<td>Amazon MarketplaceID_IT</td>
 					<td><input type="text" name="MarketplaceID_IT" size="25" value="<?= $MarketplaceID_IT ?>"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Emailempfaenger Porto</td>
+					<td><input type="text" name="portoemail" size="25" value="<?= $portoemail ?>"></td>				
 					<td></td>
 					<td>Amazon MarketplaceID_ES</td>
 					<td><input type="text" name="MarketplaceID_ES" size="25" value="<?= $MarketplaceID_ES ?>"></td>
 				</tr>				
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Liste Sprachzuordnung<br>Marketplace -> Sprache<br>(eine pro Zeile, | ist Trenner)</td>
+					<td><textarea name="ersatzSprache" cols="32" rows="10"><?= $ersatzSprache ?></textarea>
 					<td></td>
 					<td>Liste mit zu ersetzenden SKU<br>Amazon -> Kivi<br>(eine pro Zeile, | ist Trenner)</td>
 					<td><textarea name="ersatzSKU" cols="32" rows="5"><?= $ersatzSKU ?></textarea>
