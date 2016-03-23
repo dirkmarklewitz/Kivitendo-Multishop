@@ -223,7 +223,7 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 			// $orderItemsListOutput[$itemcounter]['GiftWrapTax'] = "";
 			$orderItemsListOutput[$itemcounter]['QuantityOrdered'] = $row_products['product_quantity'];
 			$orderItemsListOutput[$itemcounter]['QuantityShipped'] = 0;
-			$orderItemsListOutput[$itemcounter]['Title'] = $row_products['product_name'];
+			$orderItemsListOutput[$itemcounter]['Title'] = utf8_encode($row_products['product_name']);
 			
 			/* unused Fields
 			$row_products['product_tax']

@@ -192,15 +192,14 @@ class eBayApiClass
 						$returnvalue[$bestellungszaehler]['City'] = $item->getElementsByTagName('CityName')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['CountryCode'] = $item->getElementsByTagName('Country')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['StateOrRegion'] = $item->getElementsByTagName('StateOrProvince')->item(0)->nodeValue;
-						
 						// $returnvalue[$bestellungszaehler]['recipient-title'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['recipient-name'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-address-1'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-address-2'] = "";
-						// $returnvalue[$bestellungszaehler]['ship-postal-code'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-city'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-country'] = utf8_encode("");
-						// $returnvalue[$bestellungszaehler]['ship-state'] = utf8_encode("");
+						$returnvalue[$bestellungszaehler]['recipient-name'] = $item->getElementsByTagName('Name')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-address-1'] = $item->getElementsByTagName('Street1')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-address-2'] = $item->getElementsByTagName('Street2')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-postal-code'] = $item->getElementsByTagName('PostalCode')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-city'] = $item->getElementsByTagName('CityName')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-country'] = $item->getElementsByTagName('Country')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ship-state'] = $item->getElementsByTagName('StateOrProvince')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['BuyerEmail'] = $item->getElementsByTagName('Email')->item(0)->nodeValue;
 						if ($item->getElementsByTagName('Phone')->item(0)->nodeValue != "Invalid Request")
 						{

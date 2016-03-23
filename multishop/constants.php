@@ -38,8 +38,10 @@ $LAND = array(	"DE" => "Deutschland",
 				"BH" => "Bahrain",
 				"BR" => "Brasilien",
 				"CA" => "Kanada",
-				"CH" => "Schweiz",				
+				"CH" => "Schweiz",
 				"CK" => "Cook Inseln",
+				"CL" => "Chile",
+				"CN" => "China",
 				"GF" => "Französisch Guyana",
 				"GG" => "Guernsey",
 				"GI" => "Gibraltar",
@@ -68,7 +70,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"US" => "USA",
 				"XK" => "Kosovo, Republik");
 				
-$TAXID = array(	"DE" => 0,	// Steuerschluessel Deutschland
+$TAXID = array(	"DE" => 4,	// Steuerschluessel Deutschland
 
 				"AT" => 2,	// Steuerschluessel EU
 				"BE" => 2,
@@ -108,16 +110,16 @@ $VERSAND = array(	"AFN" => "Amazon",
 					"MFN" => "Händler");
 
 
-$paramsOrders = array(	"MarketplaceId", "SalesChannel",
-						"OrderType", "OrderStatus", "SellerOrderId", "AmazonOrderId", "FulfillmentChannel",
-						"ShipmentServiceLevelCategory", "ShipServiceLevel",
-						"Amount", "CurrencyCode", "PaymentMethod",
-						"NumberOfItemsShipped", "NumberOfItemsUnshipped",
-						"PurchaseDate", "LastUpdateDate",
-						"BuyerName",
-						"Title", "Name", "AddressLine1", "AddressLine2", "PostalCode", "City", "StateOrRegion", "CountryCode",
-						"recipient-title", "recipient-name", "ship-address-1", "ship-address-2", "ship-address-3", "ship-postal-code", "ship-city", "ship-state", "ship-country", "ship-phone-number",
-						"BuyerEmail", "Phone", "OrderComment", "carrier", "tracking-number", "Language");
+$paramsOrders = array(	"MarketplaceId" => "MarketplaceId", "SalesChannel" => "SalesChannel",
+						"OrderType" => "OrderType", "OrderStatus" => "OrderStatus", "SellerOrderId" => "SellerOrderId", "AmazonOrderId" => "AmazonOrderId", "FulfillmentChannel" => "FulfillmentChannel",
+						"ShipmentServiceLevelCategory" => "ShipmentServiceLevelCategory", "ShipServiceLevel" => "ShipServiceLevel",
+						"Amount" => "Amount", "CurrencyCode" => "CurrencyCode", "PaymentMethod" => "PaymentMethod",
+						"NumberOfItemsShipped" => "NumberOfItemsShipped", "NumberOfItemsUnshipped" => "NumberOfItemsUnshipped",
+						"PurchaseDate" => "PurchaseDate", "LastUpdateDate" => "LastUpdateDate",
+						"BuyerName" => "BuyerName",
+						"Title" => "Title", "Name" => "Name", "AddressLine1" => "AddressLine1", "AddressLine2" => "AddressLine2", "PostalCode" => "PostalCode", "City" => "City", "StateOrRegion" => "StateOrRegion", "CountryCode" => "CountryCode",
+						"recipient-title" => "Title", "recipient-name" => "Name", "ship-address-1" => "AddressLine1", "ship-address-2" => "AddressLine2", "ship-address-3" => "", "ship-postal-code" => "PostalCode", "ship-city" => "City", "ship-state" => "StateOrRegion", "ship-country" => "CountryCode", "ship-phone-number" => "Phone",
+						"BuyerEmail" => "BuyerEmail", "Phone" => "Phone", "OrderComment" => "OrderComment", "carrier" => "carrier", "tracking-number" => "tracking-number", "Language" => "Language");
 
 $paramsOrderItems = array(	"OrderItemId", "SellerSKU", "ASIN", "Title",
 							"ItemPrice", "ItemTax", "PromotionDiscount", "ShippingPrice", "ShippingTax", "ShippingDiscount", "GiftWrapPrice", "GiftWrapTax",

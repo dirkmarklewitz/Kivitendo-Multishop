@@ -373,9 +373,9 @@ class DhListOrders extends DhAmazonAccess
 				
 				foreach($items as $i => $item)
 				{
-					foreach($paramsOrders as $param)
+					foreach(array_keys($paramsOrders) as $param)
 					{
-						$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
+						$output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
@@ -614,9 +614,9 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 				
 				foreach($items as $i => $item)
 				{
-					foreach($paramsOrders as $param)
+					foreach(array_keys($paramsOrders) as $param)
 					{
-						$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
+						$output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";

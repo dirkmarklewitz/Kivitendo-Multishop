@@ -7,6 +7,7 @@ require "constants.php";
 
 $VERSANDKOSTEN = 0;
 $GESCHENKVERPACKUNG = 0;
+$ARTIKELPOSITION = 0;
 
 $dsnP = array(	'phptype'  => 'pgsql',
 				'username' => $ERPuser,
@@ -581,7 +582,17 @@ function insert_neuen_Kunden($bestellung)
 	{
 		$currencyCode = $rs[0]["id"];
 	}
-	$sql = "insert into customer (name,customernumber,currency_id) values ('$newID','$kdnr','$currencyCode')";
+	
+	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
+	{	
+		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+	}
+	else
+	{
+		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+	}
+	
+	$sql = "insert into customer (name,customernumber,currency_id,taxzone_id) values ('$newID','$kdnr','$currencyCode','$localtaxid')";
 	$rc = query("erp", $sql, "insert_neuen_Kunden");
 	if ($rc === -99)
 	{
@@ -674,6 +685,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 	$ok = true;
 	$GLOBALS["VERSANDKOSTEN"] = 0;
 	$GLOBALS["GESCHENKVERPACKUNG"] = 0;
+	$GLOBALS["ARTIKELPOSITION"] = 0;
 
 	foreach ($artikelliste as $einzelartikel)
 	{
@@ -688,8 +700,9 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 			$longdescription = $rs2[0]["notes"];
 			$einzelpreis = round($einzelartikel["ItemPrice"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP) - round($einzelartikel["PromotionDiscount"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP);
 			$text = $rs2[0]["description"];
+			$GLOBALS["ARTIKELPOSITION"]++;
 			
-			$sql = "insert into orderitems (trans_id, ordnumber, parts_id, description, longdescription, qty, cusordnumber, sellprice, lastcost, unit, ship, discount) values (";
+			$sql = "insert into orderitems (trans_id, ordnumber, parts_id, description, longdescription, qty, cusordnumber, sellprice, lastcost, unit, ship, discount, position) values (";
 			$sql .= $zugehoerigeAuftragsID.","
 					.$ordnumber.",'"
 					.$artID."','"
@@ -699,7 +712,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 					.$AmazonOrderId."',"
 					.$einzelpreis.","
 					.$lastcost.","
-					."'Stck',0,0)";
+					."'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
 					
 			echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$einzelartikel["Title"]." ]<br>";
 			$rc = query("erp", $sql, "einfuegen_bestellte_Artikel");
@@ -719,14 +732,15 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 				$artNr = $rs3[0]["partnumber"]." (".$einzelartikel["SellerSKU"].")";
 				$einzelpreis = round($einzelartikel["ItemPrice"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP) - round($einzelartikel["PromotionDiscount"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP);
 				$text = $einzelartikel["Title"];
+				$GLOBALS["ARTIKELPOSITION"]++;
 				
-				$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
+				$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount, position) values (";
 				$sql .= $zugehoerigeAuftragsID.",'"
 						.$artID."','"
 						.pg_escape_string($text)."',"
 						.$einzelartikel["QuantityOrdered"].",'"
 						.$AmazonOrderId."',"
-						.$einzelpreis.",'Stck',0,0)";
+						.$einzelpreis.",'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
 						
 				echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$einzelartikel["Title"]." ]<br>";
 				$rc = query("erp", $sql, "einfuegen_bestellte_Artikel");
@@ -818,8 +832,32 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$currencyCode = $rs[0]["id"];
 	}
+	
+		// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
+	if ($bestellung["ship-country"] != "")
+	{
+		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
+		{	
+			$localtaxid = $GLOBALS["TAXID"][$bestellung["ship-country"]];
+		}
+		else
+		{
+			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		}
+	}
+	else
+	{
+		if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
+		{	
+			$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+		}
+		else
+		{
+			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		}
+	}
 		
-	$sql = "insert into oe (notes,ordnumber,customer_id,currency_id) values ('$newID','$auftrag','".$kundennummer."','$currencyCode')";
+	$sql = "insert into oe (notes,ordnumber,customer_id,currency_id,taxzone_id) values ('$newID','$auftrag','".$kundennummer."','$currencyCode','$localtaxid')";
 	$rc = query("erp", $sql, "erstelle_Auftrag 2");
 	if ($rc === -99)
 	{
@@ -931,16 +969,17 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 			$rsUebersetzung = getAll("erp", $sqlUebersetzung, "erstelle_Auftrag");
 			if ($rsUebersetzung[0]["language_id"])
 			{
-				$text = pg_escape_string($rsUebersetzung[0]["longdescription"]);
+				$text = pg_escape_string(strip_tags($rsUebersetzung[0]["longdescription"]));
 			}
+			$GLOBALS["ARTIKELPOSITION"]++;
 		
-			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
+			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount, position) values (";
 			$sql .= $rs2[0]["id"].",'"	
 					.$artID."','"
 					.$text."',"
 					."1,'"
 					.$versandkosten."',"
-					.$einzelpreis.",'Stck',0,0)";
+					.$einzelpreis.",'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
 					
 			echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$text." ]<br>";
 			$rc = query("erp", $sql, "erstelle_Auftrag");
@@ -965,16 +1004,17 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 			$rsUebersetzung = getAll("erp", $sqlUebersetzung, "erstelle_Auftrag");
 			if ($rsUebersetzung[0]["language_id"])
 			{
-				$text = pg_escape_string($rsUebersetzung[0]["longdescription"]);
+				$text = pg_escape_string(strip_tags($rsUebersetzung[0]["longdescription"]));
 			}
+			$GLOBALS["ARTIKELPOSITION"]++;
 			
-			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount) values (";
+			$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount, position) values (";
 			$sql .= $rs2[0]["id"].",'"
 					.$artID."','"
 					.$text."',"
 					."1,'"
 					.$geschenkverpackung."',"
-					.$einzelpreis.",'Stck',0,0)";
+					.$einzelpreis.",'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
 					
 			echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$text." ]<br>";
 			$rc = query("erp", $sql, "erstelle_Auftrag");
