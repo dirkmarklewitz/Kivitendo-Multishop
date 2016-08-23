@@ -67,6 +67,9 @@ else
 			$standardprojekt=$_POST["standardprojekt"];
 			$portoemail=$_POST["portoemail"];
 			$ersatzSprache=$_POST["ersatzSprache"];
+			$pricewarning=$_POST["pricewarning"];
+			$pricewarningemail=$_POST["pricewarningemail"];
+			$pricewarninglist=$_POST["pricewarninglist"];
 			
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
 			$AmazonAbteilungsname=$_POST["AmazonAbteilungsname"];
@@ -135,7 +138,10 @@ else
 			fputs($f,"\$standardprojekt=\"".$_POST["standardprojekt"]."\";\n");
 			fputs($f,"\$portoemail=\"".$_POST["portoemail"]."\";\n");
 			fputs($f,"\$ersatzSprache=\"".$_POST["ersatzSprache"]."\";\n");
-			
+			fputs($f,"\$pricewarning=\"".$_POST["pricewarning"]."\";\n");
+			fputs($f,"\$pricewarningemail=\"".$_POST["pricewarningemail"]."\";\n");
+			fputs($f,"\$pricewarninglist=\"".$_POST["pricewarninglist"]."\";\n");
+
 			fputs($f,"\$Amazonaktiviert=\"".$_POST["Amazonaktiviert"]."\";\n");
 			fputs($f,"\$AmazonAbteilungsname=\"".$_POST["AmazonAbteilungsname"]."\";\n");
 			fputs($f,"\$AmazonBestellnummernprefix=\"".$_POST["AmazonBestellnummernprefix"]."\";\n");
@@ -207,6 +213,9 @@ else
 			$standardprojekt=$_POST["standardprojekt"];
 			$portoemail=$_POST["portoemail"];
 			$ersatzSprache=$_POST["ersatzSprache"];
+			$pricewarning=$_POST["pricewarning"];
+			$pricewarningemail=$_POST["pricewarningemail"];
+			$pricewarninglist=$_POST["pricewarninglist"];
 
 			$Amazonaktiviert=$_POST["Amazonaktiviert"];
 			$AmazonAbteilungsname=$_POST["AmazonAbteilungsname"];
@@ -384,7 +393,7 @@ else
 				</tr>
 				<tr>
 					<td>Emailempfaenger Porto</td>
-					<td><input type="text" name="portoemail" size="25" value="<?= $portoemail ?>"></td>				
+					<td><input type="text" name="portoemail" size="25" value="<?= $portoemail ?>"></td>
 					<td></td>
 					<td>Amazon MarketplaceID_ES</td>
 					<td><input type="text" name="MarketplaceID_ES" size="25" value="<?= $MarketplaceID_ES ?>"></td>
@@ -397,22 +406,22 @@ else
 					<td><textarea name="ersatzSKU" cols="32" rows="5"><?= $ersatzSKU ?></textarea>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Preiswarnungen verschicken</td>
+					<td>ein<input type="radio" name="pricewarning" value="true" <?= ($pricewarning=="true")?"checked":"" ?>>aus<input type="radio" name="pricewarning" value="false" <?= ($pricewarning!="true")?"checked":"" ?>></td>
 					<td></td>
 					<td>Amazon.com aktiviert</td>
 					<td><input type="checkbox" name="Amazonaktiviert_COM" value="checked" <?php if ($Amazonaktiviert_COM == "checked") { echo "checked=\"checked\""; } ?>></td>
 				</tr>				
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Emailempfaenger Preiswarnungen</td>
+					<td><input type="text" name="pricewarningemail" size="25" value="<?= $pricewarningemail ?>"></td>
 					<td></td>
 					<td>Amazon.com MerchantID</td>
 					<td><input type="text" name="MerchantID_COM" size="25" value="<?= $MerchantID_COM ?>"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Liste Preiswarnungen<br>SKU -> Betrag<br>(eine pro Zeile, | ist Trenner)</td>
+					<td><textarea name="pricewarninglist" cols="32" rows="10"><?= $pricewarninglist ?></textarea>
 					<td></td>
 					<td>Amazon.com AccessKeyID</td>
 					<td><input type="text" name="AccessKeyID_COM" size="25" value="<?= $AccessKeyID_COM ?>"></td>

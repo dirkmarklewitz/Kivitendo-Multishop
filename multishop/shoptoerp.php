@@ -743,6 +743,44 @@ else
 				{
 					erstelle_Auftrag($bestellung, $nummernarray[0], $nummernarray[1], $ERPusrID);
 				}
+				// Checke auf falsche Preise und schicke Warnemail
+				If ($pricewarning == "true")
+				{
+				 	// Preiswarnungen in Array umwandeln
+					$pricewarningsarray = array();
+					foreach (split("\n", $pricewarninglist) as $einzelpricewarning)
+					{
+						$zerlegtepricewarning = split("\|", $einzelpricewarning);
+						if(count($zerlegtepricewarning) == 2)
+						{
+							$pricewarningsarray[trim($zerlegtepricewarning[0])] = trim($zerlegtepricewarning[1]);
+						}
+					}
+					foreach ($bestellung['AmazonOrderIdProducts'] as $einzelprodukt)
+					{
+						foreach ($pricewarningsarray as $skuvalue => $pricevalue)
+						{
+							if(stripos($einzelprodukt['SellerSKU'], $skuvalue) !== false)
+							{
+								if (floatval($einzelprodukt['ItemPrice']) < floatval($pricevalue))
+								{
+									// Warnemail schreiben!!!
+									$empfaenger = $pricewarningemail;
+									$betreff = "PREISWARNUNG: Ein Artikel wurde vermutlich unter Preis verkauft";
+									$nachricht = "Es gibt eine Preiswarnung für folgende Bestellung\r\n" . 
+												 "Verkaufskanal    : " . $bestellung['SalesChannel'] . "\r\n" . 
+												 "Bestellungnummer : " . $bestellung['AmazonOrderId'] . "\r\n" . 
+												 "Artikel          : " . $einzelprodukt['SellerSKU'] . "\r\n" .
+												 "Preis            : " . $einzelprodukt['ItemPrice'] . "\r\n";
+									$header =	"From: kivi-import@opis-tech.com" . "\r\n" .
+												"X-Mailer: PHP/" . phpversion();
+									mail($empfaenger, $betreff, $nachricht, $header);
+								}
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 		else
