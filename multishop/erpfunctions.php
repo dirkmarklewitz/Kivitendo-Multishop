@@ -697,9 +697,18 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 			$artNr = $rs2[0]["partnumber"];
 			$ordnumber = $zugehoerigeAuftragsNummer;
 			$lastcost = $rs2[0]["lastcost"];
+			$text = $rs2[0]["description"];			
 			$longdescription = $rs2[0]["notes"];
+			// Bei Zusatzartikeln ggf. Beschreibung korrigieren
+			if ($einzelartikel['OrderItemId'] == "Zusatzartikel")
+			{
+				$longdescription = $einzelartikel['OrderItemId'];
+				if (!empty($einzelartikel['Title']))
+				{
+					$text = $einzelartikel['Title'];
+				}
+			}
 			$einzelpreis = round($einzelartikel["ItemPrice"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP) - round($einzelartikel["PromotionDiscount"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP);
-			$text = $rs2[0]["description"];
 			$GLOBALS["ARTIKELPOSITION"]++;
 			
 			$sql = "insert into orderitems (trans_id, ordnumber, parts_id, description, longdescription, qty, cusordnumber, sellprice, lastcost, unit, ship, discount, position) values (";
@@ -1098,7 +1107,7 @@ function checkAmazonOrderId($AmazonOrderId)
 /**********************************************
 * checkPortostatusOfOrderId($OrderId)
 ***********************************************/
-function checkPortostatusOfOrderId($OrderId)
+function checkPortostatusOfOrderId($CusOrdNumber, $OrderId = NULL)
 {
 	require_once "DB.php";
 	require "conf.php";
@@ -1123,7 +1132,14 @@ function checkPortostatusOfOrderId($OrderId)
 	else
 	{
 		// Auftraege checken
-		$rs = $dbP->getall("select cusordnumber from oe where cusordnumber = '".$OrderId."' and shipvia LIKE '%[porto]%'");
+		if($OrderId == NULL || $OrderId == "")
+		{
+			$rs = $dbP->getall("select cusordnumber from oe where cusordnumber = '".$CusOrdNumber."' and shipvia LIKE '%[porto]%'");
+		}
+		else
+		{
+			$rs = $dbP->getall("select ordnumber from oe where ordnumber = '".$OrderId."' and shipvia LIKE '%[porto]%'");
+		}
 		if (count($rs) >= 1)
 		{
 			$status = true;
@@ -1136,7 +1152,7 @@ function checkPortostatusOfOrderId($OrderId)
 /**********************************************
 * setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
 ***********************************************/
-function setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
+function setPortostatusOfOrderId($CusOrdNumber, $Carrier, $TrackingNumber, $OrderId = NULL)
 {
 	require_once "DB.php";
 	require "conf.php";
@@ -1161,11 +1177,18 @@ function setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
 	else
 	{
 		// Daten in Auftrag eintragen
-		$sql = "update oe set shipvia='[porto] ".$Carrier."/".$TrackingNumber."' where cusordnumber = '".$OrderId."'";
+		if($OrderId == NULL || $OrderId == "")
+		{
+			$sql = "update oe set shipvia='[porto] ".$Carrier."/".$TrackingNumber."' where cusordnumber = '".$CusOrdNumber."'";
+		}
+		else
+		{
+			$sql = "update oe set shipvia='[porto] ".$Carrier."/".$TrackingNumber."' where ordnumber = '".$OrderId."'";
+		}
 		$rc = query("erp",$sql,"setPortostatusOfOrderId");	
 		if ($rc === -99)
 		{
-			echo "Portostatus ".$OrderId." konnte nicht eingetragen werden.<br>";
+			echo "Portostatus ".$CusOrdNumber." konnte nicht eingetragen werden.<br>";
 			$rc = query("erp", "ROLLBACK WORK", "setPortostatusOfOrderId");
 			if ($rc === -99)
 			{

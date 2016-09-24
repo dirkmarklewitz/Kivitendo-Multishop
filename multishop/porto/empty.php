@@ -50,9 +50,9 @@ if ($response['status']==0) {
     $email = new PHPMailer();
     $email->From      = 'test-dhl-post@opis-tech.com';
     $email->FromName  = 'Test DHL Post';
-    $email->Subject   = 'Zu verschicken: '; 
+    $email->Subject   = '[auto versand] '; 
     foreach($export_details['positions'] as $position) {
-	$email->Subject .= $position['item_amount']."x".$position['sku']." ";
+	$email->Subject .= $position['item_amount']."#".$position['sku']." | ";
     }
     $email->Body      = "Shipment Number: " . $response['shipment_number'];
     $email->AddAddress( 'contact@opis-tech.com' );

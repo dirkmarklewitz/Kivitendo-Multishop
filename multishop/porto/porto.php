@@ -22,8 +22,9 @@ else
 	require_once "./php-mailer/class.phpmailer.php";
 	require_once "../erpfunctions.php";
 
-	if (isset($_GET["order_id"]))
+	if (isset($_GET["cusordnumber"]))
 	{
+		$cusordnumber = $_GET["cusordnumber"];
 		$order_id = $_GET["order_id"];
 		$customer = array ( 'name'			=> $_GET["name"],
 						    'department'	=> $_GET["department"],
@@ -44,12 +45,13 @@ else
 			$bestelldaten = explode("|", $_GET[$zaehler]);
 			$export_details['positions'][$zaehler] = array ('sku'				=> $bestelldaten[0],
 															'item_amount'		=> $bestelldaten[1],
-															'customs_value'		=> $bestelldaten[2],
+															'customs_value'		=> floatval(str_replace(',', '.', str_replace('.', '', $bestelldaten[2]))),
 															'goods_description' => $bestelldaten[3]);
 		}
 	}
-	elseif (isset($_POST["order_id"]))
+	elseif (isset($_POST["cusordnumber"]))
 	{
+		$cusordnumber = $_POST["cusordnumber"];
 		$order_id = $_POST["order_id"];
 		$customer = array ( 'name'			=> $_POST["name"],
 						    'department'	=> $_POST["department"],
@@ -73,7 +75,7 @@ else
 			{
 				$export_details['positions'][$zaehler] = array ('sku'				=> $einzelartikelarray[0],
 																'item_amount'		=> $einzelartikelarray[1],
-																'customs_value'		=> $einzelartikelarray[2],
+																'customs_value'		=> floatval(str_replace(',', '.', str_replace('.', '', $einzelartikelarray[2]))),
 																'goods_description' => $einzelartikelarray[3]);
 			}
 		}
@@ -90,7 +92,8 @@ else
 	echo "<form name=\"gesamtformular\" action=\"porto.php\" method=\"post\">";
 	
 	echo	"<table style=\"background-color:#cccccc\">"
-				."<tr><td>Bestellnummer</td><td><input type=\"text\" size=\"40\" name=\"order_id\" value=\"".$order_id."\"></td></tr>"
+				."<tr><td>Bestellnummer des Kunden</td><td><input type=\"text\" size=\"40\" name=\"cusordnumber\" value=\"".$cusordnumber."\"></td></tr>"
+				."<tr><td>Auftragsnummer</td><td><input type=\"text\" size=\"40\" name=\"order_id\" value=\"".$order_id."\"></td></tr>"
 				."<tr><td>Name</td><td><input type=\"text\" size=\"40\" name=\"name\" value=\"".$customer['name']."\"></td></tr>"
 				."<tr><td>Strasse 1</td><td><input type=\"text\" size=\"40\" name=\"department\" value=\"".$customer['department']."\"></td></tr>"
 				."<tr><td>Strasse 2</td><td><input type=\"text\" size=\"40\" name=\"street\" value=\"".$customer['street']."\"></td></tr>"
@@ -101,7 +104,7 @@ else
 				."<tr><td>Telefon</td><td><input type=\"text\" size=\"20\" name=\"telephone\" value=\"".$customer['telephone']."\"></td></tr>"
 				."<tr><td>Email</td><td><input type=\"text\" size=\"40\" name=\"email\" value=\"".$customer['email']."\"></td></tr>"
 				."<tr><td>Waehrung</td><td><input type=\"text\" size=\"10\" name=\"customs_currency\" value=\"".$export_details['customs_currency']."\"></td></tr>"
-		 		."<tr><td>Bestelldaten</td><td><textarea name=\"bestelldaten\" cols=\"150\" rows=\"8\">";
+		 		."<tr><td>Bestelldaten<br>(Die ersten 10 werden uebernommen)</td><td><textarea name=\"bestelldaten\" cols=\"150\" rows=\"8\">";
 	foreach ($export_details['positions'] as $einzelartikel)
 	{
 		echo $einzelartikel['sku']."|".$einzelartikel['item_amount']."|".$einzelartikel['customs_value']."|".$einzelartikel['goods_description']."\n";
@@ -110,19 +113,19 @@ else
 		."<tr><td>-----------------------</td><td>-------------------------------------------</td></tr>"
 		."<tr><td>Email Portoempfaenger</td><td><input type=\"text\" size=\"40\" name=\"portoempfaenger\" value=\"".$portoemail."\"></td></tr>";
 	echo "</table>";
-	if (!isset($_POST["portoerstellen"]) && !checkPortostatusOfOrderId($order_id))
+	if (!isset($_POST["portoerstellen"]) && !checkPortostatusOfOrderId($cusordnumber, $order_id))
 	{
 		echo "<br><input type=\"submit\" name=\"portoerstellen\" value=\"Porto erstellen\">";
 	}
 	else
 	{
-		if (checkPortostatusOfOrderId($order_id))
+		if (checkPortostatusOfOrderId($cusordnumber, $order_id))
 		{
 			echo "<br> Porto bereits erstellt, Vorgang abgebrochen <br>";
 		}
 		else
 		{
-			$shipment = new PrepareShipment($order_id);
+			$shipment = new PrepareShipment($cusordnumber);
 	 		$response = $shipment->handle_shipment($export_details, $customer);
 
 	 		echo "<br> Porto erstellt <br>";
@@ -137,7 +140,7 @@ else
 			
 			if ($response['status'] == 0)
 			{
-				setPortostatusOfOrderId($order_id, $response['carrier'], $response['shipment_number']);
+				setPortostatusOfOrderId($cusordnumber, $response['carrier'], $response['shipment_number'], $order_id);
 			}
 	 		
 			if ($response['status'] == 0)
@@ -145,10 +148,10 @@ else
 	 			$email = new PHPMailer();
 	 			$email->From      = 'test-dhl-post@opis-tech.com';
 	 	 	    $email->FromName  = 'Test DHL Post';
-	 	 	    $email->Subject   = 'Zu verschicken: '; 
+	 	 	    $email->Subject   = '[auto versand] '; 
 	 	 	    foreach($export_details['positions'] as $position)
 	 	 	    {
-	 	 			$email->Subject .= $position['item_amount']."x".$position['sku']." ";
+	 	 			$email->Subject .= $position['item_amount']."#".$position['sku']." | ";
 	 	 	    }
 	 	 	    $email->Body      = "Shipment Carrier: " . $response['carrier']."\nShipment Number : " . $response['shipment_number'];
 	 	 	    $email->AddAddress( $portoempfaenger );

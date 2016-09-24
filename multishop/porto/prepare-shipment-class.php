@@ -121,7 +121,7 @@ class PrepareShipment {
 	$customer_details['country_ISO_code']=$customer['country_ISO_code'];
 	
 	$field_length=$this->parcel_service_selector($customer_details['country_ISO_code']);
- 
+
 	//DIRKs Kivitendo address line remapping
 	if ($customer['street'] == "")
 	{
@@ -156,20 +156,34 @@ class PrepareShipment {
 	    $customer_details['street_name'] = $customer['street'];
 	    if(strlen($customer_details['street_name']) > $field_length){
 		$index=strlen($customer_details['street_name'])-$field_length;
-		for(;$index<$field_length;$index++) {
+		for(;$index<strlen($customer_details['street_name']);$index++) {
 		    if($customer_details['street_name'][$index]==' ') break;
 		}
 		if($index == $field_length) {
 		    $this->response['status'] = -1;
-		    $this->response['error_message'] = __FILE__ . ": Street name is too long. Missing ".(strlen($customer_details['street_name'])-2*$field_length)." characters of space." . 
-			" Cannot process. Please handle manually.\n";
+		    $this->response['error_message'] = __FILE__ . ": Impossible to split street name." .
+			" Cannot process. Please handle manually. (1)\n";
 		    $this->customer_details = $customer_details;
 		    return $this->response;
 		}
 
 		$address_start = substr($customer_details['street_name'],0,$index);
 		$customer_details['street_name'] = substr($customer_details['street_name'],$index+1);
-//		var_dump($customer_details);
+	    }
+	    if(strlen($address_start) > $field_length){
+		$index=strlen($address_start)-$field_length;
+		for(;$index<strlen($address_start);$index++) {
+		    if($address_start[$index]==' ') break;
+		}
+		if($index == $field_length) {
+		    $this->response['status'] = -1;
+		    $this->response['error_message'] = __FILE__ . ": Impossible to split street name." .
+			" Cannot process. Please handle manually. (2)\n";
+		    $this->customer_details = $customer_details;
+		    return $this->response;
+		}
+	        $customer_details['line2']=substr($address_start,0,$index);
+		$address_start = substr($address_start,$index+1);
 	    }
 	    //FIXME: Implement parsing???
 	    $customer_details['street_number'] = '';
@@ -196,6 +210,10 @@ class PrepareShipment {
 		} else {
 		    $customer_details['line3'] .= $address_start;
 		}
+	    }
+	    if($field_length==POST_MAX_ADDRESS_FIELD_LENGTH) {
+		//1 line less for post. let's hope it fits because the lines are longer.....
+		$customer_details['line3'] = $customer_details['line2'] . " " .  $customer_details['line3'];
 	    }
 
 	    if(strlen($customer_details['line3']) > $field_length) {

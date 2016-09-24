@@ -82,7 +82,7 @@ class DHLBusinessShipment {
     private function downloadPDFLabel() {
 	$url  = $this->response['label_url'];
 	$path = LABEL_DOWNLOAD_PATH . '/';
-	$file =  $this->date . '-' . $this->response['shipment_number'] . '.pdf';
+	$file =  $this->date . '-' . $this->response['shipment_number'] . DHL_LABEL_POSTFIX . '.pdf';
 
 	$ch = curl_init($url);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

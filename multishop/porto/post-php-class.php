@@ -52,8 +52,8 @@ class PostInternetmarke {
 	$pdf->SetXY(78,48);
 	$pdf->Write(0, $customer_details['name']);
 	$pdf->SetXY(78,58);
-	$pdf->Write(0, $customer_details['line2']);
-	if ($customer_details['line3']) {
+	$pdf->Write(0, $customer_details['line3']);
+/*	if ($customer_details['line3']) {
 	    $customer_details['street_name'] = $customer_details['line3'] . ", " . $customer_details['street_name'];
 	}
 	if (strlen($customer_details['street_name']) > POST_MAX_ADDRESS_FIELD_LENGTH) {
@@ -61,7 +61,7 @@ class PostInternetmarke {
 	    $this->response['warning_message'] .= ' - ' . __FILE__ . ": Not enough space. " . $customer_details['street_name'] . " is " . strlen($customer_details['street_name']) . 
 		" characters, but only " .  POST_MAX_ADDRESS_FIELD_LENGTH . " are allowed. Overwriting...\n";
 	} 
-
+*/
 	$pdf->SetXY(78,68);
 	$pdf->Write(0, $customer_details['street_name'] . " " . $customer_details['street_number']);
 	$pdf->SetXY(78,78);
@@ -271,8 +271,7 @@ class PostInternetmarke {
 
 	//barcode recognition
 //	$response = $this->barcode($tmppath . $imgname); 
-
-	$file =  $this->date . '-' . $this->response['shipment_number'] . '.png';
+	$file =  $this->date . '-' . $this->response['shipment_number'] . POST_LABEL_POSTFIX . '.png';
 	copy ($tmppath . $imgname, $path . $file);
 
 	$this->deletePath($tmppath);

@@ -85,6 +85,7 @@ else
 			$MarketplaceID_FR=$_POST["MarketplaceID_FR"];
 			$MarketplaceID_IT=$_POST["MarketplaceID_IT"];
 			$MarketplaceID_ES=$_POST["MarketplaceID_ES"];
+			$zusatzProdukt=$_POST["zusatzProdukt"];
 			$ersatzSKU=$_POST["ersatzSKU"];
 			
 			$Amazonaktiviert_COM=$_POST["Amazonaktiviert_COM"];
@@ -156,6 +157,7 @@ else
 			fputs($f,"\$MarketplaceID_FR=\"".$_POST["MarketplaceID_FR"]."\";\n");
 			fputs($f,"\$MarketplaceID_IT=\"".$_POST["MarketplaceID_IT"]."\";\n");
 			fputs($f,"\$MarketplaceID_ES=\"".$_POST["MarketplaceID_ES"]."\";\n");
+			fputs($f,"\$zusatzProdukt=\"".$_POST["zusatzProdukt"]."\";\n");
 			fputs($f,"\$ersatzSKU=\"".$_POST["ersatzSKU"]."\";\n");
 			
 			fputs($f,"\$Amazonaktiviert_COM=\"".$_POST["Amazonaktiviert_COM"]."\";\n");
@@ -231,6 +233,7 @@ else
 			$MarketplaceID_FR=$_POST["MarketplaceID_FR"];
 			$MarketplaceID_IT=$_POST["MarketplaceID_IT"];
 			$MarketplaceID_ES=$_POST["MarketplaceID_ES"];
+			$zusatzProdukt=$_POST["zusatzProdukt"];
 			$ersatzSKU=$_POST["ersatzSKU"];
 			
 			$Amazonaktiviert_COM=$_POST["Amazonaktiviert_COM"];
@@ -399,36 +402,36 @@ else
 					<td><input type="text" name="MarketplaceID_ES" size="25" value="<?= $MarketplaceID_ES ?>"></td>
 				</tr>				
 				<tr>
-					<td>Liste Sprachzuordnung<br>Marketplace -> Sprache<br>(eine pro Zeile, | ist Trenner)</td>
-					<td><textarea name="ersatzSprache" cols="32" rows="10"><?= $ersatzSprache ?></textarea>
+					<td>Liste Zusatzprodukte pro SKU,<br>wird vor zu ersetzenden SKU verarbeitet<br>SKU Produkt|SKU Zusatzprodukt|<br>Anzahl (* oder Ganzzahl)|Bezeichnung (optional)<br>(eins pro Zeile, | ist Trenner)</td>
+					<td><textarea name="zusatzProdukt" cols="32" rows="10"><?= $zusatzProdukt ?></textarea>
 					<td></td>
 					<td>Liste mit zu ersetzenden SKU<br>Amazon -> Kivi<br>(eine pro Zeile, | ist Trenner)</td>
-					<td><textarea name="ersatzSKU" cols="32" rows="5"><?= $ersatzSKU ?></textarea>
+					<td><textarea name="ersatzSKU" cols="32" rows="10"><?= $ersatzSKU ?></textarea>
 				</tr>
 				<tr>
-					<td>Preiswarnungen verschicken</td>
-					<td>ein<input type="radio" name="pricewarning" value="true" <?= ($pricewarning=="true")?"checked":"" ?>>aus<input type="radio" name="pricewarning" value="false" <?= ($pricewarning!="true")?"checked":"" ?>></td>
+					<td>Liste Sprachzuordnung<br>Marketplace -> Sprache<br>(eine pro Zeile, | ist Trenner)</td>
+					<td><textarea name="ersatzSprache" cols="32" rows="10"><?= $ersatzSprache ?></textarea>
 					<td></td>
 					<td>Amazon.com aktiviert</td>
 					<td><input type="checkbox" name="Amazonaktiviert_COM" value="checked" <?php if ($Amazonaktiviert_COM == "checked") { echo "checked=\"checked\""; } ?>></td>
 				</tr>				
 				<tr>
-					<td>Emailempfaenger Preiswarnungen</td>
-					<td><input type="text" name="pricewarningemail" size="25" value="<?= $pricewarningemail ?>"></td>
+					<td>Preiswarnungen verschicken</td>
+					<td>ein<input type="radio" name="pricewarning" value="true" <?= ($pricewarning=="true")?"checked":"" ?>>aus<input type="radio" name="pricewarning" value="false" <?= ($pricewarning!="true")?"checked":"" ?>></td>
 					<td></td>
 					<td>Amazon.com MerchantID</td>
 					<td><input type="text" name="MerchantID_COM" size="25" value="<?= $MerchantID_COM ?>"></td>
 				</tr>
 				<tr>
-					<td>Liste Preiswarnungen<br>SKU -> Betrag<br>(eine pro Zeile, | ist Trenner)</td>
-					<td><textarea name="pricewarninglist" cols="32" rows="10"><?= $pricewarninglist ?></textarea>
+					<td>Emailempfaenger Preiswarnungen</td>
+					<td><input type="text" name="pricewarningemail" size="25" value="<?= $pricewarningemail ?>"></td>
 					<td></td>
 					<td>Amazon.com AccessKeyID</td>
 					<td><input type="text" name="AccessKeyID_COM" size="25" value="<?= $AccessKeyID_COM ?>"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td></td>
+					<td>Liste Preiswarnungen<br>SKU -> Betrag<br>(eine pro Zeile, | ist Trenner)</td>
+					<td><textarea name="pricewarninglist" cols="32" rows="10"><?= $pricewarninglist ?></textarea>
 					<td></td>
 					<td>Amazon.com SecretKey</td>
 					<td><input type="text" name="SecretKey_COM" size="25" value="<?= $SecretKey_COM ?>"></td>
