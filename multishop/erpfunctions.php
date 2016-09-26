@@ -676,6 +676,25 @@ function insert_neuen_Kunden($bestellung)
 }
 
 /**********************************************
+* sku_ist_dienstleistung($abzufragende_sku)
+***********************************************/
+function sku_ist_dienstleistung($abzufragende_sku)
+{
+	$sql = "select inventory_accno_id from parts where partnumber='".$abzufragende_sku."'";
+	$rs2 = getAll("erp", $sql, "sku_ist_dienstleistung");
+	if (Count($rs2) == 1)
+	{
+		// inventory_accno_id == NULL heisst SKU ist Dienstleistung
+		if ($rs2[0]["inventory_accno_id"] == NULL)
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+/**********************************************
 * einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerigeAuftragsID, $zugehoerigeAuftragsNummer)
 ***********************************************/
 function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerigeAuftragsID, $zugehoerigeAuftragsNummer)
@@ -697,7 +716,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 			$artNr = $rs2[0]["partnumber"];
 			$ordnumber = $zugehoerigeAuftragsNummer;
 			$lastcost = $rs2[0]["lastcost"];
-			$text = $rs2[0]["description"];			
+			$text = $rs2[0]["description"];
 			$longdescription = $rs2[0]["notes"];
 			// Bei Zusatzartikeln ggf. Beschreibung korrigieren
 			if ($einzelartikel['OrderItemId'] == "Zusatzartikel")

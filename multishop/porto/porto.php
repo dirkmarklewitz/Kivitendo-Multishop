@@ -43,10 +43,19 @@ else
 		for($zaehler = 0; $zaehler < $_GET["count"]; $zaehler++)
 		{
 			$bestelldaten = explode("|", $_GET[$zaehler]);
-			$export_details['positions'][$zaehler] = array ('sku'				=> $bestelldaten[0],
-															'item_amount'		=> $bestelldaten[1],
-															'customs_value'		=> floatval(str_replace(',', '.', str_replace('.', '', $bestelldaten[2]))),
-															'goods_description' => $bestelldaten[3]);
+			
+			if(!sku_ist_dienstleistung($bestelldaten[0]))
+			{
+				$export_details['positions'][$zaehler] = array ('sku'				=> $bestelldaten[0],
+																'item_amount'		=> $bestelldaten[1],
+																'customs_value'		=> floatval(str_replace(',', '.', $bestelldaten[2])),
+																'goods_description' => $bestelldaten[3]);
+			}
+															
+			$export_details['emailpositions'][$zaehler] = array ('sku'				=> $bestelldaten[0],
+																'item_amount'		=> $bestelldaten[1],
+																'customs_value'		=> floatval(str_replace(',', '.', $bestelldaten[2])),
+																'goods_description' => $bestelldaten[3]);															
 		}
 	}
 	elseif (isset($_POST["cusordnumber"]))
@@ -71,9 +80,17 @@ else
 		foreach ($bestelldaten as $zaehler => $einzelartikel)
 		{
 			$einzelartikelarray = explode("|", $einzelartikel);
-			if (sizeof($einzelartikelarray) > 1)
+			if (sizeof($einzelartikelarray) > 1 && !sku_ist_dienstleistung($einzelartikelarray[0]))
 			{
 				$export_details['positions'][$zaehler] = array ('sku'				=> $einzelartikelarray[0],
+																'item_amount'		=> $einzelartikelarray[1],
+																'customs_value'		=> floatval(str_replace(',', '.', str_replace('.', '', $einzelartikelarray[2]))),
+																'goods_description' => $einzelartikelarray[3]);
+			}
+			
+			if (sizeof($einzelartikelarray) > 1)
+			{
+				$export_details['emailpositions'][$zaehler] = array ('sku'				=> $einzelartikelarray[0],
 																'item_amount'		=> $einzelartikelarray[1],
 																'customs_value'		=> floatval(str_replace(',', '.', str_replace('.', '', $einzelartikelarray[2]))),
 																'goods_description' => $einzelartikelarray[3]);
@@ -105,7 +122,7 @@ else
 				."<tr><td>Email</td><td><input type=\"text\" size=\"40\" name=\"email\" value=\"".$customer['email']."\"></td></tr>"
 				."<tr><td>Waehrung</td><td><input type=\"text\" size=\"10\" name=\"customs_currency\" value=\"".$export_details['customs_currency']."\"></td></tr>"
 		 		."<tr><td>Bestelldaten<br>(Die ersten 10 werden uebernommen)</td><td><textarea name=\"bestelldaten\" cols=\"150\" rows=\"8\">";
-	foreach ($export_details['positions'] as $einzelartikel)
+	foreach ($export_details['emailpositions'] as $einzelartikel)
 	{
 		echo $einzelartikel['sku']."|".$einzelartikel['item_amount']."|".$einzelartikel['customs_value']."|".$einzelartikel['goods_description']."\n";
 	}
@@ -126,6 +143,8 @@ else
 		else
 		{
 			$shipment = new PrepareShipment($cusordnumber);
+			
+			
 	 		$response = $shipment->handle_shipment($export_details, $customer);
 
 	 		echo "<br> Porto erstellt <br>";
@@ -149,7 +168,7 @@ else
 	 			$email->From      = 'test-dhl-post@opis-tech.com';
 	 	 	    $email->FromName  = 'Test DHL Post';
 	 	 	    $email->Subject   = '[auto versand] '; 
-	 	 	    foreach($export_details['positions'] as $position)
+	 	 	    foreach($export_details['emailpositions'] as $position)
 	 	 	    {
 	 	 			$email->Subject .= $position['item_amount']."#".$position['sku']." | ";
 	 	 	    }
