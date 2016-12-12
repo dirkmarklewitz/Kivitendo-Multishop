@@ -77,7 +77,8 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 								 "pdf_file,".
 								 "lang,".
 								 "shipping_tax,".
-								 "payment_tax".
+								 "payment_tax,".
+								 "tax_number".
 						" FROM joomla_jshopping_orders".
 						" WHERE order_date >= '".$dateAfter."' AND order_date <= '".$dateBefore."' AND order_status <> 3 AND order_created = 1".
 						" ORDER BY order_date ASC");
@@ -191,6 +192,7 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		// $returnvalue[$bestellungszaehler]['Phone'] = "";
 		$returnvalue[$bestellungszaehler]['OrderComment'] = utf8_encode($row['order_add_info']);
 		$returnvalue[$bestellungszaehler]['Language'] = utf8_encode($row['lang']);
+		$returnvalue[$bestellungszaehler]['tax_number'] = utf8_encode(trim($row['tax_number']));
 		/* unused fieldnames
 	    --------------------
 	    $row['order_tax']

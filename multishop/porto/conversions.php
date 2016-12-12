@@ -18,6 +18,7 @@ $size_mapping = array (
     'T60mic' => 1,
     'T60adap' => 0.5,
     'T60psu' => 0.5,
+    'T60rd' => 1,
     'Cmob6-garde' => 1,
     'T60cab' => 4,
     'Tffcab' => 4,
@@ -140,6 +141,13 @@ $product_types = array (
         'customs_commodity_code' => '8504403090',
 	'net_weight_kg' => 0.1,
         'gross_weight_kg' => 0.2
+    ),
+    'T60rd' => array (
+	'sku' => 'T60rd',
+	'size' => 'T60rd',
+        'customs_commodity_code' => '8517709000',
+	'net_weight_kg' => 0.2,
+        'gross_weight_kg' => 0.3
     )
 );
 

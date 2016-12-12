@@ -443,11 +443,17 @@ function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+		{
+			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			$set .= "ustid='" . $bestellung["tax_number"] . "',";
+		}
 	}
 	else
 	{
-		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 	}
+	
 	if ($rs[0]["taxzone_id"] <> $localtaxid)
 	{
 		$set .= "taxzone_id=$localtaxid ";
@@ -546,12 +552,22 @@ function checke_ob_Kundendaten_aktuell($bestellung)
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+		{
+			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+		}
 	}
 	else
 	{
-		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 	}
+	
 	if ($rs[0]["taxzone_id"] <> $localtaxid)
+	{
+		$daten_aktuell = false;
+	}
+	
+	if ($rs[0]["ustid"] <> $bestellung["tax_number"])
 	{
 		$daten_aktuell = false;
 	}
@@ -586,13 +602,19 @@ function insert_neuen_Kunden($bestellung)
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+		{
+			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+		}
 	}
 	else
 	{
-		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 	}
 	
-	$sql = "insert into customer (name,customernumber,currency_id,taxzone_id) values ('$newID','$kdnr','$currencyCode','$localtaxid')";
+	$ustid = $bestellung["tax_number"];
+	
+	$sql = "insert into customer (name,customernumber,currency_id,taxzone_id,ustid) values ('$newID','$kdnr','$currencyCode','$localtaxid','$ustid')";
 	$rc = query("erp", $sql, "insert_neuen_Kunden");
 	if ($rc === -99)
 	{
@@ -654,10 +676,15 @@ function insert_neuen_Kunden($bestellung)
 	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 	{	
 		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+		{
+			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			$set .= "ustid='" . $bestellung["tax_number"] . "',";			
+		}
 	}
 	else
 	{
-		$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 	}
 
 	$set .= "taxzone_id=$localtaxid ";
@@ -861,16 +888,20 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		$currencyCode = $rs[0]["id"];
 	}
 	
-		// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
+	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
 	if ($bestellung["ship-country"] != "")
 	{
 		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
 		{	
 			$localtaxid = $GLOBALS["TAXID"][$bestellung["ship-country"]];
+			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+			{
+				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
 		}
 		else
 		{
-			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 		}
 	}
 	else
@@ -878,10 +909,14 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 		{	
 			$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+			{
+				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
 		}
 		else
 		{
-			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 		}
 	}
 		
@@ -907,7 +942,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$sql .= "shipto_id=".$versandadressennummer.", ";
 	}
-	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", shippingpoint='".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]])."', ";
+	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", shippingpoint='".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]] . " / " . $bestellung["ShipmentServiceLevelCategory"])."', ";
 	$sql .= "globalproject_id=".hole_project_id($standardprojekt).", ";
 	$sql .= "amount=".$brutto.", netamount=".$netto.", reqdate='".$bestellung["LastUpdateDate"]."', taxincluded='t', ";
 	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
@@ -916,10 +951,14 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
 		{	
 			$localtaxid = $GLOBALS["TAXID"][$bestellung["ship-country"]];
+			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+			{
+				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
 		}
 		else
 		{
-			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 		}
 	}
 	else
@@ -927,10 +966,14 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
 		{	
 			$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
+			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
+			{
+				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
 		}
 		else
 		{
-			$localtaxid = 3;	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
 		}
 	}
 	// Sprache setzen wenn vorhanden
@@ -1531,6 +1574,9 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;				        
 					case 'mobile6-garde':
 			        	$csv_daten[$lfdNrCsv][11] += $zeile[6];
+				        break;
+					case 'mobile6-garde-back':
+			        	$csv_daten[$lfdNrCsv][12] += $zeile[6];
 				        break;				        
 				}
 				$found = true;
@@ -1572,6 +1618,9 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'mobile6-garde':
 			        	$csv_daten[$lfdNrCsv][11] += $zeile[7];
+				        break;
+					case 'mobile6-garde-back':
+			        	$csv_daten[$lfdNrCsv][12] += $zeile[7];
 				        break;
 				}
 				$returnfound = true;

@@ -254,7 +254,7 @@ else
 				 			."<th>Porto (bei Import)</th>"
 		 					."<th>Bestellnummer</th>"
 		 					."<th>Marktpl. (Ziel) - Sprache</th>"
-		 					."<th>Versanddatum (Bestelldatum)</th>"
+		 					."<th>Datum / Versandart</th>"
 		 					."<th>Name</th>"
 		 					."<th>Status (x of y done)</th>"
 		 					."<th>Gesamtbetrag</th>"
@@ -450,6 +450,7 @@ else
 											echo "<input type=\"hidden\" name=\"Phone"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['Phone']."\">";
 											echo "<input type=\"hidden\" name=\"OrderComment"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['OrderComment']."\">";
 											echo "<input type=\"hidden\" name=\"Language"."|".$opSet1['AmazonOrderId']."\" value=\"".$languagetemp."\">";
+											echo "<input type=\"hidden\" name=\"tax_number"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['tax_number']."\">";
 											echo "</td>";
 
 											if ($amazon_checked && $autoimport)
@@ -492,6 +493,7 @@ else
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Phone'] = $opSet1['Phone'];
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['OrderComment'] = $opSet1['OrderComment'];
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Language'] = $languagetemp;
+												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['tax_number'] = $opSet1['tax_number'];
 											}
 										}
 										else 
@@ -515,6 +517,10 @@ else
 									if (checkPortostatusOfOrderId($opSet1['AmazonOrderId']))
 									{
 										echo "bereits erstellt";
+									}
+									elseif ($opSet1['ShipmentServiceLevelCategory'] == "Expedited" && !array_key_exists('error', $opSet1) && !$opSet1['error'])
+									{
+										echo "Expresssendung";
 									}
 									elseif ($bearbeitungsstatus == "auftrag" && !array_key_exists('error', $opSet1) && !$opSet1['error'])
 									{
@@ -579,12 +585,18 @@ else
 									echo "</td>";
 								}
 								
+								if ($suchdatum == "versanddatum")
+								{
+									$date = new DateTime($opSet1['LastUpdateDate']);
+								}
+								else
+								{
+									$date = new DateTime($opSet1['PurchaseDate']);
+								}								
 								
-								$date1 = new DateTime($opSet1['LastUpdateDate']);
-								$date2 = new DateTime($opSet1['PurchaseDate']);
 								echo "<td>".$opSet1['AmazonOrderId']."</td>"
 									."<td>".$opSet1['SalesChannel']." (".$opSet1['CountryCode'].") - ".$languagetemp." </td>"
-									."<td>".$date1->format('Y-m-d H:i')." (".$date2->format('Y-m-d H:i').")</td>";
+									."<td>".$date->format('Y-m-d H:i')." / ". $opSet1['ShipmentServiceLevelCategory']."</td>";
 								$customerstatus = checkCustomer($opSet1['BuyerEmail'], $opSet1['BuyerName']);
 								if ($customerstatus == "neu")
 								{
@@ -754,6 +766,7 @@ else
 			if (isset($_POST["Phone|".$importItem])) { $bestellungen[$importItem]['Phone'] = $_POST["Phone|".$importItem]; }
 			if (isset($_POST["OrderComment|".$importItem])) { $bestellungen[$importItem]['OrderComment'] = $_POST["OrderComment|".$importItem]; }
 			if (isset($_POST["Language|".$importItem])) { $bestellungen[$importItem]['Language'] = $_POST["Language|".$importItem]; }
+			if (isset($_POST["tax_number|".$importItem])) { $bestellungen[$importItem]['tax_number'] = $_POST["tax_number|".$importItem]; }
 	
 			//Artikel pro Bestellung
 			for ($zaehler = 0; $zaehler <= intval($bestellungen[$importItem]['NumberOfItemsShipped']) + intval($bestellungen[$importItem]['NumberOfItemsUnshipped']); $zaehler++)
@@ -819,17 +832,18 @@ else
 						{
 							if(stripos($einzelprodukt['SellerSKU'], $skuvalue) !== false)
 							{
-								if (floatval($einzelprodukt['ItemPrice']) < floatval($pricevalue))
+								if (floatval($einzelprodukt['ItemPrice']) - floatval($einzelprodukt['PromotionDiscount']) < floatval($pricevalue))
 								{
 									// Warnemail schreiben!!!
 									$empfaenger = $pricewarningemail;
-									$betreff = "PREISWARNUNG: Ein Artikel wurde vermutlich unter Preis verkauft";
-									$nachricht = "Es gibt eine Preiswarnung für folgende Bestellung\r\n" . 
+									$betreff = "PREISWARNUNG PRODUKT: Ein Artikel wurde stark verbilligt verkauft";
+									$nachricht = "Es gibt eine Rabattwarnung für folgende Bestellung\r\n" . 
 												 "Verkaufskanal    : " . $bestellung['SalesChannel'] . "\r\n" . 
 												 "Bestellungnummer : " . $bestellung['AmazonOrderId'] . "\r\n" . 
 												 "Artikel          : " . $einzelprodukt['SellerSKU'] . "\r\n" .
-												 "Preis            : " . $einzelprodukt['ItemPrice'] . "\r\n";
-									$header =	"From: kivi-import@opis-tech.com" . "\r\n" .
+												 "Preis            : " . $einzelprodukt['ItemPrice'] . "\r\n" .
+												 "Rabatt           : " . $einzelprodukt['PromotionDiscount'] . "\r\n";
+									$header =	"From: kivi-test-import@opis-tech.com" . "\r\n" .
 												"X-Mailer: PHP/" . phpversion();
 									mail($empfaenger, $betreff, $nachricht, $header);
 								}

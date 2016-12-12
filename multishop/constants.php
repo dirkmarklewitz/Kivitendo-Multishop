@@ -51,6 +51,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"HK" => "Hong Kong",
 				"IL" => "Israel",
 				"IN" => "Indien",
+				"IS" => "Island",
 				"JE" => "Jersey (Kanalinsel)",
 				"KR" => "Süd Korea",
 				"LI" => "Liechtenstein",
@@ -64,6 +65,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"NZ" => "Neuseeland",
 				"PH" => "Philippinen",
 				"QA" => "Katar",
+				"RE" => "Réunion",
 				"RU" => "Russische Föderation",
 				"SA" => "Saudi Arabien",
 				"SG" => "Singapur",
@@ -73,7 +75,12 @@ $LAND = array(	"DE" => "Deutschland",
 				"US" => "USA",
 				"XK" => "Kosovo, Republik");
 				
-$TAXID = array(	"DE" => 4,	// Steuerschluessel Deutschland
+$TAXID = array(	"EU_ID" => 1,	// EU mit USt-ID Nummer
+				"EU_OHNE" => 2,	// EU ohne USt-ID Nummer
+				"WORLD" => 3,	// Außerhalb EU
+				"DEUT" => 4,	// Inland
+
+				"DE" => 4,	// Steuerschluessel Deutschland
 
 				"AT" => 2,	// Steuerschluessel EU
 				"BE" => 2,
