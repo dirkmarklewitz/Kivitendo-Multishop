@@ -60,10 +60,6 @@ else
 	}
 }
 
-if ($SHOPchar and ExportMode != "1")
-{
-    $erp->setCharset($SHOPchar);
-} 
 $erp->setFetchMode(MDB2_FETCHMODE_ASSOC);
 
 /****************************************************
@@ -104,7 +100,7 @@ function getAll($db, $sql, $function="--")
 	
 	$rs = $GLOBALS[$db]->queryAll($sql);
 	
-    if ($rs->message <> "")
+    if (array_key_exists('message', $rs) && $rs->message <> "")
     {
 	    if ($GLOBALS["log"])
 	    {
@@ -428,7 +424,7 @@ function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sql, "checke_update_alte_Kundendaten");
 	$languageId = 0;
-	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	if ($languagereturn != null && $languagereturn[0]["id"])	// LanguageCode vorhanden
 	{
 		$languageId = $languagereturn[0]["id"];
 	}
@@ -628,7 +624,7 @@ function insert_neuen_Kunden($bestellung)
 		return false;
 	}
 	$name = pg_escape_string($bestellung["Name"]);
-	$set .= "set name='".$name."',";
+	$set = "set name='".$name."',";
 	if ($bestellung["Title"] != "")
 	{
 		$set .= "greeting='".pg_escape_string($bestellung["Title"])."',";
@@ -664,7 +660,7 @@ function insert_neuen_Kunden($bestellung)
 	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sql, "insert_neuen_Kunden");
 	$languageId = 0;
-	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	if ($languagereturn != null && $languagereturn[0]["id"])	// LanguageCode vorhanden
 	{
 		$languageId = $languagereturn[0]["id"];
 	}
@@ -980,7 +976,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	$sqllang= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sqllang, "insert_neuen_Kunden");
 	$languageId = 0;
-	if ($languagereturn[0]["id"])	// LanguageCode vorhanden
+	if ($languagereturn != null && $languagereturn[0]["id"])	// LanguageCode vorhanden
 	{
 		$languageId = $languagereturn[0]["id"];
 	}
@@ -992,6 +988,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	$sql .= "payment_id=".hole_payment_id($bestellung["PaymentMethod"]).", ";
 	$bestelldatum = "Bestelldatum: ".date("d.m.Y", strtotime($bestellung["PurchaseDate"])).chr(13);
 	$versanddatum = "Versanddatum: ".date("d.m.Y", strtotime($bestellung["LastUpdateDate"])).chr(13);
+	$waehrungstext = "";
 	if ($bestellung["CurrencyCode"] != "EUR")
 	{
 		$waehrungstext = chr(13)."Originalwaehrung: ".$bestellung["CurrencyCode"].chr(13)."Originalbetrag: ".$bestellung["Amount"]." ".$bestellung["CurrencyCode"].chr(13)."Kurs 1 ".$bestellung["CurrencyCode"]." = x.xx EUR";
@@ -1308,7 +1305,7 @@ function checkCustomer($BuyerEmail, $BuyerName)
 		if ($BuyerName != "")
 		{
 			// BuyerName checken
-			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."'");
+			$rs = $dbP->getall("select customernumber from customer where username = '".pg_escape_string(substr($BuyerName, 0, 50))."'");
 			if (count($rs) == 1)
 			{
 				$status = "vorhanden";

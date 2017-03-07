@@ -80,6 +80,11 @@ else
 		$amazon_checked = "checked=\"checked\"";
 		$haendler_checked = "";
 	}
+	$Alle_checked = "";	
+	$Amazon_checked = "";	
+	$Ebay_checked = "";
+	$Joomla_checked = "";
+	$Rakuten_checked = "";
 	if (isset($_POST["filter"])) {
 		if ($_POST["filter"] == "Alle") {
 			$filter = "Alle";
@@ -105,6 +110,11 @@ else
 		$filter = "Alle";
 		$Alle_checked = "checked=\"checked\"";
 	}
+	$versandstatus_shipped = "";
+	$versandstatus_pending = "";
+	$versandstatus_partiallyunshipped = "";
+	$versandstatus_canceled = "";
+	$versandstatus_unfulfillable = "";
 	if (isset($_POST["versandstatus"])) {
 		$versandstatus = $_POST['versandstatus'];
 		if (in_array("shipped", $versandstatus)) { $versandstatus_shipped = "checked=\"checked\""; } else { $versandstatus_shipped = ""; }
@@ -293,46 +303,49 @@ else
 					}
 				}
 				$zuErgaenzendeProdukte = array();
-				foreach($opSet1['orderItemsListOutput'] as $lfdNrOrderItem => $orderItem)
+				if (array_key_exists('orderItemsListOutput', $opSet1))
 				{
-					if (array_key_exists($orderItem['SellerSKU'], $zusatzSKU))
+					foreach($opSet1['orderItemsListOutput'] as $lfdNrOrderItem => $orderItem)
 					{
-						$newOrderItem = array();
-						$newOrderItem['AmazonOrderId'] = $orderItem['AmazonOrderId'];
-						$newOrderItem['OrderItemId'] = "Zusatzartikel";
-						$newOrderItem['SellerSKU'] = $zusatzSKU[$orderItem['SellerSKU']]['Zusatzprodukt'];
-						$newOrderItem['ASIN'] = "";
-						$newOrderItem['ItemPrice'] = 0.00;
-						$newOrderItem['ItemTax'] = 0.00;
-						$newOrderItem['PromotionDiscount'] = 0.00;
-						$newOrderItem['ShippingPrice'] = 0.00;
-						$newOrderItem['ShippingTax'] = 0.00;
-						$newOrderItem['ShippingDiscount'] = 0.00;
-						$newOrderItem['GiftWrapPrice'] = 0.00;
-						$newOrderItem['GiftWrapTax'] = 0.00;
-						if ($zusatzSKU[$orderItem['SellerSKU']]['Anzahl'] == '*')
+						if (array_key_exists($orderItem['SellerSKU'], $zusatzSKU))
 						{
-							$newOrderItem['QuantityOrdered'] = $orderItem['QuantityOrdered'];
-							$newOrderItem['QuantityShipped'] = $orderItem['QuantityShipped'];
+							$newOrderItem = array();
+							$newOrderItem['AmazonOrderId'] = $orderItem['AmazonOrderId'];
+							$newOrderItem['OrderItemId'] = "Zusatzartikel";
+							$newOrderItem['SellerSKU'] = $zusatzSKU[$orderItem['SellerSKU']]['Zusatzprodukt'];
+							$newOrderItem['ASIN'] = "";
+							$newOrderItem['ItemPrice'] = 0.00;
+							$newOrderItem['ItemTax'] = 0.00;
+							$newOrderItem['PromotionDiscount'] = 0.00;
+							$newOrderItem['ShippingPrice'] = 0.00;
+							$newOrderItem['ShippingTax'] = 0.00;
+							$newOrderItem['ShippingDiscount'] = 0.00;
+							$newOrderItem['GiftWrapPrice'] = 0.00;
+							$newOrderItem['GiftWrapTax'] = 0.00;
+							if ($zusatzSKU[$orderItem['SellerSKU']]['Anzahl'] == '*')
+							{
+								$newOrderItem['QuantityOrdered'] = $orderItem['QuantityOrdered'];
+								$newOrderItem['QuantityShipped'] = $orderItem['QuantityShipped'];
+							}
+							else
+							{
+								$newOrderItem['QuantityOrdered'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
+								$newOrderItem['QuantityShipped'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
+							}
+							if (array_key_exists('Bezeichnung', $zusatzSKU[$orderItem['SellerSKU']]))
+							{
+								$newOrderItem['Title'] = $zusatzSKU[$orderItem['SellerSKU']]['Bezeichnung'];
+							}
+							else
+							{
+								$newOrderItem['Title'] = "";
+							}
+							$zuErgaenzendeProdukte[] = $newOrderItem;
 						}
-						else
-						{
-							$newOrderItem['QuantityOrdered'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
-							$newOrderItem['QuantityShipped'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
-						}
-						if (array_key_exists('Bezeichnung', $zusatzSKU[$orderItem['SellerSKU']]))
-						{
-							$newOrderItem['Title'] = $zusatzSKU[$orderItem['SellerSKU']]['Bezeichnung'];
-						}
-						else
-						{
-							$newOrderItem['Title'] = "";
-						}
-						$zuErgaenzendeProdukte[] = $newOrderItem;
 					}
+					// Die neuen Produkte zur Liste ergänzen
+					$opSet1['orderItemsListOutput'] = array_merge($opSet1['orderItemsListOutput'], $zuErgaenzendeProdukte);
 				}
-				// Die neuen Produkte zur Liste ergänzen
-				$opSet1['orderItemsListOutput'] = array_merge($opSet1['orderItemsListOutput'], $zuErgaenzendeProdukte);
 				
 				// Ersatz SKU vorbereiten
 				$searchSKU = array();
@@ -664,6 +677,12 @@ else
 									echo $orderItem['SellerSKU']." - Shipped ".$orderItem['QuantityShipped']." of ".$orderItem['QuantityOrdered']." Price ".$orderItem['ItemPrice'].$promotiondiscount_text.$shipping_text.$shippingdiscount_text.$giftwrap_text."<br>";
 								}
 								
+								if (isset($orderItem['ShippingPrice'])) { $ShippingPricetemp = $orderItem['ShippingPrice']; } else { $ShippingPricetemp = ""; }
+								if (isset($orderItem['ShippingTax'])) { $ShippingTaxtemp = $orderItem['ShippingTax']; } else { $ShippingTaxtemp = ""; }
+								if (isset($orderItem['ShippingDiscount'])) { $ShippingDiscounttemp = $orderItem['ShippingDiscount']; } else { $ShippingDiscounttemp = ""; }
+								if (isset($orderItem['GiftWrapPrice'])) { $GiftWrapPricetemp = $orderItem['GiftWrapPrice']; } else { $GiftWrapPricetemp = ""; }
+								if (isset($orderItem['GiftWrapTax'])) { $GiftWrapTaxtemp = $orderItem['GiftWrapTax']; } else { $GiftWrapTaxtemp = ""; }
+								
 								echo "<input type=\"hidden\" name=\"AmazonOrderIdProducts"."|".$opSet1['AmazonOrderId']."|".$lfdNrOrderItem."\" value=\""
 										.$orderItem['OrderItemId']."|"
 										.str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU'])."|"
@@ -671,11 +690,11 @@ else
 										.$orderItem['ItemPrice']."|"
 										.$orderItem['ItemTax']."|"
 										.$orderItem['PromotionDiscount']."|"
-										.$orderItem['ShippingPrice']."|"
-										.$orderItem['ShippingTax']."|"
-										.$orderItem['ShippingDiscount']."|"
-										.$orderItem['GiftWrapPrice']."|"
-										.$orderItem['GiftWrapTax']."|"
+										.$ShippingPricetemp."|"
+										.$ShippingTaxtemp."|"
+										.$ShippingDiscounttemp."|"
+										.$GiftWrapPricetemp."|"
+										.$GiftWrapTaxtemp."|"
 										.$orderItem['QuantityOrdered']."|"
 										.$orderItem['QuantityShipped']."|"
 										.$orderItem['Title']

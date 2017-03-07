@@ -130,7 +130,7 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 
 		// --- Einzelverarbeitung der Reports ---
 		
-		if (array_key_exists('error', $reportText) && $reportText['error'])
+		if (is_array($reportText) && array_key_exists('error', $reportText) && $reportText['error'])
 		{
 			$bestellungen[$lfdNr]['error'] = $reportText['error'];
 			$lfdNr++;
@@ -151,10 +151,18 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 	        		$bestellungen[$lfdNr]['AmazonOrderId'] = $einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']];
 					foreach($paramsOrders as $param)
 					{
-						$bestellungen[$lfdNr][$param] = $einzelbestellung[$paramsOrdersReportFBA[$param]];
+						if (array_key_exists($paramsOrdersReportFBA[$param], $einzelbestellung))
+						{
+							$bestellungen[$lfdNr][$param] = $einzelbestellung[$paramsOrdersReportFBA[$param]];
+						}
+						else
+						{
+							$bestellungen[$lfdNr][$param] = "";
+						}
 					}
 					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
 					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
+					$bestellungen[$lfdNr]['tax_number'] = "";
 					
 					// Artikel zur Bestellung
 					$orderItemsListOutput = array();
@@ -183,6 +191,7 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 					}
 					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
 					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
+					$bestellungen[$lfdNr]['tax_number'] = "";
 					
 					// Artikel zur Bestellung
 					$orderItemsListOutput = array();
@@ -223,11 +232,6 @@ class DhAmazonAccess	// enthält Zugangsdaten und Call-Funktion:
 
 class DhListOrders extends DhAmazonAccess
 {
-	function cmp($a, $b)
-	{
-		return strcmp($a['LastUpdateDate'], $b['LastUpdateDate']);
-	}
-	
 	public function prepareOrderListRequest($fulfillmentchannel, $versandstatus, $suchdatum)
 	{
 		require "conf.php";
@@ -343,7 +347,8 @@ class DhListOrders extends DhAmazonAccess
 		
 		$responseDomDoc = new DomDocument();	// Response in neuem DomDocument-Objekt verarbeiten
 		$responseDomDoc->loadXML($this->_responseXml);
-		$error=$responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
+		$error = $responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
+		$output = array();
  
 		if ($error->length>0)	// wenn Fehler, Errorcode auslesen und darstellen:
 		{
@@ -359,7 +364,16 @@ class DhListOrders extends DhAmazonAccess
 
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
 			{
-				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				# alt: $nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				$p = $response->getElementsByTagName("NextToken");
+				if($p->length > 0)
+				{
+				    $nextToken = $p->item(0)->nodeValue;
+				} else {
+				    $nextToken = "";
+				}
+				
+				$nextTokenOutput = array();
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhListOrdersByNextToken();
@@ -375,10 +389,18 @@ class DhListOrders extends DhAmazonAccess
 				{
 					foreach(array_keys($paramsOrders) as $param)
 					{
-						$output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
+						# alt: $output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
+						$p = $item->getElementsByTagName($paramsOrders[$param]);
+						if($p->length > 0)
+						{
+						    $output[$i][$param] = $p->item(0)->nodeValue;
+						} else {
+						    $output[$i][$param] = "";
+						}
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
+					$output[$i]['tax_number'] = "";
 				}
 				
 				foreach($nextTokenOutput as $item)
@@ -387,12 +409,6 @@ class DhListOrders extends DhAmazonAccess
 					$output[$i] = $item;
 				}
 			}
-		}
-		
-		// output sortieren
-		if ($suchdatum == "versanddatum")
-		{
-			usort($output, "cmp");
 		}
 		
 		return $output;
@@ -600,7 +616,16 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
 			{
-				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				#$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				$p = $response->getElementsByTagName("NextToken");
+				if($p->length > 0)
+				{
+				    $nextToken = $p->item(0)->nodeValue;
+				} else {
+				    $nextToken = "";
+				}				
+				
+				$nextTokenOutput = array();
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhListOrdersByNextToken();
@@ -616,10 +641,18 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 				{
 					foreach(array_keys($paramsOrders) as $param)
 					{
-						$output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
+						# alt: $output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
+						$p = $item->getElementsByTagName($paramsOrders[$param]);
+						if($p->length > 0)
+						{
+						    $output[$i][$param] = $p->item(0)->nodeValue;
+						} else {
+						    $output[$i][$param] = "";
+						}						
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
+					$output[$i]['tax_number'] = "";
 				}
 				
 				foreach($nextTokenOutput as $item)
@@ -739,6 +772,8 @@ class DhListOrdersByReports extends DhAmazonAccess
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <ReportInfo> stehen:
 			{
 				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				
+				$nextTokenOutput = array();
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhReportListByNextToken();
@@ -962,6 +997,8 @@ class DhReportListByNextToken extends DhAmazonAccess
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <ReportInfo> stehen:
 			{
 				$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
+				
+				$nextTokenOutput = array();
 				if (!empty($nextToken))
 				{
 					$amazonApiCall = new DhReportListByNextToken();
