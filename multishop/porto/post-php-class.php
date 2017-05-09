@@ -141,7 +141,7 @@ class PostInternetmarke {
 	$headers .="Content-Transfer-Encoding: 8bit";
 	
 	$body=htmlspecialchars_decode($body,ENT_QUOTES);//optional
-	$email_address=PORTOKASSE_EMAIL_RECIPIENT;
+	$email_address=PORTOKASSE_WARNING_EMAIL_RECIPIENT;
 	mail($email_address,  "=?utf-8?B?".base64_encode($subject)."?=", $body, $headers);
     }
 
@@ -322,7 +322,7 @@ class PostInternetmarke {
 
 	return $this->response;
     }    
-
+    
     private function checkOutCart($type) {
 	$this->setTimestamp();
 	$signature_elements= array();
@@ -381,6 +381,20 @@ class PostInternetmarke {
 	    $this->downloadLabel();
 	}
 	return $this->response;
+    }
+
+    function get_portokasse() {
+	$this->loginToInternetmarke();
+	$subject = "Monatsbetrag Portokasse: " . ($this->balance/100) . "EUR";
+	$body = "Anfragezeit (www.opis-tech.com Server Zeit): " . date('Y-m-d H:i:s');;
+	$headers = "From: 'post-portokasse@opis-tech.com \r\n";
+	$headers .= "MIME-Version: 1.0\r\n";
+	$headers .= "Content-type: text/plain; charset=utf-8\r\n";
+	$headers .="Content-Transfer-Encoding: 8bit";
+	
+	$body=htmlspecialchars_decode($body,ENT_QUOTES);//optional
+	$email_address=PORTOKASSE_MONTHLY_EMAIL_RECIPIENT;
+	mail($email_address,  "=?utf-8?B?".base64_encode($subject)."?=", $body, $headers);
     }
 }
 ?>

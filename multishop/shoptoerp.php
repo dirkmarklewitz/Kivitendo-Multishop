@@ -282,26 +282,63 @@ else
 			}
 			
 			$bestellungen_autoimport = array();			
-			
+
+			// Zusatzprodukte vorbereiten
+			$zusatzSKU = array();
+			foreach (split("\n", $zusatzProdukt) as $einzelZusatzProdukt)
+			{
+				$zerlegtesEinzelZusatzProdukt = split("\|", $einzelZusatzProdukt);
+				if (count($zerlegtesEinzelZusatzProdukt) == 3 || count($zerlegtesEinzelZusatzProdukt) == 4)
+				{
+					$zerlegtesEinzelZusatzProduktMarktplaetze = split("\@", $zerlegtesEinzelZusatzProdukt[0]);
+					if (!isset($zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze']))
+					{
+						$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze'] = array();
+					}
+					if (count($zerlegtesEinzelZusatzProduktMarktplaetze) > 1)
+					{
+						// --- Marktplatzbezogene Zusatzprodukte
+						foreach ($zerlegtesEinzelZusatzProduktMarktplaetze as $value)
+						{
+							$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze'][$value]['Zusatzprodukt'] = trim($zerlegtesEinzelZusatzProdukt[1]);
+							$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze'][$value]['Anzahl'] = trim($zerlegtesEinzelZusatzProdukt[2]);
+							if (count($zerlegtesEinzelZusatzProdukt) == 4)
+							{
+								$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze'][$value]['Bezeichnung'] = trim($zerlegtesEinzelZusatzProdukt[3]);
+							}								
+						}
+					}
+					else
+					{
+						// --- Generische Zusatzprodukte
+						$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze']['All']['Zusatzprodukt'] = trim($zerlegtesEinzelZusatzProdukt[1]);
+						$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze']['All']['Anzahl'] = trim($zerlegtesEinzelZusatzProdukt[2]);
+						if (count($zerlegtesEinzelZusatzProdukt) == 4)
+						{
+							$zusatzSKU[$zerlegtesEinzelZusatzProduktMarktplaetze[0]]['Marktplaetze']['All']['Bezeichnung'] = trim($zerlegtesEinzelZusatzProdukt[3]);
+						}
+					}
+				}
+			}
+			// Ersatz SKU vorbereiten
+			$searchSKU = array();
+			$replaceSKU = array();
+			foreach (split("\n", $ersatzSKU) as $einzelSKU)
+			{
+				$zerlegteEinzelSKU = split("\|", $einzelSKU);
+				if(count($zerlegteEinzelSKU) == 2)
+				{
+					$searchSKU[] = trim($zerlegteEinzelSKU[0]);
+					$replaceSKU[] = trim($zerlegteEinzelSKU[1]);
+				}
+			}			
+						
 			foreach($output as $lfdNr => $opSet1)
 			{
 				$languagetemp = $standardsprache;
 				$bearbeitungsstatus = $opSet1['bearbeitungsstatus'];
+				
 				// ----- Zusatzprodukte einfügen, bevor die SKU korrigiert werden, dann an $opSet1 anfügen -----
-				$zusatzSKU = array();
-				foreach (split("\n", $zusatzProdukt) as $einzelZusatzProdukt)
-				{
-					$zerlegtesEinzelZusatzProdukt = split("\|", $einzelZusatzProdukt);
-					if(count($zerlegtesEinzelZusatzProdukt) == 3 || count($zerlegtesEinzelZusatzProdukt) == 4)
-					{
-						$zusatzSKU[$zerlegtesEinzelZusatzProdukt[0]]['Zusatzprodukt'] = trim($zerlegtesEinzelZusatzProdukt[1]);
-						$zusatzSKU[$zerlegtesEinzelZusatzProdukt[0]]['Anzahl'] = trim($zerlegtesEinzelZusatzProdukt[2]);
-					}
-					if(count($zerlegtesEinzelZusatzProdukt) == 4)
-					{
-						$zusatzSKU[$zerlegtesEinzelZusatzProdukt[0]]['Bezeichnung'] = trim($zerlegtesEinzelZusatzProdukt[3]);
-					}
-				}
 				$zuErgaenzendeProdukte = array();
 				if (array_key_exists('orderItemsListOutput', $opSet1))
 				{
@@ -309,55 +346,86 @@ else
 					{
 						if (array_key_exists($orderItem['SellerSKU'], $zusatzSKU))
 						{
-							$newOrderItem = array();
-							$newOrderItem['AmazonOrderId'] = $orderItem['AmazonOrderId'];
-							$newOrderItem['OrderItemId'] = "Zusatzartikel";
-							$newOrderItem['SellerSKU'] = $zusatzSKU[$orderItem['SellerSKU']]['Zusatzprodukt'];
-							$newOrderItem['ASIN'] = "";
-							$newOrderItem['ItemPrice'] = 0.00;
-							$newOrderItem['ItemTax'] = 0.00;
-							$newOrderItem['PromotionDiscount'] = 0.00;
-							$newOrderItem['ShippingPrice'] = 0.00;
-							$newOrderItem['ShippingTax'] = 0.00;
-							$newOrderItem['ShippingDiscount'] = 0.00;
-							$newOrderItem['GiftWrapPrice'] = 0.00;
-							$newOrderItem['GiftWrapTax'] = 0.00;
-							if ($zusatzSKU[$orderItem['SellerSKU']]['Anzahl'] == '*')
+							// --- Generische Zusatzprodukte hinzufügen
+							if (array_key_exists('All', $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']))
 							{
-								$newOrderItem['QuantityOrdered'] = $orderItem['QuantityOrdered'];
-								$newOrderItem['QuantityShipped'] = $orderItem['QuantityShipped'];
+								$newOrderItem = array();
+								$newOrderItem['AmazonOrderId'] = $orderItem['AmazonOrderId'];
+								$newOrderItem['OrderItemId'] = "Zusatzartikel";
+								$newOrderItem['SellerSKU'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']['Zusatzprodukt'];
+								$newOrderItem['ASIN'] = "";
+								$newOrderItem['ItemPrice'] = 0.00;
+								$newOrderItem['ItemTax'] = 0.00;
+								$newOrderItem['PromotionDiscount'] = 0.00;
+								$newOrderItem['ShippingPrice'] = 0.00;
+								$newOrderItem['ShippingTax'] = 0.00;
+								$newOrderItem['ShippingDiscount'] = 0.00;
+								$newOrderItem['GiftWrapPrice'] = 0.00;
+								$newOrderItem['GiftWrapTax'] = 0.00;
+								if ($zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']['Anzahl'] == '*')
+								{
+									$newOrderItem['QuantityOrdered'] = $orderItem['QuantityOrdered'];
+									$newOrderItem['QuantityShipped'] = $orderItem['QuantityShipped'];
+								}
+								else
+								{
+									$newOrderItem['QuantityOrdered'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']['Anzahl'];
+									$newOrderItem['QuantityShipped'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']['Anzahl'];
+								}
+								if (array_key_exists('Bezeichnung', $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']))
+								{
+									$newOrderItem['Title'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']['All']['Bezeichnung'];
+								}
+								else
+								{
+									$newOrderItem['Title'] = "";
+								}
+								$newOrderItem['SerialNumber'] = str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU']);
+								$zuErgaenzendeProdukte[] = $newOrderItem;
+								$opSet1['NumberOfItemsShipped']++;
 							}
-							else
+							// --- Marktplatzbezogene Zusatzprodukte hinzufügen
+							if (array_key_exists($opSet1['SalesChannel'], $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze']))
 							{
-								$newOrderItem['QuantityOrdered'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
-								$newOrderItem['QuantityShipped'] = $zusatzSKU[$orderItem['SellerSKU']]['Anzahl'];
+								$newOrderItem = array();
+								$newOrderItem['AmazonOrderId'] = $orderItem['AmazonOrderId'];
+								$newOrderItem['OrderItemId'] = "Zusatzartikel";
+								$newOrderItem['SellerSKU'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]['Zusatzprodukt'];
+								$newOrderItem['ASIN'] = "";
+								$newOrderItem['ItemPrice'] = 0.00;
+								$newOrderItem['ItemTax'] = 0.00;
+								$newOrderItem['PromotionDiscount'] = 0.00;
+								$newOrderItem['ShippingPrice'] = 0.00;
+								$newOrderItem['ShippingTax'] = 0.00;
+								$newOrderItem['ShippingDiscount'] = 0.00;
+								$newOrderItem['GiftWrapPrice'] = 0.00;
+								$newOrderItem['GiftWrapTax'] = 0.00;
+								if ($zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]['Anzahl'] == '*')
+								{
+									$newOrderItem['QuantityOrdered'] = $orderItem['QuantityOrdered'];
+									$newOrderItem['QuantityShipped'] = $orderItem['QuantityShipped'];
+								}
+								else
+								{
+									$newOrderItem['QuantityOrdered'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]['Anzahl'];
+									$newOrderItem['QuantityShipped'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]['Anzahl'];
+								}
+								if (array_key_exists('Bezeichnung', $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]))
+								{
+									$newOrderItem['Title'] = $zusatzSKU[$orderItem['SellerSKU']]['Marktplaetze'][$opSet1['SalesChannel']]['Bezeichnung'];
+								}
+								else
+								{
+									$newOrderItem['Title'] = "";
+								}
+								$newOrderItem['SerialNumber'] = str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU']);
+								$zuErgaenzendeProdukte[] = $newOrderItem;
+								$opSet1['NumberOfItemsShipped']++;
 							}
-							if (array_key_exists('Bezeichnung', $zusatzSKU[$orderItem['SellerSKU']]))
-							{
-								$newOrderItem['Title'] = $zusatzSKU[$orderItem['SellerSKU']]['Bezeichnung'];
-							}
-							else
-							{
-								$newOrderItem['Title'] = "";
-							}
-							$zuErgaenzendeProdukte[] = $newOrderItem;
 						}
 					}
 					// Die neuen Produkte zur Liste ergänzen
 					$opSet1['orderItemsListOutput'] = array_merge($opSet1['orderItemsListOutput'], $zuErgaenzendeProdukte);
-				}
-				
-				// Ersatz SKU vorbereiten
-				$searchSKU = array();
-				$replaceSKU = array();
-				foreach (split("\n", $ersatzSKU) as $einzelSKU)
-				{
-					$zerlegteEinzelSKU = split("\|", $einzelSKU);
-					if(count($zerlegteEinzelSKU) == 2)
-					{
-						$searchSKU[] = trim($zerlegteEinzelSKU[0]);
-						$replaceSKU[] = trim($zerlegteEinzelSKU[1]);
-					}
 				}
 				
 				$show_it = true;
@@ -464,6 +532,7 @@ else
 											echo "<input type=\"hidden\" name=\"OrderComment"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['OrderComment']."\">";
 											echo "<input type=\"hidden\" name=\"Language"."|".$opSet1['AmazonOrderId']."\" value=\"".$languagetemp."\">";
 											echo "<input type=\"hidden\" name=\"tax_number"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['tax_number']."\">";
+											echo "<input type=\"hidden\" name=\"tax_included"."|".$opSet1['AmazonOrderId']."\" value=\"".$opSet1['tax_included']."\">";
 											echo "</td>";
 
 											if ($amazon_checked && $autoimport)
@@ -507,6 +576,7 @@ else
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['OrderComment'] = $opSet1['OrderComment'];
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['Language'] = $languagetemp;
 												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['tax_number'] = $opSet1['tax_number'];
+												$bestellungen_autoimport[$opSet1['AmazonOrderId']]['tax_included'] = $opSet1['tax_included'];
 											}
 										}
 										else 
@@ -561,6 +631,10 @@ else
 										foreach($opSet1['orderItemsListOutput'] as $lfdNrOrderItem => $orderItem)
 										{
 											$export_details[$zaehler]['sku'] = rawurlencode(str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU']));
+											if (!empty($orderItem['SerialNumber']))
+											{
+												$export_details[$zaehler]['sku'] .= rawurlencode('@'.$orderItem['SerialNumber']);
+											}											
 											$export_details[$zaehler]['item_amount'] = rawurlencode($orderItem['QuantityOrdered']);
 											$export_details[$zaehler]['customs_value'] = rawurlencode($orderItem['ItemPrice']);											
 											$export_details[$zaehler]['goods_description'] = rawurlencode($orderItem['Title']);
@@ -666,6 +740,11 @@ else
 								{
 									$giftwrap_text = " GiftWrap ".$orderItem['GiftWrapPrice'];
 								}
+								$serialnumber = "";
+								if (isset($orderItem['SerialNumber']))
+								{
+									$serialnumber = $orderItem['SerialNumber'];
+								}
 								$count = 0;
 								str_replace($searchSKU, $replaceSKU, $orderItem['SellerSKU'], $count);
 								if ($count > 0)
@@ -697,7 +776,8 @@ else
 										.$GiftWrapTaxtemp."|"
 										.$orderItem['QuantityOrdered']."|"
 										.$orderItem['QuantityShipped']."|"
-										.$orderItem['Title']
+										.$orderItem['Title']."|"
+										.$serialnumber
 										."\">";
 								if ($amazon_checked && $autoimport)
 								{
@@ -715,6 +795,7 @@ else
 									$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['QuantityOrdered'] = $orderItem['QuantityOrdered'];
 									$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['QuantityShipped'] = $orderItem['QuantityShipped'];
 									$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['Title'] = $orderItem['Title'];
+									$bestellungen_autoimport[$opSet1['AmazonOrderId']]['AmazonOrderIdProducts'][$zaehler]['SerialNumber'] = $serialnumber;									
 									$zaehler++;
 								}
 							}
@@ -786,6 +867,7 @@ else
 			if (isset($_POST["OrderComment|".$importItem])) { $bestellungen[$importItem]['OrderComment'] = $_POST["OrderComment|".$importItem]; }
 			if (isset($_POST["Language|".$importItem])) { $bestellungen[$importItem]['Language'] = $_POST["Language|".$importItem]; }
 			if (isset($_POST["tax_number|".$importItem])) { $bestellungen[$importItem]['tax_number'] = $_POST["tax_number|".$importItem]; }
+			if (isset($_POST["tax_included|".$importItem])) { $bestellungen[$importItem]['tax_included'] = $_POST["tax_included|".$importItem]; }
 	
 			//Artikel pro Bestellung
 			for ($zaehler = 0; $zaehler <= intval($bestellungen[$importItem]['NumberOfItemsShipped']) + intval($bestellungen[$importItem]['NumberOfItemsUnshipped']); $zaehler++)
@@ -808,6 +890,7 @@ else
 					$bestellungen[$importItem]['AmazonOrderIdProducts'][$zaehler]['QuantityOrdered'] = $produktdaten[11];
 					$bestellungen[$importItem]['AmazonOrderIdProducts'][$zaehler]['QuantityShipped'] = $produktdaten[12];
 					$bestellungen[$importItem]['AmazonOrderIdProducts'][$zaehler]['Title'] = $produktdaten[13];
+					$bestellungen[$importItem]['AmazonOrderIdProducts'][$zaehler]['SerialNumber'] = $produktdaten[14];					
 				}
 			}
 		}

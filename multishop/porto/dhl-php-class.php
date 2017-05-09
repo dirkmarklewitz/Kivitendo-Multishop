@@ -228,6 +228,10 @@ class DHLBusinessShipment {
 		$export_position['NetWeightInKG'] = $position['net_weight_kg'];
 		$export_position['GrossWeightInKG'] = $position['gross_weight_kg'];
 		$export_position['CustomsValue'] = round($position['customs_value']*$exchange_rate);
+		//HACK//
+		if (!$export_position['CustomsValue']) {
+		    $export_position['CustomsValue']=0.01;
+		}
 		$total_value += $export_position['CustomsValue'];
 		$export_position['CustomsCurrency'] = 'EUR';//$export_details['customs_currency'];
 		$export['ExportDocPosition'][]=$export_position;

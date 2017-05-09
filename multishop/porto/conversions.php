@@ -15,13 +15,14 @@ $de_country_code = "DE";
 
 //FIXME
 $size_mapping = array (
+	'DJD_ATD4S_SW_1993' => 2,
     'T60mic' => 1,
     'T60adap' => 0.5,
     'T60psu' => 0.5,
     'T60rd' => 1,
     'Cmob6-garde' => 1,
-    'T60cab' => 4,
-    'Tffcab' => 4,
+    'T60cab' => 3.6,
+    'Tffcab' => 3.6,
     'T1921cab' => 8)
 ;
 
@@ -86,6 +87,13 @@ $product_types = array (
 	'net_weight_kg' => 0.4,
         'gross_weight_kg' => 0.5
     ),
+    'DJD_ATD4S_SW_1993' => array (
+	'sku' => 'DJD_ATD4S_SW_1993',
+	'size' => 'DJD_ATD4S_SW_1993',
+	'customs_commodity_code' => '85183095',
+	'net_weight_kg' => 0.6,
+        'gross_weight_kg' => 0.8
+    ),    
     'T60mob' => array (
 	'sku' => 'T60mob',
 	'size' => 'T60cab',

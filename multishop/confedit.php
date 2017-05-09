@@ -402,7 +402,7 @@ else
 					<td><input type="text" name="MarketplaceID_ES" size="25" value="<?= $MarketplaceID_ES ?>"></td>
 				</tr>				
 				<tr>
-					<td>Liste Zusatzprodukte pro SKU,<br>wird vor zu ersetzenden SKU verarbeitet<br>SKU Produkt|SKU Zusatzprodukt|<br>Anzahl (* oder Ganzzahl)|Bezeichnung (optional)<br>(eins pro Zeile, | ist Trenner)</td>
+					<td>Liste Zusatzprodukte pro SKU,<br>wird vor zu ersetzenden SKU verarbeitet<br>SKU Produkt[@Marktplatz1@Marktplatz2...(optional)]|<br>SKU Zusatzprodukt|Anzahl (* oder Ganzzahl)|<br>Bezeichnung (optional)<br>(eins pro Zeile, | ist Trenner)</td>
 					<td><textarea name="zusatzProdukt" cols="32" rows="10"><?= $zusatzProdukt ?></textarea>
 					<td></td>
 					<td>Liste mit zu ersetzenden SKU<br>Amazon -> Kivi<br>(eine pro Zeile, | ist Trenner)</td>

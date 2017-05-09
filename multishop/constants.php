@@ -20,7 +20,7 @@ $LAND = array(	"DE" => "Deutschland",
 				"IT" => "Italien",
 				"LT" => "Litauen",
 				"LU" => "Luxemburg",
-				"LV" => "Lettland",+
+				"LV" => "Lettland",
 				"MC" => "Monaco",
 				"MT" => "Malta",
 				"NL" => "Niederlande",

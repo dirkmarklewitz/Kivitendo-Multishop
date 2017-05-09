@@ -47,7 +47,7 @@ else
 			
 			if(!sku_ist_dienstleistung($bestelldaten[0]))
 			{
-				$export_details['positions'][$zaehler] = array ('sku'				=> $bestelldaten[0],
+				$export_details['positions'][$zaehler] = array ('sku'				=> explode("@", trim($bestelldaten[0]))[0],
 																'item_amount'		=> $bestelldaten[1],
 																'customs_value'		=> floatval(str_replace('.', '', substr($bestelldaten[2], 0, strlen($bestelldaten[2])-3)) . str_replace(',', '.', substr($bestelldaten[2], strlen($bestelldaten[2])-3))),
 																'goods_description' => $bestelldaten[3]);
@@ -84,7 +84,7 @@ else
 			$einzelartikelarray = explode("|", $einzelartikel);
 			if (sizeof($einzelartikelarray) > 1 && !sku_ist_dienstleistung($einzelartikelarray[0]))
 			{
-				$export_details['positions'][$zaehler] = array ('sku'				=> $einzelartikelarray[0],
+				$export_details['positions'][$zaehler] = array ('sku'				=> explode("@", trim($einzelartikelarray[0]))[0],
 																'item_amount'		=> $einzelartikelarray[1],
 																'customs_value'		=> floatval($einzelartikelarray[2]),
 																'goods_description' => $einzelartikelarray[3]);

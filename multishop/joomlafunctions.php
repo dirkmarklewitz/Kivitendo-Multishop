@@ -193,6 +193,14 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		$returnvalue[$bestellungszaehler]['OrderComment'] = utf8_encode($row['order_add_info']);
 		$returnvalue[$bestellungszaehler]['Language'] = utf8_encode($row['lang']);
 		$returnvalue[$bestellungszaehler]['tax_number'] = utf8_encode(trim($row['tax_number']));
+		if (($row['order_subtotal'] + $row['order_shipping']) < $row['order_total'])
+	    {
+		    $returnvalue[$bestellungszaehler]['tax_included'] = "f";
+	    }
+	    else
+	    {
+		    $returnvalue[$bestellungszaehler]['tax_included'] = "t";
+	    }
 		/* unused fieldnames
 	    --------------------
 	    $row['order_tax']

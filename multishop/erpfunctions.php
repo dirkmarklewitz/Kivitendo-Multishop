@@ -753,7 +753,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 			$einzelpreis = round($einzelartikel["ItemPrice"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP) - round($einzelartikel["PromotionDiscount"] / $einzelartikel["QuantityOrdered"], 2, PHP_ROUND_HALF_UP);
 			$GLOBALS["ARTIKELPOSITION"]++;
 			
-			$sql = "insert into orderitems (trans_id, ordnumber, parts_id, description, longdescription, qty, cusordnumber, sellprice, lastcost, unit, ship, discount, position) values (";
+			$sql = "insert into orderitems (trans_id, ordnumber, parts_id, description, longdescription, qty, cusordnumber, sellprice, lastcost, unit, ship, discount, position, serialnumber) values (";
 			$sql .= $zugehoerigeAuftragsID.","
 					.$ordnumber.",'"
 					.$artID."','"
@@ -763,7 +763,8 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 					.$AmazonOrderId."',"
 					.$einzelpreis.","
 					.$lastcost.","
-					."'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
+					."'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].",'"
+					.pg_escape_string($einzelartikel['SerialNumber'])."')";					
 					
 			echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$einzelartikel["Title"]." ]<br>";
 			$rc = query("erp", $sql, "einfuegen_bestellte_Artikel");
@@ -785,13 +786,14 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 				$text = $einzelartikel["Title"];
 				$GLOBALS["ARTIKELPOSITION"]++;
 				
-				$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount, position) values (";
+				$sql = "insert into orderitems (trans_id, parts_id, description, qty, longdescription, sellprice, unit, ship, discount, position, serialnumber) values (";
 				$sql .= $zugehoerigeAuftragsID.",'"
 						.$artID."','"
 						.pg_escape_string($text)."',"
 						.$einzelartikel["QuantityOrdered"].",'"
 						.$AmazonOrderId."',"
-						.$einzelpreis.",'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].")";
+						.$einzelpreis.",'Stck',0,0,".$GLOBALS["ARTIKELPOSITION"].",'"
+						.pg_escape_string($einzelartikel['SerialNumber'])."')";						
 						
 				echo " - Artikel:[ Artikel-ID:$artID Artikel-Nummer:<b>$artNr</b> ".$einzelartikel["Title"]." ]<br>";
 				$rc = query("erp", $sql, "einfuegen_bestellte_Artikel");
@@ -857,9 +859,6 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 {
 	require "conf.php";
 	
-	$brutto = $bestellung["Amount"];
-	$netto = round($brutto / 1.19, 2, PHP_ROUND_HALF_UP);
-	
 	// Hier beginnt die Transaktion
 	$rc = query("erp","BEGIN WORK","erstelle_Auftrag");
 	if ($rc === -99)
@@ -884,7 +883,11 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		$currencyCode = $rs[0]["id"];
 	}
 	
-	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
+	$brutto = $bestellung["Amount"];
+	$netto = $bestellung["Amount"];
+	
+	
+	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!)
 	if ($bestellung["ship-country"] != "")
 	{
 		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
@@ -893,6 +896,10 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
 			{
 				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
+			else
+			{
+				$netto = round($brutto / 1.19, 2, PHP_ROUND_HALF_UP);
 			}
 		}
 		else
@@ -908,6 +915,10 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
 			{
 				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
+			}
+			else
+			{
+				$netto = round($brutto / 1.19, 2, PHP_ROUND_HALF_UP);
 			}
 		}
 		else
@@ -940,38 +951,15 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	}
 	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", shippingpoint='".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]] . " / " . $bestellung["ShipmentServiceLevelCategory"])."', ";
 	$sql .= "globalproject_id=".hole_project_id($standardprojekt).", ";
-	$sql .= "amount=".$brutto.", netamount=".$netto.", reqdate='".$bestellung["LastUpdateDate"]."', taxincluded='t', ";
-	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!
-	if ($bestellung["ship-country"] != "")
+	if ($localtaxid == $GLOBALS["TAXID"]["EU_ID"] || $localtaxid == $GLOBALS["TAXID"]["WORLD"] || $bestellung["tax_included"] == "f")
 	{
-		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
-		{	
-			$localtaxid = $GLOBALS["TAXID"][$bestellung["ship-country"]];
-			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-			{
-				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			}
-		}
-		else
-		{
-			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-		}
+		$taxincluded = "f";
 	}
 	else
 	{
-		if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-		{	
-			$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-			{
-				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			}
-		}
-		else
-		{
-			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-		}
+		$taxincluded = "t";
 	}
+	$sql .= "amount=".$brutto.", netamount=".$netto.", reqdate='".$bestellung["LastUpdateDate"]."', taxincluded='".$taxincluded."', ";
 	// Sprache setzen wenn vorhanden
 	$sqllang= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sqllang, "insert_neuen_Kunden");

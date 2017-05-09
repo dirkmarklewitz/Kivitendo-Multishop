@@ -166,6 +166,7 @@ class RakutenApiClass
 					$returnvalue[$bestellungszaehler]['CountryCode'] = $rechnungsdaten->item(0)->getElementsByTagName('country')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['Language'] = $rechnungsdaten->item(0)->getElementsByTagName('country')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['tax_number'] = "";
+					$returnvalue[$bestellungszaehler]['tax_included'] = "t";
 					$returnvalue[$bestellungszaehler]['StateOrRegion'] = utf8_encode("");
 					$returnvalue[$bestellungszaehler]['BuyerEmail'] = $rechnungsdaten->item(0)->getElementsByTagName('email')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['Phone'] = $rechnungsdaten->item(0)->getElementsByTagName('phone')->item(0)->nodeValue;

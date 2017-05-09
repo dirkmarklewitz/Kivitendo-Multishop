@@ -163,6 +163,7 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
 					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
 					$bestellungen[$lfdNr]['tax_number'] = "";
+					$bestellungen[$lfdNr]['tax_included'] = "t";
 					
 					// Artikel zur Bestellung
 					$orderItemsListOutput = array();
@@ -192,6 +193,7 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
 					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
 					$bestellungen[$lfdNr]['tax_number'] = "";
+					$bestellungen[$lfdNr]['tax_included'] = "t";
 					
 					// Artikel zur Bestellung
 					$orderItemsListOutput = array();
@@ -401,6 +403,7 @@ class DhListOrders extends DhAmazonAccess
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
 					$output[$i]['tax_number'] = "";
+					$output[$i]['tax_included'] = "t";
 				}
 				
 				foreach($nextTokenOutput as $item)
@@ -653,6 +656,7 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
 					$output[$i]['tax_number'] = "";
+					$output[$i]['tax_included'] = "t";
 				}
 				
 				foreach($nextTokenOutput as $item)

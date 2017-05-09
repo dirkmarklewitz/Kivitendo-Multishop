@@ -158,6 +158,7 @@ class eBayApiClass
 						$returnvalue[$bestellungszaehler]['SalesChannel'] = $item->getElementsByTagName('Platform')->item(0)->nodeValue.".".$item->getElementsByTagName('TransactionSiteID')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['Language'] = $item->getElementsByTagName('TransactionSiteID')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['tax_number'] = "";
+						$returnvalue[$bestellungszaehler]['tax_included'] = "t";
 						$returnvalue[$bestellungszaehler]['MarketplaceId'] = $eBayAbteilungsname;
 						// $returnvalue[$bestellungszaehler]['OrderType'] = "";
 						$returnvalue[$bestellungszaehler]['OrderStatus'] = $item->getElementsByTagName('OrderStatus')->item(0)->nodeValue;
