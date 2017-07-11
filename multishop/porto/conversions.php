@@ -19,8 +19,14 @@ $size_mapping = array (
     'T60mic' => 1,
     'T60adap' => 0.5,
     'T60psu' => 0.5,
-    'T60rd' => 1,
+    'T60rd' => 0.5,
+    'Inlay' => 0.0, 
+    'T60bat' => 0.2,
     'Cmob6-garde' => 1,
+    'Cmob7-garde' => 1,
+    'Cmob7+-garde' => 1,
+    'Cmob7-garde' => 1,
+    'Ctab97pro' => 1,
     'T60cab' => 3.6,
     'Tffcab' => 3.6,
     'T1921cab' => 8)
@@ -101,6 +107,13 @@ $product_types = array (
 	'net_weight_kg' => 1.1,
         'gross_weight_kg' => 1.7
     ),
+    'T60bat' => array (
+	'sku' => 'T60bat',
+	'size' => 'T60bat',
+	'customs_commodity_code' => '85078000',
+	'net_weight_kg' => 0.1,
+        'gross_weight_kg' => 0.2
+    ),
     'T60cab' => array (
 	'sku' => 'T60cab',
         'size' => 'T60cab',
@@ -136,6 +149,27 @@ $product_types = array (
 	'net_weight_kg' => 0.1,
         'gross_weight_kg' => 0.2
     ),
+    'Cmob7-garde' => array (
+	'sku' => 'Cmob7-garde',
+	'size' => 'Cmob7-garde',
+	'customs_commodity_code' => '4202310090',
+	'net_weight_kg' => 0.1,
+        'gross_weight_kg' => 0.2
+    ),
+    'Cmob7+-garde' => array (
+	'sku' => 'Cmob7-garde',
+	'size' => 'Cmob7+-garde',
+	'customs_commodity_code' => '4202310090',
+	'net_weight_kg' => 0.1,
+        'gross_weight_kg' => 0.2
+    ),
+    'Ctab97pro' => array (
+	'sku' => 'Ctab97pro',
+	'size' => 'Ctab97pro',
+	'customs_commodity_code' => '4202310090',
+	'net_weight_kg' => 0.2,
+        'gross_weight_kg' => 0.3
+    ),
     'T60adap' => array (
 	'sku' => 'T60adap',
 	'size' => 'T60adap',
@@ -146,9 +180,9 @@ $product_types = array (
     'T60psu' => array (
 	'sku' => 'T60psu',
 	'size' => 'T60psu',
-        'customs_commodity_code' => '8504403090',
+    'customs_commodity_code' => '8504403090',
 	'net_weight_kg' => 0.1,
-        'gross_weight_kg' => 0.2
+    'gross_weight_kg' => 0.2
     ),
     'T60rd' => array (
 	'sku' => 'T60rd',
@@ -156,6 +190,13 @@ $product_types = array (
         'customs_commodity_code' => '8517709000',
 	'net_weight_kg' => 0.2,
         'gross_weight_kg' => 0.3
+    ),
+    'Inlay' => array (
+	'sku' => 'Inlay',
+	'size' => 'Inlay',
+    'customs_commodity_code' => '8517709000',
+	'net_weight_kg' => 0.0,
+    'gross_weight_kg' => 0.0
     )
 );
 

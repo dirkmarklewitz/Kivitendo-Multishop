@@ -65,7 +65,7 @@ class PrepareShipment {
 		    $position['customs_commodity_code'] = $product_type['customs_commodity_code'];
 		    $position['net_weight_kg'] = $product_type['net_weight_kg'] * $position['item_amount'];
 		    $position['gross_weight_kg'] = $product_type['gross_weight_kg'] * $position['item_amount'];
-		    $export_details['total_sum'] += $position['customs_value'];
+		    $export_details['total_sum'] += $position['customs_value'] * $position['item_amount'];
 		    $weight += $position['gross_weight_kg'];
 		    $position['size'] = $product_type['size'];
 		    if(array_key_exists($product_type['size'],$found)) {
@@ -118,6 +118,12 @@ class PrepareShipment {
 	global $laender;
 	$customer_details=array();
 	$remainder=''; 
+	
+	if ($customer['country'] == "" || $customer['country_ISO_code']=="") {
+	    $this->response['status'] = -1;
+	    $this->response['error_message'] = __FILE__ . ": No country specified. Please correct address.\n";
+	    return $this->response;
+	}
 	$customer_details['country_ISO_code']=$customer['country_ISO_code'];
 	
 	$field_length=$this->parcel_service_selector($customer_details['country_ISO_code']);
@@ -129,7 +135,7 @@ class PrepareShipment {
 	    $customer['department']="";
 	}
 
-	$customer_details['reference_number'] = $this->order_id;
+	$customer_details['reference_number'] = substr($this->order_id, 0, 35);
 	$customer_details['name'] = $customer['name'];
 	if(strlen($customer_details['name']) > $field_length) {
 	    $remainder = substr($customer_details['name'], $field_length);

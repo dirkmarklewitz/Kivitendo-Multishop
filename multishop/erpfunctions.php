@@ -703,7 +703,7 @@ function insert_neuen_Kunden($bestellung)
 ***********************************************/
 function sku_ist_dienstleistung($abzufragende_sku)
 {
-	$sql = "select inventory_accno_id from parts where partnumber='".$abzufragende_sku."'";
+	$sql = "select inventory_accno_id from parts where partnumber='".preg_replace('/@.*/', '', $abzufragende_sku)."'";
 	$rs2 = getAll("erp", $sql, "sku_ist_dienstleistung");
 	if (Count($rs2) == 1)
 	{
@@ -1562,7 +1562,16 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'mobile6-garde-back':
 			        	$csv_daten[$lfdNrCsv][12] += $zeile[6];
-				        break;				        
+				        break;
+					case 'mobile7-garde':
+			        	$csv_daten[$lfdNrCsv][13] += $zeile[6];
+				        break;
+					case 'mobile7+-garde':
+			        	$csv_daten[$lfdNrCsv][14] += $zeile[6];
+				        break;
+					case 'tablet-garde-9.7pro':
+			        	$csv_daten[$lfdNrCsv][15] += $zeile[6];
+				        break;
 				}
 				$found = true;
 			}
@@ -1606,6 +1615,15 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'mobile6-garde-back':
 			        	$csv_daten[$lfdNrCsv][12] += $zeile[7];
+				        break;
+					case 'mobile7-garde':
+			        	$csv_daten[$lfdNrCsv][13] += $zeile[7];
+				        break;
+					case 'mobile7+-garde':
+			        	$csv_daten[$lfdNrCsv][14] += $zeile[7];
+				        break;
+					case 'tablet-garde-9.7pro':
+			        	$csv_daten[$lfdNrCsv][15] += $zeile[7];
 				        break;
 				}
 				$returnfound = true;
