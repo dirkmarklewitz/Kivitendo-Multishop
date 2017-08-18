@@ -1,65 +1,5 @@
 <?php
 
-function getAmazonOrders($fulfillmentchannel, $versandstatus, $suchdatum, $bestellungvom, $bestellungbis, $domain)
-{
-	$amazonApiCall = new DhListOrders();
-	$amazonApiCall->_domain = $domain;
-	$amazonApiCall->_timestamp = gmdate("Y-m-d\TH:i:s\Z");
-	// Bestellungen vom
-	$date_from = explode("-", $bestellungvom);
-	$amazonApiCall->_dateAfter = date("Y-m-d\TH:i:s\Z", mktime(0, 0, 0, $date_from[1], $date_from[0], $date_from[2]));
-	
-	// Bestellungen bis
-	if ($bestellungbis != "")
-	{
-		$zeit = "0:0:0";
-		if(gmdate("d-m-Y", time()-120) == $bestellungbis)
-		{
-			$zeit = gmdate("H:i:s", time()-120);
-		}
-		else
-		{
-			$zeit = "23:59:59";
-		}
-		$date_bis = explode("-", $bestellungbis);
-		$zeit_bis = explode(":", $zeit);
-		$amazonApiCall->_dateBefore = date("Y-m-d\TH:i:s\Z", mktime($zeit_bis[0], $zeit_bis[1], $zeit_bis[2], $date_bis[1], $date_bis[0], $date_bis[2]));
-	}
-	else
-	{
-		$amazonApiCall->_dateBefore=gmdate("Y-m-d\TH:i:s\Z", time()-120); // 120 muß sein!!!
-	}
-
-	$amazonApiCall->callAmazon($amazonApiCall->prepareOrderListRequest($fulfillmentchannel, $versandstatus, $suchdatum));
-	$output = $amazonApiCall->handleOrderListResponse();
-	
-	foreach($output as $lfdNr => $opSet1)
-	{
-		$bearbeitungsstatus = checkAmazonOrderId($opSet1['AmazonOrderId']);
-		$output[$lfdNr]['bearbeitungsstatus'] = $bearbeitungsstatus;
-		$get_it = false;
-		if ($bearbeitungsstatus == "neu" || ($bearbeitungsstatus == "auftrag" && $fulfillmentchannel == "haendler"))
-		{
-			$get_it = true;
-		}
-		if ($get_it)
-		{
-			$amazonApiCall->callAmazon($amazonApiCall->prepareOrderItemsListRequest($opSet1['AmazonOrderId']));
-			$orderItemsListOutput = $amazonApiCall->handleOrderItemsListResponse();
-
-			if (array_key_exists('error', $orderItemsListOutput) && $orderItemsListOutput['error'])
-			{
-				$output[$lfdNr]['error'] = $orderItemsListOutput['error'];
-			}
-			else
-			{
-				$output[$lfdNr]['orderItemsListOutput'] = $orderItemsListOutput;
-			}
-		}
-	}
-	return $output;
-}
-
 function csv_to_array($csv, $delimiter = "\t", $enclosure = '"', $escape = '\\', $terminator = "\n")
 {
     $r = array();
@@ -79,7 +19,7 @@ function csv_to_array($csv, $delimiter = "\t", $enclosure = '"', $escape = '\\',
     return $r; 
 }
 
-function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
+function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 {
 	require "constants.php";
 	$amazonApiCall = new DhListOrdersByReports();
@@ -139,76 +79,268 @@ function getAmazonOrdersByReports($fulfillmentchannel, $reportsvom, $reportsbis,
 		else
 		{
 			$csvarray = csv_to_array($reportText);
-
+			
 			if($single_report['ReportType'] == "_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_")
 			{
 				foreach($csvarray as $einzelbestellung)
 				{
-					$bearbeitungsstatus = checkAmazonOrderId($einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]);
-					
-					// Grunddaten zur Bestellung
-					$bestellungen[$lfdNr]['bearbeitungsstatus'] = $bearbeitungsstatus;
-	        		$bestellungen[$lfdNr]['AmazonOrderId'] = $einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']];
-					foreach($paramsOrders as $param)
+					// Bestellung bereits vorhanden, nur noch zusätzliche Produkte und Versanddaten hinzufügen
+					if (array_key_exists($einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']], $bestellungen))
 					{
-						if (array_key_exists($paramsOrdersReportFBA[$param], $einzelbestellung))
+						// Zusätzlicher Artikel zur Bestellung, zuerst prüfen ob schon in Artikelliste vorhanden, und ob in einem Extra-Paket
+						$artikelVorhanden = false;
+						$paketVorhanden = false;
+						foreach($bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['orderItemsListOutput'] as $einzelartikel)
 						{
-							$bestellungen[$lfdNr][$param] = $einzelbestellung[$paramsOrdersReportFBA[$param]];
+							if( $einzelartikel['OrderItemId'] == $einzelbestellung[$paramsOrderItemsReportFBA['OrderItemId']] &&
+								$einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportFBA['shipment-id']] &&
+								$einzelartikel['shipment-item-id'] == $einzelbestellung[$paramsOrderItemsReportFBA['shipment-item-id']])
+							{
+								$artikelVorhanden = true;
+							}
+							if ($einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportFBA['shipment-id']])
+							{
+								$paketVorhanden = true;
+							}
 						}
-						else
+						// Wenn zusätzlicher Artikel noch nicht vorhanden, dann hinzufuegen
+						if ($artikelVorhanden == false)
 						{
-							$bestellungen[$lfdNr][$param] = "";
+							$itemcounter = count($bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['orderItemsListOutput']);
+							foreach(array_keys($paramsOrderItems) as $param)
+							{
+								if (array_key_exists($paramsOrderItemsReportFBA[$param], $einzelbestellung))
+								{
+									$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['orderItemsListOutput'][$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportFBA[$param]];
+								}
+								else
+								{
+									$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['orderItemsListOutput'][$itemcounter][$param] = "";
+								}
+							}
+							$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['NumberOfItems'] += $einzelbestellung[$paramsOrdersReportFBA['NumberOfItems']];
+							if ($paketVorhanden == false)
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['carrier'] .= ";" . $einzelbestellung[$paramsOrdersReportFBA['carrier']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['tracking-number'] .= ";" . $einzelbestellung[$paramsOrdersReportFBA['tracking-number']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['estimated-arrival-date'] .= ";" . $einzelbestellung[$paramsOrdersReportFBA['estimated-arrival-date']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['fulfillment-center-id'] .= ";" . $einzelbestellung[$paramsOrdersReportFBA['fulfillment-center-id']];
+							}
 						}
 					}
-					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
-					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
-					$bestellungen[$lfdNr]['tax_number'] = "";
-					$bestellungen[$lfdNr]['tax_included'] = "t";
-					
-					// Artikel zur Bestellung
-					$orderItemsListOutput = array();
-					$itemcounter = 0;
-					foreach($paramsOrderItems as $param)
+					else
 					{
-						$orderItemsListOutput[$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportFBA[$param]];
+						$bearbeitungsstatus = checkAmazonOrderId($einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]);
+						
+						// Grunddaten zur Bestellung
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['bearbeitungsstatus'] = $bearbeitungsstatus;
+		        		$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['AmazonOrderId'] = $einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']];
+						foreach(array_keys($paramsOrders) as $param)
+						{
+							if (array_key_exists($paramsOrdersReportFBA[$param], $einzelbestellung))
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]][$param] = $einzelbestellung[$paramsOrdersReportFBA[$param]];
+							}
+							else
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]][$param] = "";
+							}
+						}
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['MarketplaceId'] = "Amazon";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['PaymentMethod'] = "Amazon";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['tax_number'] = "";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['tax_included'] = "t";
+						
+						// 1. Artikel zur Bestellung
+						$orderItemsListOutput = array();
+						$itemcounter = 0;
+						foreach(array_keys($paramsOrderItems) as $param)
+						{
+							if (array_key_exists($paramsOrderItemsReportFBA[$param], $einzelbestellung))
+							{
+								$orderItemsListOutput[$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportFBA[$param]];
+							}
+							else
+							{
+								$orderItemsListOutput[$itemcounter][$param] = "";
+							}
+						}
+						$itemcounter++;
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['NumberOfItems'] = $einzelbestellung[$paramsOrdersReportFBA['NumberOfItems']];
+						$bestellungen[$einzelbestellung[$paramsOrdersReportFBA['AmazonOrderId']]]['orderItemsListOutput'] = $orderItemsListOutput;
 					}
-					$itemcounter++;
-					$bestellungen[$lfdNr]['orderItemsListOutput'] = $orderItemsListOutput;
-					$lfdNr++;
 				}
 			}
 			else
 			{
 				foreach($csvarray as $einzelbestellung)
 				{
-					$bearbeitungsstatus = checkAmazonOrderId($einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]);
-					
-					// Grunddaten zur Bestellung
-					$bestellungen[$lfdNr]['bearbeitungsstatus'] = $bearbeitungsstatus;
-	        		$bestellungen[$lfdNr]['AmazonOrderId'] = $einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']];
-					foreach($paramsOrders as $param)
+					// Bestellung bereits vorhanden, nur noch zusätzliche Produkte und Versanddaten hinzufügen
+					if (array_key_exists($einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']], $bestellungen))
 					{
-						$bestellungen[$lfdNr][$param] = $einzelbestellung[$paramsOrdersReportMFN[$param]];
+						// Zusätzlicher Artikel zur Bestellung, zuerst prüfen ob schon in Artikelliste vorhanden, und ob in einem Extra-Paket
+						$artikelVorhanden = false;
+						$paketVorhanden = false;
+						foreach($bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput'] as $einzelartikel)
+						{
+							if( $einzelartikel['OrderItemId'] == $einzelbestellung[$paramsOrderItemsReportMFN['OrderItemId']] &&
+								$einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-id']] &&
+								$einzelartikel['shipment-item-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-item-id']])
+							{
+								$artikelVorhanden = true;
+							}
+							if ($einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-id']])
+							{
+								$paketVorhanden = true;
+							}
+						}
+						// Wenn zusätzlicher Artikel noch nicht vorhanden, dann hinzufuegen
+						if ($artikelVorhanden == false)
+						{
+							$itemcounter = count($bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput']);
+							foreach(array_keys($paramsOrderItems) as $param)
+							{
+								if (array_key_exists($paramsOrderItemsReportMFN[$param], $einzelbestellung))
+								{
+									$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput'][$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportMFN[$param]];
+								}
+								else
+								{
+									$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput'][$itemcounter][$param] = "";
+								}								
+							}
+							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['NumberOfItems'] += $einzelbestellung[$paramsOrdersReportMFN['NumberOfItems']];
+							if ($paketVorhanden == false)
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['carrier'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['carrier']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tracking-number'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['tracking-number']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['estimated-arrival-date'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['estimated-arrival-date']];
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['fulfillment-center-id']];
+							}
+						}
 					}
-					$bestellungen[$lfdNr]['MarketplaceId'] = "Amazon";
-					$bestellungen[$lfdNr]['PaymentMethod'] = "Amazon";
-					$bestellungen[$lfdNr]['tax_number'] = "";
-					$bestellungen[$lfdNr]['tax_included'] = "t";
-					
-					// Artikel zur Bestellung
-					$orderItemsListOutput = array();
-					$itemcounter = 0;
-					foreach($paramsOrderItems as $param)
+					else
 					{
-						$orderItemsListOutput[$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportMFN[$param]];
+						$bearbeitungsstatus = checkAmazonOrderId($einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]);
+						
+						// Grunddaten zur Bestellung
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['bearbeitungsstatus'] = $bearbeitungsstatus;
+		        		$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['AmazonOrderId'] = $einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']];
+						foreach(array_keys($paramsOrders) as $param)
+						{
+							if (array_key_exists($paramsOrdersReportMFN[$param], $einzelbestellung))
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]][$param] = $einzelbestellung[$paramsOrdersReportMFN[$param]];
+							}
+							else
+							{
+								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]][$param] = "";
+							}
+						}
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['MarketplaceId'] = "Amazon";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['PaymentMethod'] = "Amazon";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tax_number'] = "";
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tax_included'] = "t";
+						
+						// 1. Artikel zur Bestellung
+						$orderItemsListOutput = array();
+						$itemcounter = 0;
+						foreach(array_keys($paramsOrderItems) as $param)
+						{
+							if (array_key_exists($paramsOrderItemsReportMFN[$param], $einzelbestellung))
+							{
+								$orderItemsListOutput[$itemcounter][$param] = $einzelbestellung[$paramsOrderItemsReportMFN[$param]];
+							}
+							else
+							{
+								$orderItemsListOutput[$itemcounter][$param] = "";
+							}							
+						}
+						$itemcounter++;
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['NumberOfItems'] = $einzelbestellung[$paramsOrdersReportMFN['NumberOfItems']];
+						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput'] = $orderItemsListOutput;
 					}
-					$itemcounter++;
-					$bestellungen[$lfdNr]['orderItemsListOutput'] = $orderItemsListOutput;
-					$lfdNr++;
 				}
 			}
 		}
 	}
+	
+	$zaehler = 1;
+	$newOrderIdsArray = array();
+	$newOrdersAWSData = array();
+	foreach ($bestellungen as $einzelbestellung)
+	{
+		if ($einzelbestellung['bearbeitungsstatus'] == "neu")
+		{
+			$orderIdArray[] = $einzelbestellung['AmazonOrderId'];
+			$zaehler++;
+		}
+		
+		if ($zaehler > 50) // GetOrderRequest can not handle more than 50 IDs at once
+		{
+			$amazonApiCallTest = new DhListOrders();
+			$amazonApiCallTest->_domain = $domain;
+			$amazonApiCallTest->_timestamp = gmdate("Y-m-d\TH:i:s\Z");
+			$amazonApiCallTest->callAmazon($amazonApiCallTest->prepareGetOrderRequest($orderIdArray));
+			$newOrdersAWSData = array_merge($newOrdersAWSData, $amazonApiCallTest->handleOrderListResponse("GetOrderResult"));
+			
+			$zaehler = 1;
+			$orderIdArray = array();
+		}
+	}
+	if ($zaehler != 1) // GetOrderRequest can not handle more than 50 IDs at once
+	{
+		$amazonApiCallTest = new DhListOrders();
+		$amazonApiCallTest->_domain = $domain;
+		$amazonApiCallTest->_timestamp = gmdate("Y-m-d\TH:i:s\Z");
+		$amazonApiCallTest->callAmazon($amazonApiCallTest->prepareGetOrderRequest($orderIdArray));
+		$newOrdersAWSData = array_merge($newOrdersAWSData, $amazonApiCallTest->handleOrderListResponse("GetOrderResult"));
+	}
+	
+	// Combine Report and AWS-Live-Data
+	foreach ($newOrdersAWSData as $newSingleOrderAWSData)
+	{
+		$AmazonOrderId = $newSingleOrderAWSData['AmazonOrderId'];
+		
+		foreach ($newSingleOrderAWSData as $singleAWSKey => $singleAWSValue)
+		{
+			if (trim($singleAWSValue) != false)
+			{
+				if (trim($bestellungen[$AmazonOrderId][$singleAWSKey]) == false)
+				{
+					$bestellungen[$AmazonOrderId][$singleAWSKey] = $singleAWSValue;
+				}
+				else
+				{
+					if ($bestellungen[$AmazonOrderId][$singleAWSKey] != $singleAWSValue)
+					{
+						$bestellungen[$AmazonOrderId][$singleAWSKey] = $singleAWSValue;
+						// echo $singleAWSKey . " >>>> " . $bestellungen[$AmazonOrderId][$singleAWSKey] . " <====> " . $singleAWSValue . "<br>";
+					}
+				}
+			}
+		}
+		
+		// Check if billing address is set, if not make a copy of shipping address
+		if (trim($bestellungen[$AmazonOrderId]['AddressLine1']) == false &&
+			trim($bestellungen[$AmazonOrderId]['AddressLine2']) == false &&
+			trim($bestellungen[$AmazonOrderId]['PostalCode']) == false &&
+			trim($bestellungen[$AmazonOrderId]['City']) == false)
+		{
+			$bestellungen[$AmazonOrderId]['Title'] = $bestellungen[$AmazonOrderId]['recipient-title'];
+			$bestellungen[$AmazonOrderId]['Name'] = $bestellungen[$AmazonOrderId]['recipient-name'];
+			$bestellungen[$AmazonOrderId]['AddressLine1'] = $bestellungen[$AmazonOrderId]['ship-address-1'];
+			$bestellungen[$AmazonOrderId]['AddressLine2'] = $bestellungen[$AmazonOrderId]['ship-address-2'];
+			$bestellungen[$AmazonOrderId]['PostalCode'] = $bestellungen[$AmazonOrderId]['ship-postal-code'];
+			$bestellungen[$AmazonOrderId]['City'] = $bestellungen[$AmazonOrderId]['ship-city'];
+			$bestellungen[$AmazonOrderId]['StateOrRegion'] = $bestellungen[$AmazonOrderId]['ship-state'];
+			$bestellungen[$AmazonOrderId]['CountryCode'] = $bestellungen[$AmazonOrderId]['ship-country'];
+		}
+	}
+	
+	// echo '<pre>';
+	// print_r($bestellungen);
+	// echo '</pre>';
 
 	return $bestellungen;
 }
@@ -234,7 +366,7 @@ class DhAmazonAccess	// enthält Zugangsdaten und Call-Funktion:
 
 class DhListOrders extends DhAmazonAccess
 {
-	public function prepareOrderListRequest($fulfillmentchannel, $versandstatus, $suchdatum)
+	public function prepareGetOrderRequest($orderIdArray)
 	{
 		require "conf.php";
 		
@@ -247,57 +379,22 @@ class DhListOrders extends DhAmazonAccess
  		{
 			$request = "AWSAccessKeyId=".$AccessKeyID;
 		}
-		$request .= "&Action=ListOrders";
-				   
-		if ($suchdatum == "bestelldatum")
-		{
- 			$request .= "&CreatedAfter=".$this->_dateAfter;
- 			$request .= "&CreatedBefore=".$this->_dateBefore;
-		}
-				   
-		if ($fulfillmentchannel == "haendler")
-		{
-			$request .= "&FulfillmentChannel.Channel.1=MFN";
-		}
-		else
-		{
-			$request .= "&FulfillmentChannel.Channel.1=AFN";
-		}
+		$request .= "&Action=GetOrder";
 
-		if ($suchdatum == "versanddatum")
+		
+		$counter = 1;
+		$amazonOrderIdSorted = array();
+		foreach ($orderIdArray as $singleOrderId)
 		{
-			$request .= "&LastUpdatedAfter=".$this->_dateAfter;
-			$request .= "&LastUpdatedBefore=".$this->_dateBefore;
+			$amazonOrderIdSorted[$counter] = "&AmazonOrderId.Id.".$counter."=".$singleOrderId;
+			$counter++;
+		}
+		ksort ($amazonOrderIdSorted, SORT_STRING );
+		foreach ($amazonOrderIdSorted as $singleOrderId)
+		{
+			$request .= $singleOrderId;
 		}
 		
-		if ($this->_domain == "COM")
- 		{
-			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_US
-						."&MarketplaceId.Id.2=".$MarketplaceID_CA;
- 		}
- 		else
- 		{
-			$request .= "&MarketplaceId.Id.1=".$MarketplaceID_DE
-						."&MarketplaceId.Id.2=".$MarketplaceID_GB
-						."&MarketplaceId.Id.3=".$MarketplaceID_FR
-						."&MarketplaceId.Id.4=".$MarketplaceID_IT
-						."&MarketplaceId.Id.5=".$MarketplaceID_ES;
-		}
-
-		if ($versandstatus)
-		{
-			$zaehler = 1;
-			if (in_array("shipped", $versandstatus)) { $request .= "&OrderStatus.Status.".$zaehler++."=Shipped"; }
-			if (in_array("pending", $versandstatus)) { $request .= "&OrderStatus.Status.".$zaehler++."=Pending"; }
-			if (in_array("partiallyunshipped", $versandstatus) || $fulfillmentchannel == "haendler") { $request .= "&OrderStatus.Status.".$zaehler++."=PartiallyShipped"."&OrderStatus.Status.".$zaehler++."=Unshipped"; }
-			if (in_array("canceled", $versandstatus)) { $request .= "&OrderStatus.Status.".$zaehler++."=Canceled"; }
-			if (in_array("unfulfillable", $versandstatus)) { $request .= "&OrderStatus.Status.".$zaehler++."=Unfulfillable"; }
-		}
-		else
-		{
-			$request .= "&OrderStatus.Status.1=Shipped";
- 		}
- 					
  		if ($this->_domain == "COM")
  		{
 			$request .= "&SellerId=".$MerchantID_COM;
@@ -343,7 +440,7 @@ class DhListOrders extends DhAmazonAccess
 		return $request;
 	}
  
-	public function handleOrderListResponse()
+	public function handleOrderListResponse($reportResultType)
 	{
 		require "constants.php";
 		
@@ -351,7 +448,7 @@ class DhListOrders extends DhAmazonAccess
 		$responseDomDoc->loadXML($this->_responseXml);
 		$error = $responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
 		$output = array();
- 
+		
 		if ($error->length>0)	// wenn Fehler, Errorcode auslesen und darstellen:
 		{
 			$errorType=$error->item(0)->getElementsByTagName('Type')->item(0)->nodeValue;
@@ -362,11 +459,10 @@ class DhListOrders extends DhAmazonAccess
 		}
 		else // sonst: angeforderte Parameter aus Response in Array auslesen:
   		{
-			$responses=$responseDomDoc->getElementsByTagName("ListOrdersResult");
+			$responses=$responseDomDoc->getElementsByTagName($reportResultType);
 
 			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
 			{
-				# alt: $nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
 				$p = $response->getElementsByTagName("NextToken");
 				if($p->length > 0)
 				{
@@ -387,271 +483,29 @@ class DhListOrders extends DhAmazonAccess
 				
 				$items=$response->getElementsByTagName("Order");
 				
-				foreach($items as $i => $item)
+				foreach ($items as $i => $item)
 				{
 					foreach(array_keys($paramsOrders) as $param)
 					{
-						# alt: $output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
-						$p = $item->getElementsByTagName($paramsOrders[$param]);
-						if($p->length > 0)
+						$entries = $item->getElementsByTagName($paramsOrders[$param]);
+						if($entries->length > 0)
 						{
-						    $output[$i][$param] = $p->item(0)->nodeValue;
-						} else {
-						    $output[$i][$param] = "";
-						}
-					}
-					$output[$i]['MarketplaceId'] = "Amazon";
-					$output[$i]['PaymentMethod'] = "Amazon";
-					$output[$i]['tax_number'] = "";
-					$output[$i]['tax_included'] = "t";
-				}
-				
-				foreach($nextTokenOutput as $item)
-				{
-					$i++;
-					$output[$i] = $item;
-				}
-			}
-		}
-		
-		return $output;
-	}
-	
-	public function prepareOrderItemsListRequest($amazonOrderId)
-	{
-		require "conf.php";
-		// Request zusammenstellen:
- 		if ($this->_domain == "COM")
- 		{
-			$request = "AWSAccessKeyId=".$AccessKeyID_COM
-						."&Action=ListOrderItems"
-					  	."&AmazonOrderId=".$amazonOrderId
-						."&SellerId=".$MerchantID_COM
-						."&SignatureMethod=".$SigMethod
-						."&SignatureVersion=".$SigVersion
-						."&Timestamp=".$this->_timestamp
-						."&Version=2013-09-01";			
- 		}
- 		else
- 		{
-	 		$request = "AWSAccessKeyId=".$AccessKeyID
-						."&Action=ListOrderItems"
-					  	."&AmazonOrderId=".$amazonOrderId
-						."&SellerId=".$MerchantID
-						."&SignatureMethod=".$SigMethod
-						."&SignatureVersion=".$SigVersion
-						."&Timestamp=".$this->_timestamp
-						."&Version=2013-09-01";			
-		}		
-
-		// Request sauber zusammenstellen:
-		$requestArr = explode("&",$request);
-		foreach ($requestArr as $requestSet)
-		{
-			list($param, $value) = explode("=",$requestSet);
-			$param = str_replace("%7E","~",rawurlencode($param));
-			$value = str_replace("%7E","~",rawurlencode($value));
-			$requestCanonicalized[] = $param."=".$value;
-		}
-		$request=implode("&",$requestCanonicalized);
-		
-		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
-		if ($this->_domain == "COM")
- 		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
-			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
-			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;
- 		}
- 		else
- 		{
-	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2013-09-01\n".$request;
-			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
-			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl."/Orders/2013-09-01?".$request."&Signature=".$signature;			
-		}
-
-		return $request;
-	}
-	
-	public function handleOrderItemsListResponse()
-	{
-		require "constants.php";
-				
-		$responseDomDoc = new DomDocument();	// Response in neuem DomDocument-Objekt verarbeiten
-		$responseDomDoc->loadXML($this->_responseXml);
-		$error=$responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
-		
-		if ($error->length>0)	// wenn Fehler, Errorcode auslesen und darstellen:
-		{
-			$errorType=$error->item(0)->getElementsByTagName('Type')->item(0)->nodeValue;
-			$errorCode=$error->item(0)->getElementsByTagName('Code')->item(0)->nodeValue;
- 			$errorMsg=$error->item(0)->getElementsByTagName('Message')->item(0)->nodeValue;
- 			
-			$output['error'][]=$errorType." ".$errorCode.": ".$errorMsg;
-		}
-		else // sonst: angeforderte Parameter aus Response in Array auslesen:
-  		{
-			$responses = $responseDomDoc->getElementsByTagName("ListOrderItemsResult");
-
-			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <OrderItem> stehen:
-			{
-				$amazonOrderId = $response->getElementsByTagName("AmazonOrderId")->item(0)->nodeValue;
-
-				$items = $response->getElementsByTagName("OrderItem");
-
-				foreach($items as $i => $item)
-				{
-					$output[$i]['AmazonOrderId'] = $amazonOrderId;
-					foreach($paramsOrderItems as $param)
-					{
-						switch ($param)
-						{
-							case "ItemPrice":
-							case "ItemTax":
-							case "PromotionDiscount":
-							case "ShippingPrice":
-							case "ShippingTax":
-							case "ShippingDiscount":
-							case "GiftWrapPrice":
-							case "GiftWrapTax":							
-								$subitems = $item->getElementsByTagName($param);
-								if($subitems->length > 0)
+							foreach ($entries as $entry)
+							{
+								if(array_key_exists($param, $output[$i]))
 								{
-									$output[$i][$param] = $subitems->item(0)->getElementsByTagName("Amount")->item(0)->nodeValue;
+									$output[$i][$param] .= ";" . $entry->nodeValue;
 								}
-								break;
-							default:
-								$output[$i][$param] = $item->getElementsByTagName($param)->item(0)->nodeValue;
-						}
-					}
-				}
-			}
-		}
-		return $output;
-	}
-}
-
-class DhListOrdersByNextToken extends DhAmazonAccess
-{
-	public function prepareListOrdersByNextTokenRequest($nextToken)
-	{
-		require "conf.php";
-		
-		// Request zusammenstellen:
-		if ($this->_domain == "COM")
- 		{
-			$request = "AWSAccessKeyId=".$AccessKeyID_COM;
- 		}
- 		else
- 		{
-			$request = "AWSAccessKeyId=".$AccessKeyID;
-		}
-		$request .= "&Action=ListOrdersByNextToken";
-				   
-		$request .= "&NextToken=".$nextToken;
-
-		if ($this->_domain == "COM")
- 		{
-			$request .= "&SellerId=".$MerchantID_COM;
- 		}
- 		else
- 		{
-			$request .= "&SellerId=".$MerchantID;
-		}
-		
-		$request .= "&SignatureMethod=".$SigMethod
-					."&SignatureVersion=".$SigVersion
-					."&Timestamp=".$this->_timestamp
-					."&Version=2013-09-01";
-				
-		// Request sauber zusammenstellen:
-		$requestArr = explode("&",$request);
-		foreach ($requestArr as $requestSet)
-		{
-			list($param, $value) = explode("=",$requestSet);
-			$param = str_replace("%7E","~",rawurlencode($param));
-			$value = str_replace("%7E","~",rawurlencode($value));
-			$requestCanonicalized[] = $param."=".$value;
-		}
-		$request=implode("&",$requestCanonicalized);
-		
-		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
-		if ($this->_domain == "COM")
- 		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
-			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
-			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;			
- 		}
- 		else
- 		{
-	 		$stringToSign = "GET\n".$EndpointUrl."\n/Orders/2013-09-01\n".$request;
-			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
-			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl."/Orders/2013-09-01?".$request."&Signature=".$signature;			
-		}		
-
-		return $request;
-	}
- 
-	public function handleListOrdersByNextTokenResponse()
-	{
-		require "constants.php";
-		
-		$responseDomDoc = new DomDocument();	// Response in neuem DomDocument-Objekt verarbeiten
-		$responseDomDoc->loadXML($this->_responseXml);
-		$error = $responseDomDoc->getElementsByTagName('Error');	// Fehler abfragen
- 
-		if ($error->length>0)	// wenn Fehler, Errorcode auslesen und darstellen:
-		{
-			$errorType = $error->item(0)->getElementsByTagName('Type')->item(0)->nodeValue;
-			$errorCode = $error->item(0)->getElementsByTagName('Code')->item(0)->nodeValue;
- 			$errorMsg = $error->item(0)->getElementsByTagName('Message')->item(0)->nodeValue;
- 			
-			// $output['error'][] = $errorType." ".$errorCode.": ".$errorMsg;
-			echo "Es konnte nicht alles abgerufen werden. ListOrdersByNextTokenResponse() liefert folgenden Fehler:<br>";
-			echo $errorType." ".$errorCode.": ".$errorMsg."<br>";
-		}
-		else // sonst: angeforderte Parameter aus Response in Array auslesen:
-  		{
-			$responses=$responseDomDoc->getElementsByTagName("ListOrdersByNextTokenResult");
-
-			foreach ($responses as $response)	// nur Daten weiter untersuchen, die im Tag <Order> stehen:
-			{
-				#$nextToken = $response->getElementsByTagName("NextToken")->item(0)->nodeValue;
-				$p = $response->getElementsByTagName("NextToken");
-				if($p->length > 0)
-				{
-				    $nextToken = $p->item(0)->nodeValue;
-				} else {
-				    $nextToken = "";
-				}				
-				
-				$nextTokenOutput = array();
-				if (!empty($nextToken))
-				{
-					$amazonApiCall = new DhListOrdersByNextToken();
-					$amazonApiCall->_domain = $this->_domain;
-					$amazonApiCall->_timestamp=gmdate("Y-m-d\TH:i:s\Z");
-					$amazonApiCall->callAmazon($amazonApiCall->prepareListOrdersByNextTokenRequest($nextToken));
-					$nextTokenOutput = $amazonApiCall->handleListOrdersByNextTokenResponse();
-				}
-				
-				$items=$response->getElementsByTagName("Order");
-				
-				foreach($items as $i => $item)
-				{
-					foreach(array_keys($paramsOrders) as $param)
-					{
-						# alt: $output[$i][$param] = $item->getElementsByTagName($paramsOrders[$param])->item(0)->nodeValue;
-						$p = $item->getElementsByTagName($paramsOrders[$param]);
-						if($p->length > 0)
+								else
+								{
+    								$output[$i][$param] = $entry->nodeValue;
+								}
+							}
+						} 
+						else
 						{
-						    $output[$i][$param] = $p->item(0)->nodeValue;
-						} else {
 						    $output[$i][$param] = "";
-						}						
+						}
 					}
 					$output[$i]['MarketplaceId'] = "Amazon";
 					$output[$i]['PaymentMethod'] = "Amazon";
@@ -670,7 +524,6 @@ class DhListOrdersByNextToken extends DhAmazonAccess
 		return $output;
 	}
 }
-
 
 // ##########################################################################################
 
@@ -913,6 +766,8 @@ class DhListOrdersByReports extends DhAmazonAccess
 	}	
 }
 
+// ##########################################################################################
+
 class DhReportListByNextToken extends DhAmazonAccess
 {
 	public function prepareReportListByNextTokenRequest($nextToken)
@@ -960,10 +815,10 @@ class DhReportListByNextToken extends DhAmazonAccess
 		// Signatur erstellen, codieren, Hash bilden, Request endgültig zusammenstellen
 		if ($this->_domain == "COM")
  		{
-	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/Orders/2013-09-01\n".$request;
+	 		$stringToSign = "GET\n".$EndpointUrl_COM."\n/\n".$request;
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey_COM, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
-			$request = "https://".$EndpointUrl_COM."/Orders/2013-09-01?".$request."&Signature=".$signature;			
+			$request = "https://".$EndpointUrl_COM."/?".$request."&Signature=".$signature;			
  		}
  		else
  		{
@@ -971,7 +826,7 @@ class DhReportListByNextToken extends DhAmazonAccess
 			$signature = base64_encode(hash_hmac("sha256", $stringToSign, $SecretKey, True));
 			$signature = str_replace("%7E","~",rawurlencode($signature));
 			$request = "https://".$EndpointUrl."/?".$request."&Signature=".$signature;			
-		}		
+		}
 
 		return $request;
 	}
@@ -991,7 +846,7 @@ class DhReportListByNextToken extends DhAmazonAccess
  			$errorMsg = $error->item(0)->getElementsByTagName('Message')->item(0)->nodeValue;
  			
 			// $output['error'][] = $errorType." ".$errorCode.": ".$errorMsg;
-			echo "Es konnte nicht alles abgerufen werden. ListOrdersByNextTokenResponse() liefert folgenden Fehler:<br>";
+			echo "Es konnte nicht alles abgerufen werden. ReportListByNextTokenResponse() liefert folgenden Fehler:<br>";
 			echo $errorType." ".$errorCode.": ".$errorMsg."<br>";
 		}
 		else // sonst: angeforderte Parameter aus Response in Array auslesen:

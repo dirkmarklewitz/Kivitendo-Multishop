@@ -224,8 +224,7 @@ class RakutenApiClass
                 	
                 	
                 	$returnvalue[$bestellungszaehler]['orderItemsListOutput'] = $orderItemsListOutput;
-                    $returnvalue[$bestellungszaehler]['NumberOfItemsShipped'] = 0;
-                    $returnvalue[$bestellungszaehler]['NumberOfItemsUnshipped'] = $artikelanzahl;
+                    $returnvalue[$bestellungszaehler]['NumberOfItems'] = $artikelanzahl;
                     
     				$bestellungszaehler++;
 				}

@@ -183,7 +183,6 @@ class eBayApiClass
 						{
 							$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Sonstiges";
 						}
-						$returnvalue[$bestellungszaehler]['NumberOfItemsShipped'] = 0;
 						$returnvalue[$bestellungszaehler]['BuyerName'] = $item->getElementsByTagName('BuyerUserID')->item(0)->nodeValue;
 						//$returnvalue[$bestellungszaehler]['Title'] = "";
 						$returnvalue[$bestellungszaehler]['Name'] = $item->getElementsByTagName('Name')->item(0)->nodeValue;
@@ -222,7 +221,7 @@ class eBayApiClass
 
 					    foreach ($transactions as $transaction)
 					    {
-						    $returnvalue[$bestellungszaehler]['NumberOfItemsUnshipped'] += $transaction->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
+						    $returnvalue[$bestellungszaehler]['NumberOfItems'] += $transaction->getElementsByTagName('QuantityPurchased')->item(0)->nodeValue;
 							$orderItemsListOutput[$itemcounter]['OrderItemId'] = $transaction->getElementsByTagName('ItemID')->item(0)->nodeValue;
 							$orderItemsListOutput[$itemcounter]['SellerSKU'] = trim($transaction->getElementsByTagName('SKU')->item(0)->nodeValue);
 							// $orderItemsListOutput[$itemcounter]['ASIN'] = "";

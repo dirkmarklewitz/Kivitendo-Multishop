@@ -125,50 +125,315 @@ $VERSAND = array(	"AFN" => "Amazon",
 					"MFN" => "Händler");
 
 
-$paramsOrders = array(	"MarketplaceId" => "MarketplaceId", "SalesChannel" => "SalesChannel",
-						"OrderType" => "OrderType", "OrderStatus" => "OrderStatus", "SellerOrderId" => "SellerOrderId", "AmazonOrderId" => "AmazonOrderId", "FulfillmentChannel" => "FulfillmentChannel",
-						"ShipmentServiceLevelCategory" => "ShipmentServiceLevelCategory", "ShipServiceLevel" => "ShipServiceLevel",
-						"Amount" => "Amount", "CurrencyCode" => "CurrencyCode", "PaymentMethod" => "PaymentMethod",
-						"NumberOfItemsShipped" => "NumberOfItemsShipped", "NumberOfItemsUnshipped" => "NumberOfItemsUnshipped",
-						"PurchaseDate" => "PurchaseDate", "LastUpdateDate" => "LastUpdateDate",
+$paramsOrders = array(	"MarketplaceId" => "MarketplaceId",    
+						"SalesChannel" => "SalesChannel",
+
+						"OrderType" => "OrderType",
+						"OrderStatus" => "OrderStatus",
+						"SellerOrderId" => "SellerOrderId",
+						"AmazonOrderId" => "AmazonOrderId",
+						"purchase-order-number" => "",
+						"FulfillmentChannel" => "FulfillmentChannel",
+						"IsReplacementOrder" => "IsReplacementOrder",
+						"IsBusinessOrder" => "IsBusinessOrder",
+						"IsPremiumOrder" => "IsPremiumOrder",
+						"IsPrime" => "IsPrime",
+
+						"ShipmentServiceLevelCategory" => "ShipmentServiceLevelCategory",
+						"ShipServiceLevel" => "ShipServiceLevel",
+
+						"Amount" => "Amount",
+						"CurrencyCode" => "CurrencyCode",
+						"price-designation" => "",
+						"PaymentMethod" => "PaymentMethod",
+						"PaymentMethodDetail" => "PaymentMethodDetail",	// Invoice ist hier das Zeichen für verspätete Verbuchung
+																		// PaymentMethodDetails -> kann enthalten/ enthält mehrere PaymentMethodDetail
+						"payments-date" => "",			// Datum, an dem die Bezahlung verifiziert ist (bzw. an dem die Rechnung gestellt wird (nicht das Faelligkeits der Rechnung))
+
+						"NumberOfItems" => "",
+
+						"PurchaseDate" => "PurchaseDate",
+						"LastUpdateDate" => "LastUpdateDate",
+						"LatestShipDate" => "LatestShipDate",
+						"EarliestShipDate" => "EarliestShipDate",
+						"shipment-date" => "",		// Datum, an dem die Ware verschickt wurde
+						"reporting-date" => "",		// Datum, an dem die Infoemail von Amazon kommt
+						"delivery-time-zone" => "",
+						"delivery-Instructions" => "",
+
 						"BuyerName" => "BuyerName",
-						"Title" => "Title", "Name" => "Name", "AddressLine1" => "AddressLine1", "AddressLine2" => "AddressLine2", "PostalCode" => "PostalCode", "City" => "City", "StateOrRegion" => "StateOrRegion", "CountryCode" => "CountryCode",
-						"recipient-title" => "Title", "recipient-name" => "Name", "ship-address-1" => "AddressLine1", "ship-address-2" => "AddressLine2", "ship-address-3" => "", "ship-postal-code" => "PostalCode", "ship-city" => "City", "ship-state" => "StateOrRegion", "ship-country" => "CountryCode", "ship-phone-number" => "Phone",
-						"BuyerEmail" => "BuyerEmail", "Phone" => "Phone", "OrderComment" => "OrderComment", "carrier" => "carrier", "tracking-number" => "tracking-number", "Language" => "Language");
+						"Title" => "",
+						"Name" => "",
+						"AddressLine1" => "",
+						"AddressLine2" => "",
+						"AddressLine3" => "",
+						"PostalCode" => "",
+						"City" => "",
+						"StateOrRegion" => "",
+						"CountryCode" => "",
+						"buyer-cst-number" => "",
+						"buyer-vat-number" => "",
 
-$paramsOrderItems = array(	"OrderItemId", "SellerSKU", "ASIN", "Title",
-							"ItemPrice", "ItemTax", "PromotionDiscount", "ShippingPrice", "ShippingTax", "ShippingDiscount", "GiftWrapPrice", "GiftWrapTax",
-							"QuantityOrdered", "QuantityShipped");
+						"recipient-title" => "Title",
+						"recipient-name" => "",
+						"ship-address-1" => "",
+						"ship-address-2" => "",
+						"ship-address-3" => "",
+						"ship-postal-code" => "",
+						"ship-city" => "",
+						"ship-state" => "",
+						"ship-country" => "",
+						"ship-phone-number" => "",
+						
+						"BuyerEmail" => "BuyerEmail",
+						"Phone" => "Phone",
+						"OrderComment" => "OrderComment",
+
+						"carrier" => "",
+						"tracking-number" => "",
+						"estimated-arrival-date" => "",
+						"fulfillment-center-id" => "",
+						"fulfillment-channel" => "",
+
+						"Language" => "SalesChannel",
+						
+						"ShippedByAmazonTFM" => "ShippedByAmazonTFM",
+						"LatestDeliveryDate" => "LatestDeliveryDate",
+						"EarliestDeliveryDate" => "EarliestDeliveryDate",
+						
+						"tax_number" => "",
+						"tax_included" => ""
+						);
+
+$paramsOrderItems = array(	"OrderItemId" => "",
+							"SellerSKU" => "",
+							"ASIN" => "",
+							"Title" => "",
+
+							"shipment-id" => "",
+							"shipment-item-id" => "",
+							"merchant-order-item-id" => "",
+
+							"ItemPrice" => "",
+							"ItemTax" => "",
+							"PromotionDiscount" => "",
+							"ShippingPrice" => "",
+							"ShippingTax" => "",
+							"ShippingDiscount" => "",
+							"GiftWrapPrice" => "",
+							"GiftWrapTax" => "",
+
+							"QuantityOrdered" => "",
+							"QuantityShipped" => "",
+							
+							"SerialNumber" => ""
+							);
+
+$paramsOrdersReportFBA = array(	"MarketplaceId" => "",
+								"SalesChannel" => "sales-channel",
+
+								"OrderType" => "",
+								"OrderStatus" => "",
+								"SellerOrderId" => "merchant-order-id",
+								"AmazonOrderId" => "amazon-order-id",
+								"purchase-order-number" => "",
+								"FulfillmentChannel" => "fulfillment-channel",
+								"IsReplacementOrder" => "",
+								"IsBusinessOrder" => "",
+								"IsPremiumOrder" => "",
+								"IsPrime" => "",
+
+								"ShipmentServiceLevelCategory" => "",
+								"ShipServiceLevel" => "ship-service-level",
+
+								"Amount" => "",
+								"CurrencyCode" => "currency",
+								"price-designation" => "",
+								"PaymentMethod" => "",
+								"PaymentMethodDetail" => "",					// Invoice ist hier das Zeichen für verspätete Verbuchung
+																				// PaymentMethodDetails -> kann enthalten/ enthält mehrere PaymentMethodDetail
+								"payments-date" => "payments-date",				// Datum, an dem die Bezahlung verifiziert ist (bzw. an dem die Rechnung gestellt wird (nicht das Faelligkeits der Rechnung))
+
+								"NumberOfItems" => "quantity-shipped",
+								
+								"PurchaseDate" => "purchase-date",
+								"LastUpdateDate" => "",
+								"LatestShipDate" => "",
+								"EarliestShipDate" => "",
+								"shipment-date" => "shipment-date",		// Datum, an dem die Ware verschickt wurde
+								"reporting-date" => "reporting-date",	// Datum, an dem die Infoemail von Amazon kommt
+								"delivery-time-zone" => "",
+								"delivery-Instructions" => "",
+
+								"BuyerName" => "",
+								"Title" => "",
+								"Name" => "buyer-name",
+								"AddressLine1" =>"bill-address-1",
+								"AddressLine2" => "bill-address-2",
+								"AddressLine3" => "bill-address-3",
+								"PostalCode" => "bill-postal-code",
+								"City" => "bill-city",
+								"StateOrRegion" => "bill-state",
+								"CountryCode" => "bill-country",
+								"buyer-cst-number" => "",
+								"buyer-vat-number" => "",
+
+								"recipient-title" => "",
+								"recipient-name" => "recipient-name",
+								"ship-address-1" => "ship-address-1",
+								"ship-address-2" => "ship-address-2",
+								"ship-address-3" => "ship-address-3",
+								"ship-postal-code" => "ship-postal-code",
+								"ship-city" => "ship-city",
+								"ship-state" => "ship-state",
+								"ship-country" => "ship-country",
+								"ship-phone-number" => "ship-phone-number",
+
+								"BuyerEmail" => "buyer-email",
+								"Phone" => "buyer-phone-number",
+								"OrderComment" => "",
+
+								"carrier" => "carrier",
+								"tracking-number" => "tracking-number",
+								"estimated-arrival-date" => "estimated-arrival-date",
+								"fulfillment-center-id" => "fulfillment-center-id",
+								"fulfillment-channel" => "fulfillment-channel",
+
+								"Language" => "sales-channel",
+								
+								"ShippedByAmazonTFM" => "",
+								"LatestDeliveryDate" => "",
+								"EarliestDeliveryDate" => "",
+								
+								"tax_number" => "",
+								"tax_included" => ""
+								);
+
+$paramsOrderItemsReportFBA = array(	"OrderItemId" => "amazon-order-item-id",
+									"SellerSKU" => "sku",
+									"ASIN" => "",
+									"Title" => "product-name",
+
+									"shipment-id" => "shipment-id",
+									"shipment-item-id" => "shipment-item-id",
+									"merchant-order-item-id" => "merchant-order-item-id",
+
+									"ItemPrice" => "item-price",
+									"ItemTax" => "item-tax",
+									"PromotionDiscount" => "item-promotion-discount",
+									"ShippingPrice" => "shipping-price",
+									"ShippingTax" => "shipping-tax",
+									"ShippingDiscount" => "ship-promotion-discount",
+									"GiftWrapPrice" => "gift-wrap-price",
+									"GiftWrapTax" => "gift-wrap-tax",
+
+									"QuantityOrdered" => "quantity-shipped",
+									"QuantityShipped" => "quantity-shipped",
+							
+									"SerialNumber" => ""
+									);
+
+$paramsOrdersReportMFN = array(	"MarketplaceId" => "",
+								"SalesChannel" => "sales-channel",
+								
+								"OrderType" => "",
+								"OrderStatus" => "",
+								"SellerOrderId" => "",
+								"AmazonOrderId" => "order-id",
+								"purchase-order-number" => "purchase-order-number",
+								"FulfillmentChannel" => "",
+								"IsReplacementOrder" => "",
+								"IsBusinessOrder" => "is-business-order",
+								"IsPremiumOrder" => "",
+								"IsPrime" => "",
+
+								"ShipmentServiceLevelCategory" => "ship-service-level",
+								"ShipServiceLevel" => "ship-service-level",
+								
+								"Amount" => "",
+								"CurrencyCode" => "currency",
+								"price-designation" => "price-designation",
+								"PaymentMethod" => "",
+								"PaymentMethodDetail" => "",					// Invoice ist hier das Zeichen für verspätete Verbuchung
+																				// PaymentMethodDetails -> kann enthalten/ enthält mehrere PaymentMethodDetail
+								"payments-date" => "payments-date",				// Datum, an dem die Bezahlung verifiziert ist (bzw. an dem die Rechnung gestellt wird (nicht das Faelligkeits der Rechnung))
+
+								"NumberOfItems" => "quantity-purchased",
+								
+								"PurchaseDate" => "purchase-date",
+								"LastUpdateDate" => "",
+								"LatestShipDate" => "delivery-end-date",
+								"EarliestShipDate" => "delivery-start-date",
+								"shipment-date" => "",		// Datum, an dem die Ware verschickt wurde
+								"reporting-date" => "",		// Datum, an dem die Infoemail von Amazon kommt
+								"delivery-time-zone" => "delivery-time-zone",
+								"delivery-Instructions" => "delivery-Instructions",
 
 
-$paramsOrdersReportFBA = array(	"MarketplaceId" => "", "SalesChannel" => "sales-channel",
-								"OrderType" => "ship-service-level", "OrderStatus" => "", "SellerOrderId" => "merchant-order-id", "AmazonOrderId" => "amazon-order-id", "FulfillmentChannel" => "fulfillment-channel",
-								"ShipmentServiceLevelCategory" => "ship-service-level", "ShipServiceLevel" => "ship-service-level",
-								"Amount" => "item-price", "CurrencyCode" => "currency", "PaymentMethod" => "",
-								"NumberOfItemsShipped" => "quantity-shipped", "NumberOfItemsUnshipped" => "",
-								"PurchaseDate" => "purchase-date", "LastUpdateDate" => "shipment-date",
-								"BuyerName" => "buyer-name",
-								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
-								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
-								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "carrier", "tracking-number" => "tracking-number", "Language" => "sales-channel");
+								"BuyerName" => "",
+								"Title" => "",
+								"Name" => "buyer-name",
+								"AddressLine1" => "bill-address-1",
+								"AddressLine2" => "bill-address-2",
+								"AddressLine3" => "bill-address-3",
+								"PostalCode" => "bill-postal-code",
+								"City" => "bill-city",
+								"StateOrRegion" => "bill-state",
+								"CountryCode" => "bill-country",
+								"buyer-cst-number" => "buyer-cst-number",
+								"buyer-vat-number" => "buyer-vat-number",
+								
+								"recipient-title" => "",
+								"recipient-name" => "recipient-name",
+								"ship-address-1" => "ship-address-1",
+								"ship-address-2" => "ship-address-2",
+								"ship-address-3" => "ship-address-3",
+								"ship-postal-code" => "ship-postal-code",
+								"ship-city" => "ship-city",
+								"ship-state" => "ship-state",
+								"ship-country" => "ship-country",
+								"ship-phone-number" => "ship-phone-number",
+								
+								"BuyerEmail" => "buyer-email",
+								"Phone" => "buyer-phone-number",
+								"OrderComment" => "",
 
-$paramsOrderItemsReportFBA = array(	"OrderItemId" => "amazon-order-item-id", "SellerSKU" => "sku", "ASIN" => "", "Title" => "product-name",
-									"ItemPrice" => "item-price", "ItemTax" => "item-tax", "PromotionDiscount" => "item-promotion-discount", "ShippingPrice" => "shipping-price", "ShippingTax" => "shipping-tax", "ShippingDiscount" => "ship-promotion-discount", "GiftWrapPrice" => "gift-wrap-price", "GiftWrapTax" => "gift-wrap-tax",
-									"QuantityOrdered" => "quantity-shipped", "QuantityShipped" => "quantity-shipped");
+								"carrier" => "",
+								"tracking-number" => "",
+								"estimated-arrival-date" => "",
+								"fulfillment-center-id" => "",
+								"fulfillment-channel" => "",
 
+								"Language" => "sales-channel",
 
-$paramsOrdersReportMFN = array(	"MarketplaceId" => "", "SalesChannel" => "sales-channel",
-								"OrderType" => "ship-service-level", "OrderStatus" => "", "SellerOrderId" => "", "AmazonOrderId" => "order-id", "FulfillmentChannel" => "",
-								"ShipmentServiceLevelCategory" => "ship-service-level", "ShipServiceLevel" => "ship-service-level",
-								"Amount" => "item-price", "CurrencyCode" => "currency", "PaymentMethod" => "",
-								"NumberOfItemsShipped" => "", "NumberOfItemsUnshipped" => "quantity-purchased",
-								"PurchaseDate" => "purchase-date", "LastUpdateDate" => "payments-date",
-								"BuyerName" => "buyer-name",
-								"Title" => "", "Name" => "buyer-name", "AddressLine1" => "bill-address-1", "AddressLine2" => "bill-address-2", "PostalCode" => "bill-postal-code", "City" => "bill-city", "StateOrRegion" => "bill-state", "CountryCode" => "bill-country",
-								"recipient-title" => "", "recipient-name" => "recipient-name", "ship-address-1" => "ship-address-1", "ship-address-2" => "ship-address-2", "ship-address-3" => "ship-address-3", "ship-postal-code" => "ship-postal-code", "ship-city" => "ship-city", "ship-state" => "ship-state", "ship-country" => "ship-country", "ship-phone-number" => "ship-phone-number",
-								"BuyerEmail" => "buyer-email", "Phone" => "buyer-phone-number", "OrderComment" => "", "carrier" => "", "tracking-number" => "", "Language" => "sales-channel");
+								"ShippedByAmazonTFM" => "",
+								"LatestDeliveryDate" => "",
+								"EarliestDeliveryDate" => "",
+								
+								"tax_number" => "",
+								"tax_included" => ""
+								);
 
-$paramsOrderItemsReportMFN = array(	"OrderItemId" => "order-item-id", "SellerSKU" => "sku", "ASIN" => "", "Title" => "product-name",
-									"ItemPrice" => "item-price", "ItemTax" => "item-tax", "PromotionDiscount" => "", "ShippingPrice" => "shipping-price", "ShippingTax" => "shipping-tax", "ShippingDiscount" => "", "GiftWrapPrice" => "", "GiftWrapTax" => "",
-									"QuantityOrdered" => "quantity-purchased", "QuantityShipped" => "");
+$paramsOrderItemsReportMFN = array(	"OrderItemId" => "order-item-id",
+									"SellerSKU" => "sku",
+									"ASIN" => "",
+									"Title" => "product-name",
+
+									"shipment-id" => "",
+									"shipment-item-id" => "",
+									"merchant-order-item-id" => "",
+
+									"ItemPrice" => "item-price",
+									"ItemTax" => "item-tax",
+									"PromotionDiscount" => "",
+									"ShippingPrice" => "shipping-price",
+									"ShippingTax" => "shipping-tax",
+									"ShippingDiscount" => "",
+									"GiftWrapPrice" => "", "GiftWrapTax" => "",
+									
+									"QuantityOrdered" => "quantity-purchased",
+									"QuantityShipped" => "",
+																
+									"SerialNumber" => ""
+									);
 ?>

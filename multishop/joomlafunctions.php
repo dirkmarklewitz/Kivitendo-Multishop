@@ -169,8 +169,7 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		$returnvalue[$bestellungszaehler]['Amount'] = $row['order_total'];
 		$returnvalue[$bestellungszaehler]['CurrencyCode'] = $row['currency_code_iso'];
 		$returnvalue[$bestellungszaehler]['PaymentMethod'] = $row_payment_method['name_de-DE'];
-		$returnvalue[$bestellungszaehler]['NumberOfItemsShipped'] = 0;
-		$returnvalue[$bestellungszaehler]['NumberOfItemsUnshipped'] = $item_count;
+		$returnvalue[$bestellungszaehler]['NumberOfItems'] = $item_count;
 		$returnvalue[$bestellungszaehler]['BuyerName'] = utf8_encode($row['f_name'])." ".utf8_encode($row['l_name']);
 		$returnvalue[$bestellungszaehler]['Title'] = utf8_encode($title);
 		$returnvalue[$bestellungszaehler]['Name'] = utf8_encode($row['f_name'])." ".utf8_encode($row['l_name']);
