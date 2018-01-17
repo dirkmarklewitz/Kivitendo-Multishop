@@ -4,6 +4,7 @@ require_once "DB.php";
 require_once "MDB2.php";
 require "conf.php";
 require "constants.php";
+require "ecb.php";
 
 $VERSANDKOSTEN = 0;
 $GESCHENKVERPACKUNG = 0;
@@ -435,25 +436,15 @@ function checke_update_alte_Kundendaten($bestellung, $rechnungsadressenupdate)
 			$set .= "language_id=".$languageId.",";
 		}
 	}
-	
-	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-	{	
-		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-		{
-			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			$set .= "ustid='" . $bestellung["tax_number"] . "',";
-		}
-	}
-	else
+
+	if (!empty($bestellung["tax_number"]))
 	{
-		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+		$set .= "ustid='" . $bestellung["tax_number"] . "',";
 	}
 	
-	if ($rs[0]["taxzone_id"] <> $localtaxid)
-	{
-		$set .= "taxzone_id=$localtaxid ";
-	}
+	$taxzonedata = getTaxzone($bestellung["CountryCode"], $bestellung["CountryCode"], $bestellung["tax_number"]);
+	$localtaxid = getTaxzoneID($taxzonedata["NAME"]);
+	$set .= "taxzone_id=$localtaxid ";
 
 	if ($set)
 	{
@@ -544,20 +535,10 @@ function checke_ob_Kundendaten_aktuell($bestellung)
 	{
 		$daten_aktuell = false;
 	}
-	
-	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-	{	
-		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-		{
-			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-		}
-	}
-	else
-	{
-		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-	}
-	
+
+	$taxzonedata = getTaxzone($bestellung["CountryCode"], $bestellung["CountryCode"], $bestellung["tax_number"]);
+	$localtaxid = getTaxzoneID($taxzonedata["NAME"]);
+
 	if ($rs[0]["taxzone_id"] <> $localtaxid)
 	{
 		$daten_aktuell = false;
@@ -595,19 +576,9 @@ function insert_neuen_Kunden($bestellung)
 		$currencyCode = $rs[0]["id"];
 	}
 	
-	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-	{	
-		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-		{
-			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-		}
-	}
-	else
-	{
-		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-	}
-	
+	$taxzonedata = getTaxzone($bestellung["CountryCode"], $bestellung["CountryCode"], $bestellung["tax_number"]);
+	$localtaxid = getTaxzoneID($taxzonedata["NAME"]);
+
 	$ustid = $bestellung["tax_number"];
 	
 	$sql = "insert into customer (name,customernumber,currency_id,taxzone_id,ustid) values ('$newID','$kdnr','$currencyCode','$localtaxid','$ustid')";
@@ -624,7 +595,7 @@ function insert_neuen_Kunden($bestellung)
 		return false;
 	}
 	$name = pg_escape_string($bestellung["Name"]);
-	$set = "set name='".$name."',";
+	$set = " name='".$name."',";
 	if ($bestellung["Title"] != "")
 	{
 		$set .= "greeting='".pg_escape_string($bestellung["Title"])."',";
@@ -652,10 +623,6 @@ function insert_neuen_Kunden($bestellung)
 	{
 		$set .= "country='".pg_escape_string($bestellung["CountryCode"])."',";
 	}
-	$set .= "phone='".pg_escape_string($bestellung["Phone"])."',";
-	$set .= "email='".pg_escape_string($bestellung["BuyerEmail"])."',";
-	$set .= "username='".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."',";
-
 	// Sprache setzen wenn vorhanden
 	$sql= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sql, "insert_neuen_Kunden");
@@ -668,24 +635,11 @@ function insert_neuen_Kunden($bestellung)
 	{
 		$set .= "language_id=".$languageId.",";
 	}
-	
-	if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-	{	
-		$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-		if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-		{
-			$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			$set .= "ustid='" . $bestellung["tax_number"] . "',";			
-		}
-	}
-	else
-	{
-		$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-	}
+	$set .= "phone='".pg_escape_string($bestellung["Phone"])."',";
+	$set .= "email='".pg_escape_string($bestellung["BuyerEmail"])."',";
+	$set .= "username='".pg_escape_string(substr($bestellung["BuyerName"], 0, 50))."' ";	
 
-	$set .= "taxzone_id=$localtaxid ";
-
-	$sql = "update customer ".$set;
+	$sql = "update customer set ".$set;
 	$sql .= "where id=".$rs[0]["id"];
 	$rc = query("erp", $sql, "insert_neuen_Kunden");
 	if ($rc === -99)
@@ -804,7 +758,7 @@ function einfuegen_bestellte_Artikel($artikelliste, $AmazonOrderId, $zugehoerige
 				}
 			}
 		}
-		$GLOBALS["VERSANDKOSTEN"] += $einzelartikel["ShippingPrice"] - $einzelartikel["ShippingDiscount"];
+		$GLOBALS["VERSANDKOSTEN"] += $einzelartikel["ShippingPrice"] - abs($einzelartikel["ShippingDiscount"]);
 		$GLOBALS["GESCHENKVERPACKUNG"] += $einzelartikel["GiftWrapPrice"];
 	}
 	return $ok;
@@ -886,47 +840,23 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	$brutto = $bestellung["Amount"];
 	$netto = $bestellung["Amount"];
 	
-	
-	// Versandadresse prüfen (selbige gibt wenn vorhanden den Steuerschluessel vor!)
+	// Steuerschluessel ermitteln, Nettobetrag errechnen
+	$targetcountry = $bestellung["CountryCode"];
 	if ($bestellung["ship-country"] != "")
 	{
-		if (array_key_exists($bestellung["ship-country"], $GLOBALS["TAXID"]))
-		{	
-			$localtaxid = $GLOBALS["TAXID"][$bestellung["ship-country"]];
-			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-			{
-				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			}
-			else
-			{
-				$netto = round($brutto / 1.19, 2, PHP_ROUND_HALF_UP);
-			}
-		}
-		else
-		{
-			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-		}
+		$targetcountry = $bestellung["ship-country"];
 	}
-	else
+	$fulfillmentCenterIdData = checkFulfillmentCenterId($bestellung['fulfillment-center-id']);
+	$shippingcountry = $notfallVersandland;
+	if ($fulfillmentCenterIdData)
 	{
-		if (array_key_exists($bestellung["CountryCode"], $GLOBALS["TAXID"]))
-		{	
-			$localtaxid = $GLOBALS["TAXID"][$bestellung["CountryCode"]];
-			if ($localtaxid == $GLOBALS["TAXID"]["EU_OHNE"] && !empty($bestellung["tax_number"]))
-			{
-				$localtaxid = $GLOBALS["TAXID"]["EU_ID"];
-			}
-			else
-			{
-				$netto = round($brutto / 1.19, 2, PHP_ROUND_HALF_UP);
-			}
-		}
-		else
-		{
-			$localtaxid = $GLOBALS["TAXID"]["WORLD"];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
-		}
+		$shippingcountry = $fulfillmentCenterIdData['Country'];
 	}
-		
+	$taxzonedata = getTaxzone($shippingcountry, $targetcountry, $bestellung["tax_number"]);
+	$localtaxid = getTaxzoneID($taxzonedata["NAME"]);
+	// Nettobetrag berechnen
+	$netto = round($brutto / (1.0 + ($taxzonedata["RATE"]/100)) , 2, PHP_ROUND_HALF_UP);
+
 	$sql = "insert into oe (notes,ordnumber,customer_id,currency_id,taxzone_id) values ('$newID','$auftrag','".$kundennummer."','$currencyCode','$localtaxid')";
 	$rc = query("erp", $sql, "erstelle_Auftrag 2");
 	if ($rc === -99)
@@ -949,9 +879,20 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$sql .= "shipto_id=".$versandadressennummer.", ";
 	}
-	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", shippingpoint='".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]] . " / " . $bestellung["ShipmentServiceLevelCategory"])."', ";
+	$sql .= "department_id=".hole_department_id($bestellung["MarketplaceId"]).", ";
+	
+	$fulfillmentCenterIdData = checkFulfillmentCenterId($bestellung['fulfillment-center-id']);
+	if ($fulfillmentCenterIdData)
+	{
+		$fulfillmentCenterText = $bestellung['fulfillment-center-id'] . " (" . $fulfillmentCenterIdData['City'] . ", " . $fulfillmentCenterIdData['Country'] . ")";
+	}								
+	else
+	{
+		$fulfillmentCenterText = $bestellung['fulfillment-center-id'] . " (unbekannt)";
+	}
+	$sql .= "shippingpoint='[Ort] ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]] . "/ " . $fulfillmentCenterText . "/ " . $bestellung["ShipmentServiceLevelCategory"])."', ";
 	$sql .= "globalproject_id=".hole_project_id($standardprojekt).", ";
-	if ($localtaxid == $GLOBALS["TAXID"]["EU_ID"] || $localtaxid == $GLOBALS["TAXID"]["WORLD"] || $bestellung["tax_included"] == "f")
+	if ($taxzonedata["TYPE"] == $GLOBALS["EULAENDER"]["EU_MIT"] || $taxzonedata["TYPE"] == $GLOBALS["EULAENDER"]["WORLD"] || $bestellung["tax_included"] == "f")
 	{
 		$taxincluded = "f";
 	}
@@ -960,6 +901,7 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 		$taxincluded = "t";
 	}
 	$sql .= "amount=".$brutto.", netamount=".$netto.", reqdate='".$bestellung["LastUpdateDate"]."', taxincluded='".$taxincluded."', ";
+	
 	// Sprache setzen wenn vorhanden
 	$sqllang= "select id from language where template_code = '".$bestellung["Language"]."'";
     $languagereturn = getAll("erp", $sqllang, "insert_neuen_Kunden");
@@ -972,17 +914,37 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 	{
 		$sql .= "language_id=".$languageId.",";
 	}
+	
+	// Versandinfos setzen wenn vorhanden
+	if (trim($bestellung["carrier"]) != false)
+	{
+		$sql .= "shipvia='[porto] ".$bestellung["carrier"]."/".$bestellung["tracking-number"]."', ";
+	}
+	
+	// Infos für EU-Umsatzsteuervoranmeldungen in Landeswährung, Währung ist immer die des Landes, in dem versteuert wird, ggf. werden hier die Daten mit dem generische Kurs umgerechnet
+	$sql .= "transaction_description='" . generateVatInfoString($taxzonedata["NAME"], $brutto, $bestellung["CurrencyCode"], $documentnumber = "new") . "', ";
+	
 	$sql .= "taxzone_id=$localtaxid, ";
-	$sql .= "payment_id=".hole_payment_id($bestellung["PaymentMethod"]).", ";
-	$bestelldatum = "Bestelldatum: ".date("d.m.Y", strtotime($bestellung["PurchaseDate"])).chr(13);
-	$versanddatum = "Versanddatum: ".date("d.m.Y", strtotime($bestellung["LastUpdateDate"])).chr(13);
+	if (hole_payment_id($bestellung["PaymentMethod"]) != "NULL")
+	{
+		$sql .= "payment_id=".hole_payment_id($bestellung["PaymentMethod"]).", ";  // Amazon
+	}
+	else
+	{
+		$sql .= "payment_id=".hole_payment_id($bestellung["PaymentMethodDetail"]).", ";
+	}
 	$waehrungstext = "";
 	if ($bestellung["CurrencyCode"] != "EUR")
 	{
-		$waehrungstext = chr(13)."Originalwaehrung: ".$bestellung["CurrencyCode"].chr(13)."Originalbetrag: ".$bestellung["Amount"]." ".$bestellung["CurrencyCode"].chr(13)."Kurs 1 ".$bestellung["CurrencyCode"]." = x.xx EUR";
+		$waehrungstext = "[Originalbetrag] ".$bestellung["Amount"]." ".$bestellung["CurrencyCode"]." / [Kurs] 1 ".$bestellung["CurrencyCode"]." = x.xx EUR";
 	}
 	$kundenkommentar = pg_escape_string($bestellung["OrderComment"]);
-	$sql .= "notes='".$kundenkommentar."', intnotes='".$bestelldatum.$versanddatum."SalesChannel ".$bestellung["SalesChannel"]." (".$bestellung["CountryCode"].")".chr(13)."Versand durch ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]]).$waehrungstext."', ";
+	$sql .= "notes='".$kundenkommentar."', ";
+	$sql .= "intnotes='"."[Bestelldatum] ".date("d.m.Y", strtotime($bestellung["PurchaseDate"])) . " / [Versanddatum] ".date("d.m.Y", strtotime($bestellung["LastUpdateDate"])).chr(13)
+						."[SalesChannel] ".$bestellung["SalesChannel"]." (".$bestellung["CountryCode"].") / [Versand] ".utf8_encode($GLOBALS["VERSAND"][$bestellung["FulfillmentChannel"]]).chr(13)
+						."[IsBusinessOrder] ".$bestellung["IsBusinessOrder"].chr(13)
+						."[PaymentMethod] ".$bestellung["PaymentMethod"] . " " .$bestellung["PaymentMethodDetail"].chr(13)
+						.$waehrungstext."', ";
 	$sql .= "currency_id='".$currencyCode."', employee_id=".$ERPusrID.", vendor_id=NULL ";
 	$sql .= "where id=".$rs2[0]["id"];
 	
@@ -1090,6 +1052,55 @@ function erstelle_Auftrag($bestellung, $kundennummer, $versandadressennummer, $E
 }
 
 /**********************************************
+* generateVatInfoString($taxzonename, $brutto, $bestellungCurrencyCode, $documentnumber = "new")
+***********************************************/
+function generateVatInfoString($taxzonename, $brutto, $bestellungCurrencyCode, $documentnumber = "new")
+{
+	$vatInfoString = "";
+	
+	$taxzonedata = getTaxzoneDataByName($taxzonename);
+	
+	// Nettobetrag berechnen
+	$netto = round($brutto / (1.0 + ($taxzonedata["RATE"]/100)) , 2, PHP_ROUND_HALF_UP);
+
+	// Infos für EU-Umsatzsteuervoranmeldungen in Landeswährung, Währung ist immer die des Landes, in dem versteuert wird, ggf. werden hier die Daten mit dem generische Kurs umgerechnet
+	// Land für Versteuerung wird aus taxzone_id geholt
+	// Daten werden entsprechend Vorgaben auf der Rechnung ausgegeben
+	if ($bestellungCurrencyCode == $taxzonedata["CURR"])
+	{
+		$waehrungskurs = exchangerate($bestellungCurrencyCode, $waehrungspuffer);
+		$vatInfoString = "[Document]".$documentnumber."[Land]".$taxzonedata["LAND"]."[Cur]".$bestellungCurrencyCode."[Kurs]".$waehrungskurs."[Brt]".number_format($brutto, 2, ',', '.')."[Net]".number_format($netto, 2, ',', '.')."[Ust]".number_format($brutto-$netto, 2, ',', '.');
+	}
+	else
+	{
+		$waehrungskurs = 1.00;
+		if ($bestellungCurrencyCode == "EUR") // Keine Kreuzwährung, Rechnungsbetrag in EUR wird direkt in eine andere Landeswährung zur Versteuerung umgerechnet
+		{
+			$waehrungskurs = exchangerate($taxzonedata["CURR"], -1 * $waehrungspuffer); // Währungspuffer negativieren, damit der Fremdwährungssteuerbetrag im Steuerland zur Sicherheit etwas sinkt
+			$brutto_lw = round($brutto * $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+			$netto_lw = round($netto * $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+		}
+		else if ($taxzonedata["CURR"] == "EUR") // Keine Kreuzwährung, Rechnungsbetrag in Fremdwährung wird direkt in EUR Versteuerung umgerechnet
+		{
+			$waehrungskurs = exchangerate($bestellungCurrencyCode, $waehrungspuffer); // Währungspuffer so lassen, damit der zu meldende Wert im Steuerland zur Sicherheit etwas sinkt
+			$brutto_lw = round($brutto / $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+			$netto_lw = round($netto / $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+		}
+		else // Kreuzwährung, weder Bestellwährung noch Steuerzonenwährung ist EUR, Betrag zur Versteuerung wird über die beiden EUR-Kurse kreuzberechnet
+		{
+			$waehrungskurs_order = exchangerate($bestellungCurrencyCode, $waehrungspuffer / 2); // Währungspuffer halbieren, damit der zu meldende Wert im Steuerland zur Sicherheit etwas sinkt			
+			$waehrungskurs_taxzone = exchangerate($taxzonedata["CURR"], -1 * $waehrungspuffer / 2); // Währungspuffer hablieren und negativieren, damit der Fremdwährungssteuerbetrag im Steuerland zur Sicherheit etwas sinkt
+			$waehrungskurs = $waehrungskurs_order / $waehrungskurs_taxzone;
+			$brutto_lw = round($brutto / $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+			$netto_lw = round($netto / $waehrungskurs, 2, PHP_ROUND_HALF_UP);
+		}
+		$vatInfoString = "[Document]".$documentnumber."[Land]".$taxzonedata["LAND"]."[Cur]".$taxzonedata["CURR"]."[Kurs]".$waehrungskurs."[Brt]".number_format($brutto_lw, 2, ',', '.')."[Net]".number_format($netto_lw, 2, ',', '.')."[Ust]".number_format($brutto_lw-$netto_lw, 2, ',', '.');
+	}
+	
+	return $vatInfoString;
+}
+
+/**********************************************
 * checkAmazonOrderId($AmazonOrderId)
 ***********************************************/
 function checkAmazonOrderId($AmazonOrderId)
@@ -1151,6 +1162,303 @@ function checkAmazonOrderId($AmazonOrderId)
 	return $status;
 }
 
+/****************************************************
+* checkFulfillmentCenterId() Versandzentren prüfen und Land holen
+****************************************************/
+function checkFulfillmentCenterId($testFulfillmentCenterId)
+{
+	require "conf.php";
+	
+	// FBA Versandzentren in Array umwandeln
+	$fulfillmentCenters = array();
+	foreach (explode("\n", $fulfillmentCenterIds) as $singleFulfillmentCenterId)
+	{
+		$zerlegteSingleFulfillmentCenterId = explode('|', $singleFulfillmentCenterId);
+		if(count($zerlegteSingleFulfillmentCenterId) >= 2 && count($zerlegteSingleFulfillmentCenterId) <= 3)
+		{
+			$fulfillmentCenters[$zerlegteSingleFulfillmentCenterId[0]]['Country'] = trim($zerlegteSingleFulfillmentCenterId[1]);
+			if(count($zerlegteSingleFulfillmentCenterId) == 3)
+			{
+				$fulfillmentCenters[$zerlegteSingleFulfillmentCenterId[0]]['City'] = trim($zerlegteSingleFulfillmentCenterId[2]);
+			}
+			else
+			{
+				$fulfillmentCenters[$zerlegteSingleFulfillmentCenterId[0]]['City'] = trim($zerlegteSingleFulfillmentCenterId[1]);
+			}
+		}
+	}
+	
+	if(array_key_exists(trim(explode(';', $testFulfillmentCenterId)[0]), $fulfillmentCenters))
+	{
+		return $fulfillmentCenters[trim(explode(';', $testFulfillmentCenterId)[0])];
+	}								
+	else
+	{
+ 		return false;
+	}
+}
+
+/****************************************************
+* getTaxzoneID($taxzoneName) tax_zones ID für Steuerzone holen
+****************************************************/
+function getTaxzoneID($taxzoneName)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$taxzone_id = -1;
+
+	$dbP=@DB::connect($dsnP);
+	
+	if (DB::isError($dbP)||!$dbP)
+	{
+		echo "Keine Verbindung zur ERP<br>";
+	}
+	else
+	{					
+		$rs = $dbP->getall("select id from tax_zones where description = '".$taxzoneName."'");
+		
+		if (array_key_exists(0, $rs[0]))
+		{
+			$taxzone_id = $rs[0][0];
+		}
+	}
+
+	return $taxzone_id;
+}
+
+/****************************************************
+* getTaxzone($versandland, $zielland) Steuerzone holen
+****************************************************/
+function getTaxzone($versandland, $zielland, $tax_number)
+{
+	require "conf.php";
+	
+	$taxzones = array();
+	$standardsteuerlandKuerzel = false;
+	$taxzonename = false;
+	$taxzonerate = 0;
+	$taxzonetype = "";
+	$taxzoneland = "";
+	$taxzonecurrency = "";
+	
+	foreach (explode("\n", $Steuerlaender) as $number => $line)
+	{
+		$datenarray = explode("|", $line);
+		if (trim($datenarray[0]) != false && trim($datenarray[1]) != false && trim($datenarray[2]) != false && trim($datenarray[3]) != false && trim($datenarray[4]) != false && trim($datenarray[5]) != false && trim($datenarray[6]) != false)
+		{
+			if ($number == 0)
+			{
+				$standardsteuerlandKuerzel = $datenarray[0];
+			}
+			$taxzones[$datenarray[0]] = array($datenarray[1], $datenarray[2], $datenarray[3], $datenarray[4], $datenarray[5], $datenarray[6]);
+		}
+	}
+
+	$versandland_steuerland = false;
+	if (array_key_exists($versandland, $taxzones))
+	{
+		$versandland_steuerland = true;
+	}
+	else
+	{
+		if ($standardsteuerlandKuerzel != false)
+		{
+			$versandland = $standardsteuerlandKuerzel;
+			$versandland_steuerland = true;
+		}
+	}
+	
+	$zielland_steuerland = false;
+	if (array_key_exists($zielland, $taxzones))
+	{
+		$zielland_steuerland = true;
+	}
+	
+	if ($standardsteuerland == "versandland")
+	{
+		if ($versandland_steuerland == true)
+		{
+			if ($versandland == $zielland)
+			{
+				$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["INLAND"]];
+				$taxzonerate = $taxzones[$versandland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+				$taxzonetype = $GLOBALS["EULAENDER"]["INLAND"];
+				$taxzoneland = $versandland;
+				$taxzonecurrency = $taxzones[$versandland][0];
+			}
+			else if (in_array($zielland, $GLOBALS["EULAENDER"]))
+			{	
+				$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["EU_OHNE"]];
+				$taxzonerate = $taxzones[$versandland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+				$taxzonetype = $GLOBALS["EULAENDER"]["EU_OHNE"];
+				$taxzoneland = $versandland;
+				$taxzonecurrency = $taxzones[$versandland][0];
+				if (trim($tax_number) != false)
+				{
+					$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["EU_MIT"]];
+					$taxzonerate = 0;
+					$taxzonetype = $GLOBALS["EULAENDER"]["EU_MIT"];
+					$taxzoneland = $versandland;
+					$taxzonecurrency = $taxzones[$versandland][0];
+				}
+			}
+			else
+			{
+				$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["WORLD"]];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+				$taxzonerate = 0;
+				$taxzonetype = $GLOBALS["EULAENDER"]["WORLD"];
+				$taxzoneland = $versandland;
+				$taxzonecurrency = $taxzones[$versandland][0];
+			}
+		}
+		else
+		{
+			return $taxzonename;
+		}
+	}
+	else
+	{
+		if ($zielland_steuerland == true)
+		{
+			if ($zielland == $versandland)
+			{
+				$taxzonename = $taxzones[$zielland][$GLOBALS["EULAENDER"]["INLAND"]];
+				$taxzonerate = $taxzones[$zielland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+				$taxzonetype = $GLOBALS["EULAENDER"]["INLAND"];
+				$taxzoneland = $zielland;
+				$taxzonecurrency = $taxzones[$zielland][0];
+			}
+			else if ($versandland_steuerland == true || in_array($versandland, $GLOBALS["EULAENDER"]))
+			{	
+				$taxzonename = $taxzones[$zielland][$GLOBALS["EULAENDER"]["INLAND"]];
+				$taxzonerate = $taxzones[$zielland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+				$taxzonetype = $GLOBALS["EULAENDER"]["INLAND"];
+				$taxzoneland = $zielland;
+				$taxzonecurrency = $taxzones[$zielland][0];
+			}
+		}
+		else // Zielland nicht Steuerland, dann Steuer des Versandlandes nehmen
+		{
+			if ($versandland_steuerland == true)
+			{
+				if ($versandland == $zielland)
+				{
+					$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["INLAND"]];
+					$taxzonerate = $taxzones[$versandland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+					$taxzonetype = $GLOBALS["EULAENDER"]["INLAND"];
+					$taxzoneland = $versandland;
+					$taxzonecurrency = $taxzones[$versandland][0];
+				}
+				else if (in_array($zielland, $GLOBALS["EULAENDER"]))
+				{	
+					$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["EU_OHNE"]];
+					$taxzonerate = $taxzones[$versandland][$GLOBALS["EULAENDER"]["TAXRATE"]];
+					$taxzonetype = $GLOBALS["EULAENDER"]["EU_OHNE"];
+					$taxzoneland = $versandland;
+					$taxzonecurrency = $taxzones[$versandland][0];
+					if (trim($tax_number) != false)
+					{
+						$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["EU_MIT"]];
+						$taxzonerate = 0;
+						$taxzonetype = $GLOBALS["EULAENDER"]["EU_MIT"];
+						$taxzoneland = $versandland;
+						$taxzonecurrency = $taxzones[$versandland][0];
+					}
+				}
+				else
+				{
+					$taxzonename = $taxzones[$versandland][$GLOBALS["EULAENDER"]["WORLD"]];	// Wenn nicht vorhanden, dann vermutlich Steuerschluessel Welt
+					$taxzonerate = 0;
+					$taxzonetype = $GLOBALS["EULAENDER"]["WORLD"];
+					$taxzoneland = $versandland;
+					$taxzonecurrency = $taxzones[$versandland][0];
+				}
+			}
+			else
+			{
+				return $taxzonename;
+			}
+		}
+	}
+	
+	return array( "NAME" => $taxzonename,	// Steuerzonen-Name, Steuerrate und Steuertype zurueckgeben
+				  "RATE" => $taxzonerate,
+				  "TYPE" => $taxzonetype,
+				  "LAND" => $taxzoneland,
+				  "CURR" => $taxzonecurrency);
+}
+
+/****************************************************
+* getTaxzoneDataByName($taxzoneName) Steuerzone holen
+****************************************************/
+function getTaxzoneDataByName($taxzoneName)
+{
+	require "conf.php";
+	
+	$taxzones = array();
+
+	$taxzonename = false;
+	$taxzonerate = 0;
+	$taxzonetype = "";
+	$taxzoneland = "";
+	$taxzonecurrency = "";
+	
+	foreach (explode("\n", $Steuerlaender) as $number => $line)
+	{
+		$datenarray = explode("|", $line);
+		if (trim($datenarray[0]) != false && trim($datenarray[1]) != false && trim($datenarray[2]) != false && trim($datenarray[3]) != false && trim($datenarray[4]) != false && trim($datenarray[5]) != false && trim($datenarray[6]) != false)
+		{
+			$taxzones[$datenarray[0]] = array($datenarray[1], $datenarray[2], $datenarray[3], $datenarray[4], $datenarray[5], $datenarray[6]);
+		}
+		
+		if (in_array($taxzoneName, $taxzones[$datenarray[0]]))
+		{
+			$taxzonename = $taxzoneName;
+			$taxzonerate = $taxzones[$datenarray[0]][$GLOBALS["EULAENDER"]["TAXRATE"]];
+			if ($taxzoneName == $datenarray[2])
+			{
+				$taxzonetype = "";
+			}
+			else if ($taxzoneName == $datenarray[3])
+			{
+				$taxzonetype = "";
+			}
+			else if($taxzoneName == $datenarray[4])
+			{
+				$taxzonetype = "";
+			}
+			else if ($taxzoneName == $datenarray[5])
+			{
+				$taxzonetype = "";
+			}
+			else
+			{
+				$taxzonetype = "";
+			}
+			$taxzoneland = $datenarray[0];
+			$taxzonecurrency = $taxzones[$datenarray[0]][0];
+			
+			return array( "NAME" => $taxzonename,	// Steuerzonen-Name, Steuerrate und Steuertype zurueckgeben
+						  "RATE" => $taxzonerate,
+						  "TYPE" => $taxzonetype,
+						  "LAND" => $taxzoneland,
+						  "CURR" => $taxzonecurrency);			
+		}
+	}
+
+	return  false;
+}
+
 /**********************************************
 * checkPortostatusOfOrderId($OrderId)
 ***********************************************/
@@ -1174,7 +1482,7 @@ function checkPortostatusOfOrderId($CusOrdNumber, $OrderId = NULL)
 	if (DB::isError($dbP)||!$dbP)
 	{
 		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
-		$dbP = false;
+		return $status;
 	}
 	else
 	{
@@ -1197,7 +1505,7 @@ function checkPortostatusOfOrderId($CusOrdNumber, $OrderId = NULL)
 }
 
 /**********************************************
-* setPortostatusOfOrderId($OrderId, $Carrier, $TrackingNumber)
+* setPortostatusOfOrderId($CusOrdNumber, $Carrier, $TrackingNumber)
 ***********************************************/
 function setPortostatusOfOrderId($CusOrdNumber, $Carrier, $TrackingNumber, $OrderId = NULL)
 {
@@ -1237,6 +1545,52 @@ function setPortostatusOfOrderId($CusOrdNumber, $Carrier, $TrackingNumber, $Orde
 		{
 			echo "Portostatus ".$CusOrdNumber." konnte nicht eingetragen werden.<br>";
 			$rc = query("erp", "ROLLBACK WORK", "setPortostatusOfOrderId");
+			if ($rc === -99)
+			{
+				echo "Probleme mit Transaktion. Abbruch!"; exit();
+			}
+			return false;
+		}		
+		$status = true;
+	}
+	
+	return $status;
+}
+
+/**********************************************
+* setPortostatusOfDeliveryOrderId($CusOrdNumber, $Carrier, $TrackingNumber, $Donumber)
+***********************************************/
+function setPortostatusOfDeliveryOrderId($CusOrdNumber, $Carrier, $TrackingNumber, $Donumber)
+{
+	require_once "DB.php";
+	require "conf.php";
+	
+	$dsnP = array(
+			'phptype'  => 'pgsql',
+			'username' => $ERPuser,
+			'password' => $ERPpass,
+			'hostspec' => $ERPhost,
+			'database' => $ERPdbname,
+			'port'     => $ERPport
+            );
+            
+	$status = false;
+	
+	$dbP = @DB::connect($dsnP);
+	if (DB::isError($dbP)||!$dbP)
+	{
+		$status = "Keine Verbindung zur ERP<br>".$dbP->userinfo;
+		$dbP = false;
+	}
+	else
+	{
+		// Daten in Lieferschein eintragen
+		$sql = "update delivery_orders set shipvia='[porto] ".$Carrier."/".$TrackingNumber."' where donumber = '".$Donumber."'";
+		$rc = query("erp",$sql,"setPortostatusOfDeliveryOrderId");	
+		if ($rc === -99)
+		{
+			echo "Portostatus ".$CusOrdNumber." konnte nicht eingetragen werden.<br>";
+			$rc = query("erp", "ROLLBACK WORK", "setPortostatusOfDeliveryOrderId");
 			if ($rc === -99)
 			{
 				echo "Probleme mit Transaktion. Abbruch!"; exit();
@@ -1419,7 +1773,7 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 		{
 			$gruppierung = " saleschannel, artikel";
 			$sortierung = " saleschannel, artikel";
-			$selectanweisung = 	" trim(substring(ar.intnotes from E'SalesChannel(.*)\\\(..\\\)?')) AS saleschannel,"
+			$selectanweisung = 	" trim(substring(ar.intnotes from E'SalesChannel]?(.*)\\\(..\\\)?')) AS saleschannel,"
 								." trim(parts.partnumber) AS artikel,"
 								." sum(CASE WHEN invoice.qty > 0 THEN invoice.qty ELSE 0 end) AS menge,"
 								." sum(CASE WHEN invoice.qty < 0 THEN invoice.qty ELSE 0 end) AS returns";
@@ -1571,6 +1925,9 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'tablet-garde-9.7pro':
 			        	$csv_daten[$lfdNrCsv][15] += $zeile[6];
+			        	break;
+					case 'pmf-mobile':
+			        	$csv_daten[$lfdNrCsv][16] += $zeile[6];			        	
 				        break;
 				}
 				$found = true;
@@ -1624,6 +1981,9 @@ function getSellingInfo($datum_von, $datum_bis, $csvausgabe = false)
 				        break;
 					case 'tablet-garde-9.7pro':
 			        	$csv_daten[$lfdNrCsv][15] += $zeile[7];
+				        break;
+					case 'pmf-mobile':
+			        	$csv_daten[$lfdNrCsv][16] += $zeile[7];			        	
 				        break;
 				}
 				$returnfound = true;

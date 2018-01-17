@@ -112,14 +112,27 @@ class RakutenApiClass
 					$returnvalue[$bestellungszaehler]['LastUpdateDate'] = $item->getElementsByTagName('created')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['SalesChannel'] = $RakutenAbteilungsname;
 					$returnvalue[$bestellungszaehler]['MarketplaceId'] = $RakutenAbteilungsname;
-					// $returnvalue[$bestellungszaehler]['OrderType'] = "";
+					$returnvalue[$bestellungszaehler]['OrderType'] = "";
 					$returnvalue[$bestellungszaehler]['OrderStatus'] = $item->getElementsByTagName('status')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['FulfillmentChannel'] = "MFN";
-					// $returnvalue[$bestellungszaehler]['ShipmentServiceLevelCategory'] = "";
-					// $returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
+					if (trim($RakutenStandardVersandzentrum) != false)
+					{
+						$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $RakutenStandardVersandzentrum;
+					}
+					else if (trim($StandardVersandzentrum) != false)
+					{
+						$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $StandardVersandzentrum;
+					}
+					else
+					{
+						$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = "";
+					}
+					$returnvalue[$bestellungszaehler]['ShipmentServiceLevelCategory'] = "";
+					$returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
 					$returnvalue[$bestellungszaehler]['Amount'] = $item->getElementsByTagName('total')->item(0)->nodeValue;
 					$returnvalue[$bestellungszaehler]['CurrencyCode'] = "EUR";
-					
+					$returnvalue[$bestellungszaehler]['IsBusinessOrder'] = "false";
+					$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Rakuten";
 					$zahlungsmethode = $item->getElementsByTagName('payment')->item(0)->nodeValue;
 					if(	strpos($zahlungsmethode, "PP") !== false ||
 						strpos($zahlungsmethode, "CC") !== false ||
@@ -128,19 +141,19 @@ class RakutenApiClass
 						strpos($zahlungsmethode, "CB") !== false ||
 						strpos($zahlungsmethode, "GP") !== false)
 					{
-						$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Vorauskasse";
+						$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "Vorauskasse";
 					}
 					else if(strpos($zahlungsmethode, "INV") !== false)
 					{
-						$returnvalue[$bestellungszaehler]['PaymentMethod'] = "30-days";
+						$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "30-days";
 					}
 					else if(strpos($zahlungsmethode, "PAL") !== false)
 					{
-						$returnvalue[$bestellungszaehler]['PaymentMethod'] = "PayPal";
+						$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "PayPal";
 					}
 					else
 					{
-						$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Sonstiges";
+						$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "Sonstiges";
 					}
 					
 					$rechnungsdaten = $item->getElementsByTagName('client');

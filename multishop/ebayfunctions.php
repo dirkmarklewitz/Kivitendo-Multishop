@@ -51,7 +51,7 @@ function getEbayOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 class eBayApiClass
 {
     private $_siteId = 77;  // default: Germany
-    private $_eBayApiVersion = 837;
+    private $_eBayApiVersion = 1039;
  
     public function _getOrderRequestBody($dateAfter, $dateBefore)
     {
@@ -163,25 +163,38 @@ class eBayApiClass
 						// $returnvalue[$bestellungszaehler]['OrderType'] = "";
 						$returnvalue[$bestellungszaehler]['OrderStatus'] = $item->getElementsByTagName('OrderStatus')->item(0)->nodeValue;
 						$returnvalue[$bestellungszaehler]['FulfillmentChannel'] = "MFN";
-						
-						$shippingServiceSubtree = $item->getElementsByTagName("ShippingServiceSelected");
-						$returnvalue[$bestellungszaehler]['ShipmentServiceLevelCategory'] = $shippingServiceSubtree->item(0)->getElementsByTagName('ShippingService')->item(0)->nodeValue;
-						// $returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
-						
-						$returnvalue[$bestellungszaehler]['Amount'] = $item->getElementsByTagName('Total')->item(0)->nodeValue;
-						$returnvalue[$bestellungszaehler]['CurrencyCode'] = $item->getElementsByTagName('Total')->item(0)->getAttribute('currencyID');
-						$zahlungsmethode = $item->getElementsByTagName('PaymentMethod')->item(0)->nodeValue;
-						if(strpos($zahlungsmethode, "MoneyXfer") !== false)
+						if (trim($eBayStandardVersandzentrum) != false)
 						{
-							$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Vorauskasse";
+							$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $eBayStandardVersandzentrum;
 						}
-						else if(strpos($zahlungsmethode, "PayPal") !== false)
+						else if (trim($StandardVersandzentrum) != false)
 						{
-							$returnvalue[$bestellungszaehler]['PaymentMethod'] = "PayPal";
+							$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $StandardVersandzentrum;
 						}
 						else
 						{
-							$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Sonstiges";
+							$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = "";
+						}
+						$shippingServiceSubtree = $item->getElementsByTagName("ShippingServiceSelected");
+						$returnvalue[$bestellungszaehler]['ShipmentServiceLevelCategory'] = $shippingServiceSubtree->item(0)->getElementsByTagName('ShippingService')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
+						
+						$returnvalue[$bestellungszaehler]['Amount'] = $item->getElementsByTagName('Total')->item(0)->nodeValue;
+						$returnvalue[$bestellungszaehler]['CurrencyCode'] = $item->getElementsByTagName('Total')->item(0)->getAttribute('currencyID');
+						$returnvalue[$bestellungszaehler]['IsBusinessOrder'] = "false";
+						$returnvalue[$bestellungszaehler]['PaymentMethod'] = "eBay";
+						$zahlungsmethode = $item->getElementsByTagName('PaymentMethod')->item(0)->nodeValue;
+						if(strpos($zahlungsmethode, "MoneyXfer") !== false)
+						{
+							$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "Vorauskasse";
+						}
+						else if(strpos($zahlungsmethode, "PayPal") !== false)
+						{
+							$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "PayPal";
+						}
+						else
+						{
+							$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = "Sonstiges";
 						}
 						$returnvalue[$bestellungszaehler]['BuyerName'] = $item->getElementsByTagName('BuyerUserID')->item(0)->nodeValue;
 						//$returnvalue[$bestellungszaehler]['Title'] = "";

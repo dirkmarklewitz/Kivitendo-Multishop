@@ -22,6 +22,7 @@ function csv_to_array($csv, $delimiter = "\t", $enclosure = '"', $escape = '\\',
 function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 {
 	require "constants.php";
+	require "conf.php";
 	$amazonApiCall = new DhListOrdersByReports();
 	$amazonApiCall->_domain = $domain;
 	$amazonApiCall->_timestamp = gmdate("Y-m-d\TH:i:s\Z");
@@ -180,18 +181,11 @@ function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 					{
 						// Zusätzlicher Artikel zur Bestellung, zuerst prüfen ob schon in Artikelliste vorhanden, und ob in einem Extra-Paket
 						$artikelVorhanden = false;
-						$paketVorhanden = false;
 						foreach($bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['orderItemsListOutput'] as $einzelartikel)
 						{
-							if( $einzelartikel['OrderItemId'] == $einzelbestellung[$paramsOrderItemsReportMFN['OrderItemId']] &&
-								$einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-id']] &&
-								$einzelartikel['shipment-item-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-item-id']])
+							if( $einzelartikel['OrderItemId'] == $einzelbestellung[$paramsOrderItemsReportMFN['OrderItemId']] )
 							{
 								$artikelVorhanden = true;
-							}
-							if ($einzelartikel['shipment-id'] == $einzelbestellung[$paramsOrderItemsReportMFN['shipment-id']])
-							{
-								$paketVorhanden = true;
 							}
 						}
 						// Wenn zusätzlicher Artikel noch nicht vorhanden, dann hinzufuegen
@@ -210,13 +204,6 @@ function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 								}								
 							}
 							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['NumberOfItems'] += $einzelbestellung[$paramsOrdersReportMFN['NumberOfItems']];
-							if ($paketVorhanden == false)
-							{
-								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['carrier'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['carrier']];
-								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tracking-number'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['tracking-number']];
-								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['estimated-arrival-date'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['estimated-arrival-date']];
-								$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] .= ";" . $einzelbestellung[$paramsOrdersReportMFN['fulfillment-center-id']];
-							}
 						}
 					}
 					else
@@ -241,6 +228,23 @@ function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['PaymentMethod'] = "Amazon";
 						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tax_number'] = "";
 						$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['tax_included'] = "t";
+						
+						if ($domain == "EU" && trim($AmazonStandardVersandzentrum) != false)
+						{
+							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] = $AmazonStandardVersandzentrum;
+						}
+						else if ($domain == "COM" && trim($AmazonStandardVersandzentrum_COM) != false)
+						{
+							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] = $AmazonStandardVersandzentrum_COM;
+						}
+						else if (trim($StandardVersandzentrum) != false)
+						{
+							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] = $StandardVersandzentrum;
+						}
+						else
+						{
+							$bestellungen[$einzelbestellung[$paramsOrdersReportMFN['AmazonOrderId']]]['fulfillment-center-id'] = "";
+						}
 						
 						// 1. Artikel zur Bestellung
 						$orderItemsListOutput = array();
@@ -302,6 +306,11 @@ function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 	{
 		$AmazonOrderId = $newSingleOrderAWSData['AmazonOrderId'];
 		
+		if ($bestellungen[$AmazonOrderId]['NumberOfItems'] != $newSingleOrderAWSData['NumberOfItems'] && $newSingleOrderAWSData['FulfillmentChannel'] != 'MFN')
+		{
+			$newSingleOrderAWSData['OrderStatus'] = "PartiallyShipped";
+		}	
+	
 		foreach ($newSingleOrderAWSData as $singleAWSKey => $singleAWSValue)
 		{
 			if (trim($singleAWSValue) != false)
@@ -320,7 +329,7 @@ function getAmazonOrders($fulfillmentchannel, $reportsvom, $reportsbis, $domain)
 				}
 			}
 		}
-		
+	
 		// Check if billing address is set, if not make a copy of shipping address
 		if (trim($bestellungen[$AmazonOrderId]['AddressLine1']) == false &&
 			trim($bestellungen[$AmazonOrderId]['AddressLine2']) == false &&

@@ -161,20 +161,34 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		$returnvalue[$bestellungszaehler]['LastUpdateDate'] = $row['order_m_date'];
 		$returnvalue[$bestellungszaehler]['SalesChannel'] = $JoomlaAbteilungsname;
 		$returnvalue[$bestellungszaehler]['MarketplaceId'] = $JoomlaAbteilungsname;
-		// $returnvalue[$bestellungszaehler]['OrderType'] = "";
+		$returnvalue[$bestellungszaehler]['OrderType'] = "";
 		$returnvalue[$bestellungszaehler]['OrderStatus'] = $row_order_status['name_en-GB'];
 		$returnvalue[$bestellungszaehler]['FulfillmentChannel'] = "MFN";
+		if (trim($JoomlaStandardVersandzentrum) != false)
+		{
+			$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $JoomlaStandardVersandzentrum;
+		}
+		else if (trim($StandardVersandzentrum) != false)
+		{
+			$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = $StandardVersandzentrum;
+		}
+		else
+		{
+			$returnvalue[$bestellungszaehler]['fulfillment-center-id'] = "";
+		}
 		$returnvalue[$bestellungszaehler]['ShipmentServiceLevelCategory'] = $row_shipping_method['name_en-GB'];
-		// $returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
+		$returnvalue[$bestellungszaehler]['ShipServiceLevel'] = "";
 		$returnvalue[$bestellungszaehler]['Amount'] = $row['order_total'];
 		$returnvalue[$bestellungszaehler]['CurrencyCode'] = $row['currency_code_iso'];
-		$returnvalue[$bestellungszaehler]['PaymentMethod'] = $row_payment_method['name_de-DE'];
+		$returnvalue[$bestellungszaehler]['IsBusinessOrder'] = "false";
+		$returnvalue[$bestellungszaehler]['PaymentMethod'] = "Joomla";
+		$returnvalue[$bestellungszaehler]['PaymentMethodDetail'] = $row_payment_method['name_de-DE'];
 		$returnvalue[$bestellungszaehler]['NumberOfItems'] = $item_count;
 		$returnvalue[$bestellungszaehler]['BuyerName'] = utf8_encode($row['f_name'])." ".utf8_encode($row['l_name']);
 		$returnvalue[$bestellungszaehler]['Title'] = utf8_encode($title);
 		$returnvalue[$bestellungszaehler]['Name'] = utf8_encode($row['f_name'])." ".utf8_encode($row['l_name']);
 		$returnvalue[$bestellungszaehler]['AddressLine1'] = utf8_encode($row['street']);
-		// $returnvalue[$bestellungszaehler]['AddressLine2'] = "";
+		$returnvalue[$bestellungszaehler]['AddressLine2'] = "";
 		$returnvalue[$bestellungszaehler]['PostalCode'] = utf8_encode($row['zip']);
 		$returnvalue[$bestellungszaehler]['City'] = utf8_encode($row['city']);
 		$returnvalue[$bestellungszaehler]['CountryCode'] = utf8_encode($row_country_code['country_code_2']);
@@ -182,13 +196,13 @@ function getJoomlaOrders($fulfillmentchannel, $bestellungvom, $bestellungbis)
 		$returnvalue[$bestellungszaehler]['recipient-title'] = utf8_encode($delivery_title);
 		$returnvalue[$bestellungszaehler]['recipient-name'] = utf8_encode($row['d_f_name'])." ".utf8_encode($row['d_l_name']);
 		$returnvalue[$bestellungszaehler]['ship-address-1'] = utf8_encode($row['d_street']);
-		// $returnvalue[$bestellungszaehler]['ship-address-2'] = "";
+		$returnvalue[$bestellungszaehler]['ship-address-2'] = "";
 		$returnvalue[$bestellungszaehler]['ship-postal-code'] = utf8_encode($row['d_zip']);
 		$returnvalue[$bestellungszaehler]['ship-city'] = utf8_encode($row['d_city']);
 		$returnvalue[$bestellungszaehler]['ship-country'] = utf8_encode($row_country_code_delivery['country_code_2']);
 		$returnvalue[$bestellungszaehler]['ship-state'] = utf8_encode($row['d_state']);
 		$returnvalue[$bestellungszaehler]['BuyerEmail'] = utf8_encode($row['email']);
-		// $returnvalue[$bestellungszaehler]['Phone'] = "";
+		$returnvalue[$bestellungszaehler]['Phone'] = "";
 		$returnvalue[$bestellungszaehler]['OrderComment'] = utf8_encode($row['order_add_info']);
 		$returnvalue[$bestellungszaehler]['Language'] = utf8_encode($row['lang']);
 		$returnvalue[$bestellungszaehler]['tax_number'] = utf8_encode(trim($row['tax_number']));

@@ -207,13 +207,19 @@ class DHLBusinessShipment {
 	    $exchange_rate=$this->exchange_rate($export_details['customs_currency'], 'EUR');
 
 	    $export=array();
-	    $export['InvoiceType'] = DHL_INVOICE_TYPE;
+	    if (empty($export_details['return'])) {
+		$export['InvoiceType'] = DHL_INVOICE_TYPE;
+		$export['ExportType'] = DHL_EXPORT_TYPE;
+		$export['ExportTypeDescription'] = DHL_EXPORT_TYPE_DESCRIPTION;
+	    } else {
+		$export['InvoiceType'] = DHL_INVOICE_TYPE_RETURN;
+		$export['ExportType'] = DHL_EXPORT_TYPE_RETURN;
+		$export['ExportTypeDescription'] = DHL_EXPORT_TYPE_DESCRIPTION_RETURN;
+	    }
 	    $export['InvoiceDate'] = $export_details['invoice_date'];
 	    if (isset($export_details['invoice_number'])) {
 		$export['InvoiceNumber'] = $export_details['invoice_number'];
 	    }
-	    $export['ExportType'] = DHL_EXPORT_TYPE;
-	    $export['ExportTypeDescription'] = DHL_EXPORT_TYPE_DESCRIPTION;
 	    $export['CommodityCode'] = $export_details['positions'][0]['customs_commodity_code'];
 	    $export['TermsOfTrade'] = DHL_TERMS_OF_TRADE;
 	    $export['Description'] = OVERALL_GOODS_DESCRIPTION;
@@ -227,7 +233,7 @@ class DHLBusinessShipment {
 		$export_position['Amount'] = $position['item_amount'];
 		$export_position['NetWeightInKG'] = $position['net_weight_kg'];
 		$export_position['GrossWeightInKG'] = $position['gross_weight_kg'];
-		$export_position['CustomsValue'] = round($position['customs_value']*$exchange_rate);
+		$export_position['CustomsValue'] = round($position['customs_value']*$exchange_rate)*$position['item_amount'];
 		//HACK//
 		if (!$export_position['CustomsValue']) {
 		    $export_position['CustomsValue']=0.01;
@@ -311,7 +317,25 @@ class DHLBusinessShipment {
 	} else {
 	    $receiver['Address']                                                      = array();
 	    $receiver['Address']['streetName']                                        = $customer_details['street_name'];
-	    $receiver['Address']['streetNumber']                                      = $customer_details['street_number'];
+	    //////To make sure Encoding works in DE, we try to put the street number into streetNumber////////////
+	    if (strcmp($customer_details['street_number'], ".") === 0) 
+	    {
+		$matches = null;
+		$returnValue = preg_match('/\\s(\\S{1,5})$/isU', $receiver['Address']['streetName'], $matches);
+		if($returnValue) 
+		{
+		    $receiver['Address']['streetNumber'] = $matches[1];
+		    $receiver['Address']['streetName'] = preg_replace('/\\s(\\S{1,5})$/isU', '', $receiver['Address']['streetName'], 1, $count);
+		}
+		else
+		{
+		    $receiver['Address']['streetNumber'] = ".";
+		}
+	    } 
+	    else 
+	    {
+		$receiver['Address']['streetNumber'] = $customer_details['street_number'];
+	    }
 	    if(isset($customer_details['c/o'])) {
 		$receiver['Address']['careOfName'] = $customer_details['c/o'];
 	    }

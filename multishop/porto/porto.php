@@ -26,7 +26,8 @@ else
 	{
 		$cusordnumber = $_GET["cusordnumber"];
 		$order_id = $_GET["order_id"];
-		$db_order_id = $_GET["db_order_id"];
+		$donumber; if (isset($_GET["donumber"])) { $donumber = $_GET["donumber"]; }
+		$db_document_id = $_GET["db_document_id"];
 		$customer = array ( 'name'			=> trim($_GET["name"]),
 						    'department'	=> trim($_GET["department"]),
 						    'street'		=> trim($_GET["street"]),
@@ -61,9 +62,11 @@ else
 	}
 	elseif (isset($_POST["cusordnumber"]))
 	{
+		$warenruecksendung = $_POST["warenruecksendung"];
 		$cusordnumber = $_POST["cusordnumber"];
 		$order_id = $_POST["order_id"];
-		$db_order_id = $_POST["db_order_id"];
+		$donumber; if (isset($_POST["donumber"])) { $donumber = $_POST["donumber"]; }
+		$db_document_id = $_POST["db_document_id"];
 		$customer = array ( 'name'			=> $_POST["name"],
 						    'department'	=> $_POST["department"],
 						    'street'		=> $_POST["street"],
@@ -77,6 +80,15 @@ else
 		(
 	        'customs_currency' => $_POST["customs_currency"],
 		);
+		
+		if ($warenruecksendung == "checked")
+		{
+			$export_details['return'] = 1;
+		}
+		else
+		{
+			$export_details['return'] = 0;
+		}
 	
 		$bestelldaten = explode("\n", $_POST["bestelldaten"]);
 		foreach ($bestelldaten as $zaehler => $einzelartikel)
@@ -111,9 +123,11 @@ else
 	echo "<form name=\"gesamtformular\" action=\"porto.php\" method=\"post\">";
 	
 	echo	"<table style=\"background-color:#cccccc\">"
+				."<tr><td>Exportdokumente fuer Warenruecksendung</td><td><input type=\"checkbox\" name=\"warenruecksendung\" value=\"checked\""; if ($warenruecksendung == "checked") { echo "checked=\"checked\""; }; echo "></td></tr>"
 				."<tr><td>Bestellnummer des Kunden</td><td><input type=\"text\" size=\"40\" name=\"cusordnumber\" value=\"".$cusordnumber."\"></td></tr>"
 				."<tr><td>Auftragsnummer</td><td><input type=\"text\" size=\"40\" name=\"order_id\" value=\"".$order_id."\"></td></tr>"
-				."<tr><td>Interne Auftragsnummer</td><td><input type=\"text\" size=\"40\" name=\"db_order_id\" value=\"".$db_order_id."\"></td></tr>"
+				."<tr><td>Lieferscheinnummer</td><td><input type=\"text\" size=\"40\" name=\"donumber\" value=\"".$donumber."\"></td></tr>"
+				."<tr><td>Interne Dokumentennummer</td><td><input type=\"text\" size=\"40\" name=\"db_document_id\" value=\"".$db_document_id."\"></td></tr>"
 				."<tr><td>Name</td><td><input type=\"text\" size=\"40\" name=\"name\" value=\"".$customer['name']."\"></td></tr>"
 				."<tr><td>Strasse 1</td><td><input type=\"text\" size=\"40\" name=\"department\" value=\"".$customer['department']."\"></td></tr>"
 				."<tr><td>Strasse 2</td><td><input type=\"text\" size=\"40\" name=\"street\" value=\"".$customer['street']."\"></td></tr>"
@@ -134,7 +148,7 @@ else
 
 		."<tr><td>Email Portoempfaenger</td><td><input type=\"text\" size=\"40\" name=\"portoempfaenger\" value=\"".$portoemail."\"></td></tr>";
 	echo "</table>";
-	if (!isset($_POST["portoerstellen"]) && (!checkPortostatusOfOrderId($cusordnumber, $order_id) || !empty($db_order_id)))
+	if (!isset($_POST["portoerstellen"]) && (!checkPortostatusOfOrderId($cusordnumber, $order_id) || !empty($db_document_id)))
 	{
 		echo "<br><input type=\"submit\" name=\"portoerstellen\" value=\"Porto erstellen\">";
 		echo "</form>";
@@ -142,15 +156,23 @@ else
 	else
 	{
 		echo "</form>";
-	 	echo "<form name=\"zurueckzukivi\" action=\"https://www.opis-tech.com/kivitendo/oe.pl?action=edit&type=sales_order&vc=customer&id=".$db_order_id."\" target=\"_self\" method=\"post\">";
-		if (checkPortostatusOfOrderId($cusordnumber, $order_id) && empty($db_order_id))
+		if (!empty($donumber))
+		{
+			// Lieferschein
+			echo "<form name=\"zurueckzukivi\" action=\"https://www.opis-tech.com/kivitendo/do.pl?action=edit&type=sales_delivery_order&id=".$db_document_id."\" target=\"_self\" method=\"post\">";
+		}
+		else
+		{
+			// Auftrag
+			echo "<form name=\"zurueckzukivi\" action=\"https://www.opis-tech.com/kivitendo/oe.pl?action=edit&type=sales_order&vc=customer&id=".$db_document_id."\" target=\"_self\" method=\"post\">";			
+		}
+		if (checkPortostatusOfOrderId($cusordnumber, $order_id) && empty($db_document_id))
 		{
 			echo "<br> Porto bereits erstellt, Vorgang abgebrochen <br>";
 		}
 		else
 		{
 			$shipment = new PrepareShipment($cusordnumber);
-			
 			
 	 		$response = $shipment->handle_shipment($export_details, $customer);
 
@@ -166,7 +188,16 @@ else
 			
 			if ($response['status'] == 0)
 			{
-				setPortostatusOfOrderId($cusordnumber, $response['carrier'], $response['shipment_number'], $order_id);
+				if (!empty($donumber))
+				{
+					// Lieferschein
+					setPortostatusOfDeliveryOrderId($cusordnumber, $response['carrier'], $response['shipment_number'], $donumber);
+				}
+				else
+				{
+					// Auftrag
+					setPortostatusOfOrderId($cusordnumber, $response['carrier'], $response['shipment_number'], $order_id);
+				}
 				
 	 			$email = new PHPMailer();
 	 			$email->From      = 'porto@opis-tech.com';
@@ -194,7 +225,7 @@ else
 	 	 		
 	 	 		$email->Send();
 	 	 		
-	 	 		if (!empty($db_order_id))
+	 	 		if (!empty($db_document_id))
 	 	 		{
 	 	 			echo "<script language=\"javascript\">";
 					echo "document.zurueckzukivi.submit();";
@@ -203,7 +234,7 @@ else
 		 	}
 		 	else
 		 	{
-			 	if (!empty($db_order_id))
+			 	if (!empty($db_document_id))
 			 	{
 					echo "<br><input type=\"submit\" name=\"zurueckzukivitendo\" value=\"Zurueck zu Kivitendo\">";
 			 	}

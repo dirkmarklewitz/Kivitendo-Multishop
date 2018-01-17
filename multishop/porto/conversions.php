@@ -82,6 +82,13 @@ $parcel_types = array(
         'height_cm' => 31,
 	'width_cm' => 51,
         'length_cm' => 51
+    ),
+    '1921_c_carton' => array (
+	'name' => '1921 C Karton',
+	'micro_units' => 48,
+        'height_cm' => 38,
+	'width_cm' => 54,
+        'length_cm' => 80
     )
 );
 
@@ -106,6 +113,13 @@ $product_types = array (
 	'customs_commodity_code' => '85171800',
 	'net_weight_kg' => 1.1,
         'gross_weight_kg' => 1.7
+    ),
+    'Tpmfmob' => array (
+	'sku' => 'Tpmfmob',
+	'size' => 'T60cab',
+	'customs_commodity_code' => '85171800',
+	'net_weight_kg' => 1.2,
+        'gross_weight_kg' => 1.6
     ),
     'T60bat' => array (
 	'sku' => 'T60bat',
@@ -157,7 +171,7 @@ $product_types = array (
         'gross_weight_kg' => 0.2
     ),
     'Cmob7+-garde' => array (
-	'sku' => 'Cmob7-garde',
+	'sku' => 'Cmob7+-garde',
 	'size' => 'Cmob7+-garde',
 	'customs_commodity_code' => '4202310090',
 	'net_weight_kg' => 0.1,
